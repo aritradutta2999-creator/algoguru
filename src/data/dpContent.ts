@@ -107,11 +107,506 @@ public class ClimbingStairs {
     },
   },
   {
+    id: "dp-memoization",
+    title: "Memoization (Top-Down)",
+    difficulty: "Medium",
+    timeComplexity: "O(n) — each state computed once",
+    spaceComplexity: "O(n) for memo + O(n) recursion stack",
+    theory: [
+      "Memoization = Recursion + Caching. Write the natural recursive solution, then add a cache (HashMap or array) to store already-computed results.",
+      "When the recursive function is called with the same parameters, return the cached result immediately — no recomputation.",
+      "Top-down is often easier to write because you follow the problem's natural recursive structure without determining explicit iteration order.",
+      "Use HashMap when the state space is sparse or keys are complex (strings, tuples). Use arrays when state is bounded integers (index, weight, etc.).",
+      "Stack overflow risk: Java's default stack is limited. For very deep recursion or large inputs, prefer bottom-up tabulation.",
+    ],
+    keyPoints: [
+      "memo[state] = -1 (or null) means 'not yet computed'",
+      "Always check the cache before computing: if memo[i] != -1 return memo[i]",
+      "Number of distinct states × work per state = total time complexity",
+      "HashMap<String, Integer> for complex states, int[] for simple integer states",
+    ],
+    tip: "Convert any recursive solution to memoized in 3 steps: (1) Add a memo array, (2) Check cache at top, (3) Store result before returning.",
+    code: [
+      {
+        title: "Top-Down Memoization — All Key Patterns",
+        language: "java",
+        content: `import java.util.*;
+
+public class Memoization {
+    
+    // ==================== PATTERN 1: 1D MEMO ====================
+    // Fibonacci — the textbook memoization example
+    
+    private static long[] fib_memo;
+    
+    public static long fib(int n) {
+        fib_memo = new long[n + 1];
+        Arrays.fill(fib_memo, -1);
+        return fibHelper(n);
+    }
+    
+    private static long fibHelper(int n) {
+        if (n <= 1) return n;
+        if (fib_memo[n] != -1) return fib_memo[n]; // Cache hit!
+        fib_memo[n] = fibHelper(n - 1) + fibHelper(n - 2);
+        return fib_memo[n];
+    }
+    
+    // ==================== PATTERN 2: 2D MEMO ====================
+    // Unique paths in grid — memo[row][col] = ways to reach (m-1, n-1)
+    
+    private static int[][] grid_memo;
+    
+    public static int uniquePaths(int m, int n) {
+        grid_memo = new int[m][n];
+        for (int[] row : grid_memo) Arrays.fill(row, -1);
+        return pathsHelper(0, 0, m, n);
+    }
+    
+    private static int pathsHelper(int r, int c, int m, int n) {
+        if (r == m - 1 && c == n - 1) return 1;
+        if (r >= m || c >= n) return 0;
+        if (grid_memo[r][c] != -1) return grid_memo[r][c];
+        grid_memo[r][c] = pathsHelper(r + 1, c, m, n)
+                        + pathsHelper(r, c + 1, m, n);
+        return grid_memo[r][c];
+    }
+    
+    // ==================== PATTERN 3: HashMap MEMO ====================
+    // Word Break: Can s be segmented using wordDict?
+    
+    public static boolean wordBreak(String s, List<String> wordDict) {
+        Set<String> dict = new HashSet<>(wordDict);
+        Map<Integer, Boolean> memo = new HashMap<>();
+        return wbHelper(s, 0, dict, memo);
+    }
+    
+    private static boolean wbHelper(String s, int start,
+                                     Set<String> dict, Map<Integer, Boolean> memo) {
+        if (start == s.length()) return true;
+        if (memo.containsKey(start)) return memo.get(start);
+        for (int end = start + 1; end <= s.length(); end++) {
+            if (dict.contains(s.substring(start, end)) && wbHelper(s, end, dict, memo)) {
+                return memo.put(start, true) != null || true;
+            }
+        }
+        memo.put(start, false);
+        return false;
+    }
+    
+    // ==================== PATTERN 4: INTERVAL MEMO ====================
+    // Burst Balloons — choose last balloon to burst in each interval
+    
+    private static int[][] balloon_memo;
+    private static int[] b;
+    
+    public static int maxCoins(int[] nums) {
+        int n = nums.length;
+        b = new int[n + 2];
+        b[0] = b[n + 1] = 1;
+        for (int i = 0; i < n; i++) b[i + 1] = nums[i];
+        balloon_memo = new int[n + 2][n + 2];
+        for (int[] row : balloon_memo) Arrays.fill(row, -1);
+        return burst(1, n);
+    }
+    
+    private static int burst(int l, int r) {
+        if (l > r) return 0;
+        if (balloon_memo[l][r] != -1) return balloon_memo[l][r];
+        int max = 0;
+        for (int k = l; k <= r; k++) {
+            int coins = b[l-1] * b[k] * b[r+1] + burst(l, k-1) + burst(k+1, r);
+            max = Math.max(max, coins);
+        }
+        return balloon_memo[l][r] = max;
+    }
+    
+    public static void main(String[] args) {
+        System.out.println("Fib(50): " + fib(50));                    // 12586269025
+        System.out.println("Unique paths 3x7: " + uniquePaths(3,7)); // 28
+        System.out.println("Word break 'leetcode': " + wordBreak("leetcode", List.of("leet","code"))); // true
+        System.out.println("Burst Balloons [3,1,5,8]: " + maxCoins(new int[]{3,1,5,8})); // 167
+    }
+}`,
+      },
+    ],
+  },
+  {
+    id: "dp-tabulation",
+    title: "Tabulation (Bottom-Up)",
+    difficulty: "Medium",
+    timeComplexity: "O(n) — same states, no recursion overhead",
+    spaceComplexity: "O(n) → often reducible to O(1) or O(k)",
+    theory: [
+      "Tabulation fills the DP table iteratively starting from base cases and building up to the answer. No recursion — avoids stack overflow and has lower constant factor.",
+      "The key challenge: determine the correct fill order so that whenever you compute dp[i], all values it depends on are already computed.",
+      "For 1D DP: usually left-to-right. For 2D DP: row by row. For interval DP: by increasing interval length.",
+      "Space optimization is much easier with tabulation — identify which previous values are needed and only keep those (rolling array technique).",
+      "When converting from memoization: recursion parameters become table dimensions, base cases become initial values, recursive calls determine iteration order.",
+    ],
+    keyPoints: [
+      "Tabulation order: always fill dependencies before dependents",
+      "Rolling array: if dp[i] only depends on dp[i-1], use a single variable",
+      "2D rolling array: if dp[i][j] only needs row i-1, use 2 rows instead of full table",
+      "Tabulation preferred in production: no recursion overhead, easier to space-optimize",
+    ],
+    warning: "Common mistake: wrong iteration order — computing dp[i] before its dependencies are ready.",
+    code: [
+      {
+        title: "Tabulation Patterns & Space Optimization",
+        language: "java",
+        content: `import java.util.*;
+
+public class Tabulation {
+    
+    // ==================== PATTERN 1: GRID (forward fill) ====================
+    // Min Path Sum — move right or down only
+    
+    public static int minPathSum(int[][] grid) {
+        int m = grid.length, n = grid[0].length;
+        int[][] dp = new int[m][n];
+        dp[0][0] = grid[0][0];
+        for (int j = 1; j < n; j++) dp[0][j] = dp[0][j-1] + grid[0][j];
+        for (int i = 1; i < m; i++) dp[i][0] = dp[i-1][0] + grid[i][0];
+        for (int i = 1; i < m; i++)
+            for (int j = 1; j < n; j++)
+                dp[i][j] = Math.min(dp[i-1][j], dp[i][j-1]) + grid[i][j];
+        return dp[m-1][n-1];
+    }
+    
+    // Space Optimized O(n): only keep one row at a time
+    public static int minPathSumO1(int[][] grid) {
+        int m = grid.length, n = grid[0].length;
+        int[] dp = new int[n];
+        dp[0] = grid[0][0];
+        for (int j = 1; j < n; j++) dp[j] = dp[j-1] + grid[0][j];
+        for (int i = 1; i < m; i++) {
+            dp[0] += grid[i][0];
+            for (int j = 1; j < n; j++)
+                dp[j] = Math.min(dp[j], dp[j-1]) + grid[i][j];
+        }
+        return dp[n-1];
+    }
+    
+    // ==================== PATTERN 2: INTERVAL DP ====================
+    // Fill in order of increasing interval length
+    // Palindromic Partitioning — min cuts to make all parts palindromes
+    
+    public static int minCutPalindrome(String s) {
+        int n = s.length();
+        boolean[][] isPalin = new boolean[n][n];
+        for (int i = n-1; i >= 0; i--)
+            for (int j = i; j < n; j++)
+                isPalin[i][j] = s.charAt(i) == s.charAt(j)
+                                && (j - i <= 2 || isPalin[i+1][j-1]);
+        
+        int[] dp = new int[n];
+        for (int i = 0; i < n; i++) {
+            if (isPalin[0][i]) { dp[i] = 0; continue; }
+            dp[i] = i;
+            for (int j = 1; j <= i; j++)
+                if (isPalin[j][i]) dp[i] = Math.min(dp[i], dp[j-1] + 1);
+        }
+        return dp[n-1];
+    }
+    
+    // ==================== PATTERN 3: STATE MACHINE ====================
+    // Best Time to Buy/Sell Stock — at most k transactions
+    
+    public static int maxProfitK(int k, int[] prices) {
+        int n = prices.length;
+        if (k >= n / 2) {
+            int profit = 0;
+            for (int i = 1; i < n; i++)
+                if (prices[i] > prices[i-1]) profit += prices[i] - prices[i-1];
+            return profit;
+        }
+        int[] buy = new int[k + 1], sell = new int[k + 1];
+        Arrays.fill(buy, Integer.MIN_VALUE);
+        for (int price : prices)
+            for (int t = k; t >= 1; t--) {
+                sell[t] = Math.max(sell[t], buy[t] + price);
+                buy[t]  = Math.max(buy[t], sell[t-1] - price);
+            }
+        return sell[k];
+    }
+    
+    public static void main(String[] args) {
+        int[][] grid = {{1,3,1},{1,5,1},{4,2,1}};
+        System.out.println("Min path sum:  " + minPathSum(grid));  // 7
+        System.out.println("Optimized:     " + minPathSumO1(grid)); // 7
+        System.out.println("Min cuts 'aab': " + minCutPalindrome("aab")); // 1
+        System.out.println("Max profit k=2 [2,4,1,7]: " + maxProfitK(2, new int[]{2,4,1,7})); // 7
+    }
+}`,
+      },
+    ],
+  },
+  {
+    id: "dp-2d",
+    title: "2D DP Problems",
+    difficulty: "Hard",
+    timeComplexity: "O(m × n) per problem",
+    spaceComplexity: "O(m × n) → O(n) with rolling array",
+    theory: [
+      "2D DP uses a table where dp[i][j] represents the optimal value for a subproblem defined by two parameters — grid coordinates, indices into two strings, or item + capacity.",
+      "Grid DP: dp[i][j] = optimal at cell (i,j). Transitions from adjacent cells. Common in path-finding, flood-fill, dungeon problems.",
+      "Two-string DP: dp[i][j] = optimal for first i chars of s1 and first j chars of s2. Used in LCS, Edit Distance, pattern matching.",
+      "Key insight: if dp[i][j] only depends on dp[i-1][*], keep only one row — O(n) instead of O(mn) space.",
+    ],
+    keyPoints: [
+      "Initialize borders carefully: dp[0][j] and dp[i][0] are base cases",
+      "Fill direction must match transition dependencies",
+      "Dungeon-style: fill backwards when the answer depends on future cells",
+      "Rolling array: save memory when only the previous row is needed",
+    ],
+    code: [
+      {
+        title: "Essential 2D DP Problems",
+        language: "java",
+        content: `import java.util.*;
+
+public class TwoDDP {
+    
+    // ==================== UNIQUE PATHS WITH OBSTACLES ====================
+    
+    public static int uniquePathsObstacles(int[][] grid) {
+        int m = grid.length, n = grid[0].length;
+        if (grid[0][0] == 1 || grid[m-1][n-1] == 1) return 0;
+        int[][] dp = new int[m][n];
+        dp[0][0] = 1;
+        for (int i = 1; i < m; i++) dp[i][0] = (grid[i][0]==1) ? 0 : dp[i-1][0];
+        for (int j = 1; j < n; j++) dp[0][j] = (grid[0][j]==1) ? 0 : dp[0][j-1];
+        for (int i = 1; i < m; i++)
+            for (int j = 1; j < n; j++)
+                dp[i][j] = (grid[i][j]==1) ? 0 : dp[i-1][j] + dp[i][j-1];
+        return dp[m-1][n-1];
+    }
+    
+    // ==================== MAXIMAL SQUARE ====================
+    // Largest square of all 1s
+    // dp[i][j] = side of largest square ending at (i,j)
+    // KEY: dp[i][j] = min(top, left, top-left) + 1
+    
+    public static int maximalSquare(char[][] matrix) {
+        int m = matrix.length, n = matrix[0].length, maxSide = 0;
+        int[][] dp = new int[m+1][n+1];
+        for (int i = 1; i <= m; i++)
+            for (int j = 1; j <= n; j++)
+                if (matrix[i-1][j-1] == '1') {
+                    dp[i][j] = Math.min(dp[i-1][j],
+                                Math.min(dp[i][j-1], dp[i-1][j-1])) + 1;
+                    maxSide = Math.max(maxSide, dp[i][j]);
+                }
+        return maxSide * maxSide;
+    }
+    
+    // ==================== DUNGEON GAME ====================
+    // Fill BACKWARDS — min health to traverse dungeon alive
+    
+    public static int calculateMinimumHP(int[][] dungeon) {
+        int m = dungeon.length, n = dungeon[0].length;
+        int[][] dp = new int[m+1][n+1];
+        for (int[] row : dp) Arrays.fill(row, Integer.MAX_VALUE);
+        dp[m][n-1] = dp[m-1][n] = 1; // Sentinels
+        for (int i = m-1; i >= 0; i--)
+            for (int j = n-1; j >= 0; j--) {
+                int need = Math.min(dp[i+1][j], dp[i][j+1]) - dungeon[i][j];
+                dp[i][j] = Math.max(need, 1);
+            }
+        return dp[0][0];
+    }
+    
+    // ==================== WILDCARD MATCHING ====================
+    // '?' = any single char, '*' = any sequence (including empty)
+    
+    public static boolean isMatch(String s, String p) {
+        int m = s.length(), n = p.length();
+        boolean[][] dp = new boolean[m+1][n+1];
+        dp[0][0] = true;
+        for (int j = 1; j <= n; j++)
+            if (p.charAt(j-1) == '*') dp[0][j] = dp[0][j-1];
+        for (int i = 1; i <= m; i++)
+            for (int j = 1; j <= n; j++) {
+                char pc = p.charAt(j-1);
+                if (pc == '*') dp[i][j] = dp[i][j-1] || dp[i-1][j];
+                else dp[i][j] = (pc == '?' || pc == s.charAt(i-1)) && dp[i-1][j-1];
+            }
+        return dp[m][n];
+    }
+    
+    // ==================== REGEX MATCHING ====================
+    // '.' = any single char, '*' = zero or more of preceding element
+    
+    public static boolean regexMatch(String s, String p) {
+        int m = s.length(), n = p.length();
+        boolean[][] dp = new boolean[m+1][n+1];
+        dp[0][0] = true;
+        for (int j = 2; j <= n; j += 2)
+            if (p.charAt(j-1) == '*') dp[0][j] = dp[0][j-2];
+        for (int i = 1; i <= m; i++)
+            for (int j = 1; j <= n; j++) {
+                char sc = s.charAt(i-1), pc = p.charAt(j-1);
+                if (pc == '*') {
+                    dp[i][j] = dp[i][j-2]; // Zero occurrences
+                    if (p.charAt(j-2)=='.' || p.charAt(j-2)==sc)
+                        dp[i][j] = dp[i][j] || dp[i-1][j];
+                } else dp[i][j] = (pc=='.' || pc==sc) && dp[i-1][j-1];
+            }
+        return dp[m][n];
+    }
+    
+    public static void main(String[] args) {
+        System.out.println("Maximal Square: " + maximalSquare(new char[][]{
+            {'1','0','1','0','0'},{'1','0','1','1','1'},
+            {'1','1','1','1','1'},{'1','0','0','1','0'}})); // 4
+        System.out.println("Dungeon min HP: " + calculateMinimumHP(
+            new int[][]{{-2,-3,3},{-5,-10,1},{10,30,-5}})); // 7
+        System.out.println("Wildcard 'aa','*': " + isMatch("aa","*")); // true
+        System.out.println("Regex 'aab','c*a*b': " + regexMatch("aab","c*a*b")); // true
+    }
+}`,
+      },
+    ],
+  },
+  {
+    id: "dp-trees",
+    title: "DP on Trees",
+    difficulty: "Hard",
+    timeComplexity: "O(n) for most tree DP problems",
+    spaceComplexity: "O(n) for recursion stack and DP arrays",
+    theory: [
+      "Tree DP computes optimal values using post-order DFS (children before parent). Each node's value depends only on its subtree — this gives optimal substructure.",
+      "Standard pattern: dp[v][0] = optimal NOT including v; dp[v][1] = optimal INCLUDING v. Process all children first, then decide for v.",
+      "Rerooting technique: Compute answers for ALL possible roots in O(n). Pass 1 (bottom-up) builds subtree answers. Pass 2 (top-down) adds parent's contribution to each child.",
+      "Tree diameter: The longest path may not pass through the root. For each node, track its two longest downward paths and update a global maximum.",
+      "Heavy-Light Decomposition: Decompose tree into O(log n) chains. Allows path queries in O(log² n) using segment trees on each chain.",
+    ],
+    keyPoints: [
+      "Post-order DFS: process all children before computing current node's DP value",
+      "dp[v][0/1] = exclude/include — the binary state pattern",
+      "Rerooting: Pass 1 bottom-up, Pass 2 top-down with parent's contribution",
+      "For diameter: track two longest depths at each node, update global answer",
+    ],
+    code: [
+      {
+        title: "Tree DP — MIS, Diameter & Rerooting",
+        language: "java",
+        content: `import java.util.*;
+
+public class TreeDP {
+    
+    static List<Integer>[] adj;
+    static int[][] dp;
+    
+    // ==================== MAX INDEPENDENT SET ON TREE ====================
+    // dp[v][0] = max set WITHOUT v | dp[v][1] = max set WITH v
+    
+    public static int maxIndependentSet(int n, int[][] edges) {
+        adj = new ArrayList[n];
+        dp = new int[n][2];
+        for (int i = 0; i < n; i++) adj[i] = new ArrayList<>();
+        for (int[] e : edges) { adj[e[0]].add(e[1]); adj[e[1]].add(e[0]); }
+        misDP(0, -1);
+        return Math.max(dp[0][0], dp[0][1]);
+    }
+    
+    private static void misDP(int v, int par) {
+        dp[v][1] = 1; dp[v][0] = 0;
+        for (int u : adj[v]) {
+            if (u == par) continue;
+            misDP(u, v);
+            dp[v][1] += dp[u][0];                     // Include v → exclude children
+            dp[v][0] += Math.max(dp[u][0], dp[u][1]); // Exclude v → best for children
+        }
+    }
+    
+    // ==================== TREE DIAMETER ====================
+    // Longest path between any two nodes
+    
+    static int diameter;
+    
+    public static int treeDiameter(int n, int[][] edges) {
+        adj = new ArrayList[n];
+        diameter = 0;
+        for (int i = 0; i < n; i++) adj[i] = new ArrayList<>();
+        for (int[] e : edges) { adj[e[0]].add(e[1]); adj[e[1]].add(e[0]); }
+        diameterDFS(0, -1);
+        return diameter;
+    }
+    
+    private static int diameterDFS(int v, int par) {
+        int max1 = 0, max2 = 0;
+        for (int u : adj[v]) {
+            if (u == par) continue;
+            int d = diameterDFS(u, v) + 1;
+            if (d > max1) { max2 = max1; max1 = d; }
+            else if (d > max2) max2 = d;
+        }
+        diameter = Math.max(diameter, max1 + max2);
+        return max1;
+    }
+    
+    // ==================== REROOTING: SUM OF DISTANCES ====================
+    
+    static int[] subSize, down;
+    static long[] answer;
+    
+    public static long[] sumOfDistances(int n, int[][] edges) {
+        adj = new ArrayList[n];
+        subSize = new int[n]; down = new int[n]; answer = new long[n];
+        for (int i = 0; i < n; i++) adj[i] = new ArrayList<>();
+        for (int[] e : edges) { adj[e[0]].add(e[1]); adj[e[1]].add(e[0]); }
+        dfsDown(0, -1);
+        answer[0] = down[0];
+        dfsUp(0, -1, n);
+        return answer;
+    }
+    
+    private static void dfsDown(int v, int p) {
+        subSize[v] = 1;
+        for (int u : adj[v]) {
+            if (u == p) continue;
+            dfsDown(u, v);
+            subSize[v] += subSize[u];
+            down[v] += down[u] + subSize[u];
+        }
+    }
+    
+    private static void dfsUp(int v, int p, int total) {
+        for (int u : adj[v]) {
+            if (u == p) continue;
+            // u's subtree: nodes 1 closer; rest: 1 farther
+            answer[u] = answer[v] - subSize[u] + (total - subSize[u]);
+            dfsUp(u, v, total);
+        }
+    }
+    
+    public static void main(String[] args) {
+        int n = 7;
+        int[][] edges = {{0,1},{0,2},{1,3},{1,4},{2,5},{2,6}};
+        System.out.println("Max Independent Set: " + maxIndependentSet(n, edges)); // 4
+        System.out.println("Tree Diameter:       " + treeDiameter(n, edges));      // 4
+        System.out.println("Sum of Distances:    "
+            + Arrays.toString(sumOfDistances(n, edges)));
+    }
+}`,
+      },
+    ],
+    table: {
+      headers: ["Problem", "DP State", "Transition", "Time"],
+      rows: [
+        ["Max Independent Set", "dp[v][0/1]", "Children contribute post-order", "O(n)"],
+        ["Tree Diameter", "maxDepth[v]", "Two longest child depths", "O(n)"],
+        ["Sum of Distances", "down[v], answer[v]", "Rerooting formula", "O(n)"],
+        ["Min Vertex Cover", "n − MIS", "Complement of MIS", "O(n)"],
+        ["Max Root→Leaf Path", "running sum in DFS", "Accumulate down", "O(n)"],
+      ],
+    },
+  },
+  {
     id: "dp-1d",
     title: "1D DP Problems",
-    difficulty: "Medium",
-    timeComplexity: "O(n) per problem",
-    spaceComplexity: "O(n) → optimizable to O(1)",
     theory: [
       "1D DP problems have a single dimensional state: dp[i] represents some optimal value for the first i elements.",
       "Classic examples: Climbing Stairs, House Robber, Jump Game, Maximum Subarray (Kadane's), Coin Change, Decode Ways.",
