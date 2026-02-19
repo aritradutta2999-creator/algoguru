@@ -939,6 +939,156 @@ public class TopoSortSCC {
     ],
   },
   {
+    id: "graph-scc",
+    title: "Strongly Connected Components",
+    difficulty: "Expert",
+    timeComplexity: "O(V + E) — Tarjan's / Kosaraju's",
+    spaceComplexity: "O(V)",
+    theory: [
+      "A Strongly Connected Component (SCC) is a maximal subgraph where every vertex can reach every other vertex. SCCs partition a directed graph.",
+      "Kosaraju's Algorithm: Two DFS passes. (1) DFS on original graph, record finish order. (2) DFS on transposed graph in reverse finish order — each DFS tree is one SCC.",
+      "Tarjan's Algorithm: Single DFS pass using discovery time (disc) and low-link values. A node u is root of an SCC when low[u] == disc[u]. Uses an explicit stack.",
+      "Condensation Graph: Replace each SCC with a single node — the result is a DAG. Used to solve problems on cyclic graphs by reducing to DAG problems.",
+      "Applications: Finding cycles in dependencies, 2-SAT problems, deadlock detection, compiler optimizations.",
+    ],
+    keyPoints: [
+      "Tarjan's is preferred in competitive programming (single pass, no graph reversal)",
+      "The condensation DAG can be processed with topological sort",
+      "Every single node in a DAG is its own SCC",
+      "2-SAT problem reduces to finding SCCs — solved in O(V+E)",
+    ],
+    code: [
+      {
+        title: "Tarjan's SCC — Single Pass O(V+E)",
+        language: "java",
+        content: `import java.util.*;
+
+public class TarjanSCC {
+    
+    private int timer = 0;
+    private int[] disc, low;
+    private boolean[] onStack;
+    private Deque<Integer> stack;
+    private List<List<Integer>> sccs;
+    
+    public List<List<Integer>> findSCCs(List<List<Integer>> adj, int V) {
+        disc = new int[V];
+        low = new int[V];
+        onStack = new boolean[V];
+        stack = new ArrayDeque<>();
+        sccs = new ArrayList<>();
+        Arrays.fill(disc, -1); // -1 = unvisited
+        
+        for (int i = 0; i < V; i++)
+            if (disc[i] == -1) dfs(adj, i);
+        
+        return sccs;
+    }
+    
+    private void dfs(List<List<Integer>> adj, int u) {
+        disc[u] = low[u] = timer++;
+        stack.push(u);
+        onStack[u] = true;
+        
+        for (int v : adj.get(u)) {
+            if (disc[v] == -1) {
+                dfs(adj, v);
+                low[u] = Math.min(low[u], low[v]); // Propagate low-link up
+            } else if (onStack[v]) {
+                // v is in the current DFS stack — back edge within same SCC
+                low[u] = Math.min(low[u], disc[v]);
+            }
+        }
+        
+        // u is root of an SCC if low[u] == disc[u]
+        if (low[u] == disc[u]) {
+            List<Integer> scc = new ArrayList<>();
+            while (true) {
+                int w = stack.pop();
+                onStack[w] = false;
+                scc.add(w);
+                if (w == u) break;
+            }
+            sccs.add(scc);
+        }
+    }
+    
+    // ==================== CONDENSATION DAG ====================
+    // Build DAG of SCCs (each SCC is one node)
+    
+    public static List<List<Integer>> buildCondensationDAG(
+            List<List<Integer>> adj, List<List<Integer>> sccs, int V) {
+        
+        int[] comp = new int[V]; // comp[v] = SCC index of vertex v
+        for (int i = 0; i < sccs.size(); i++)
+            for (int v : sccs.get(i)) comp[v] = i;
+        
+        int n = sccs.size();
+        Set<Long> seen = new HashSet<>();
+        List<List<Integer>> dag = new ArrayList<>();
+        for (int i = 0; i < n; i++) dag.add(new ArrayList<>());
+        
+        for (int u = 0; u < V; u++) {
+            for (int v : adj.get(u)) {
+                int cu = comp[u], cv = comp[v];
+                if (cu != cv) { // Edge between different SCCs
+                    long key = (long) cu * n + cv;
+                    if (seen.add(key)) dag.get(cu).add(cv);
+                }
+            }
+        }
+        return dag;
+    }
+    
+    // ==================== 2-SAT USING SCC ====================
+    // 2-SAT: Boolean formula with clauses of exactly 2 literals (a OR b)
+    // Satisfiability check in O(V+E) using Tarjan's SCC
+    
+    public static boolean twoSAT(int n, int[][] clauses) {
+        // 2n nodes: x_i = 2i, NOT x_i = 2i+1
+        List<List<Integer>> adj = new ArrayList<>();
+        for (int i = 0; i < 2 * n; i++) adj.add(new ArrayList<>());
+        
+        for (int[] clause : clauses) {
+            // Clause: a OR b  → (NOT a → b) AND (NOT b → a)
+            int a = clause[0], b = clause[1]; // Positive = 2i, Negative = 2i+1
+            adj.get(a ^ 1).add(b);  // NOT a implies b
+            adj.get(b ^ 1).add(a);  // NOT b implies a
+        }
+        
+        TarjanSCC tarjan = new TarjanSCC();
+        List<List<Integer>> sccs = tarjan.findSCCs(adj, 2 * n);
+        
+        int[] comp = new int[2 * n];
+        for (int i = 0; i < sccs.size(); i++)
+            for (int v : sccs.get(i)) comp[v] = i;
+        
+        // Formula is satisfiable iff no variable and its negation are in the same SCC
+        for (int i = 0; i < n; i++) {
+            if (comp[2 * i] == comp[2 * i + 1]) return false;
+        }
+        return true;
+    }
+    
+    public static void main(String[] args) {
+        // Graph: 0→1→2→0 (SCC), 1→3→4→3 (SCC: 3,4), 2→4
+        List<List<Integer>> adj = new ArrayList<>();
+        for (int i = 0; i < 5; i++) adj.add(new ArrayList<>());
+        adj.get(0).add(1); adj.get(1).add(2); adj.get(2).add(0); // SCC: {0,1,2}
+        adj.get(1).add(3); adj.get(3).add(4); adj.get(4).add(3); // SCC: {3,4}
+        adj.get(2).add(4);
+        
+        TarjanSCC tarjan = new TarjanSCC();
+        List<List<Integer>> sccs = tarjan.findSCCs(adj, 5);
+        System.out.println("SCCs found: " + sccs.size()); // 3
+        for (int i = 0; i < sccs.size(); i++)
+            System.out.println("SCC " + i + ": " + sccs.get(i));
+    }
+}`,
+      },
+    ],
+  },
+  {
     id: "graph-bridges",
     title: "Bridges & Articulation Points",
     difficulty: "Expert",
@@ -1071,5 +1221,383 @@ public class BridgesAPs {
 }`,
       },
     ],
+  },
+  {
+    id: "graph-advanced",
+    title: "Advanced Graph Algorithms",
+    difficulty: "Expert",
+    timeComplexity: "Varies by algorithm",
+    spaceComplexity: "Varies by algorithm",
+    theory: [
+      "Advanced graph algorithms form the backbone of competitive programming. These include network flow, Euler paths, shortest path optimizations, and specialized tree algorithms.",
+      "Network Flow (Max-Flow): Find maximum flow from source to sink in a flow network. Ford-Fulkerson (DFS augmenting paths), Edmonds-Karp (BFS, O(VE²)), Dinic's Algorithm (O(V²E)) — fastest in practice.",
+      "Euler Path & Circuit: An Euler path visits every EDGE exactly once. An Euler circuit is a closed Euler path. Euler circuit exists iff all vertices have even degree (undirected) or in-degree == out-degree (directed).",
+      "LCA (Lowest Common Ancestor): The deepest node that is an ancestor of both u and v. Binary Lifting: precompute 2^k ancestors for each node — O(n log n) build, O(log n) query.",
+      "0-1 BFS: When edge weights are only 0 or 1, use a deque instead of a priority queue — O(V+E) instead of O((V+E)log V).",
+      "Centroid Decomposition: Decompose tree into centroids. Each node appears in O(log n) centroid subtrees — enables O(n log n) or O(n log² n) tree path queries.",
+    ],
+    keyPoints: [
+      "Max-Flow = Min-Cut (Ford-Fulkerson theorem) — fundamental duality",
+      "Dinic's algorithm: O(V²E) general, O(E√V) for unit capacity graphs",
+      "Binary lifting for LCA requires O(n log n) space",
+      "0-1 BFS: push weight-0 edges to front, weight-1 to back of deque",
+      "Centroid decomposition is key for tree path problems with updates",
+    ],
+    code: [
+      {
+        title: "Dinic's Max Flow Algorithm",
+        language: "java",
+        content: `import java.util.*;
+
+public class MaxFlow {
+    
+    // ==================== DINIC'S ALGORITHM ====================
+    // O(V²E) general | O(E√V) for unit capacity | O(E√E) bipartite matching
+    
+    static final int INF = Integer.MAX_VALUE;
+    
+    static class Edge {
+        int to, rev;
+        long cap;
+        Edge(int to, long cap, int rev) {
+            this.to = to; this.cap = cap; this.rev = rev;
+        }
+    }
+    
+    static List<Edge>[] graph;
+    static int[] level, iter;
+    static int N;
+    
+    @SuppressWarnings("unchecked")
+    public static void init(int n) {
+        N = n;
+        graph = new ArrayList[n];
+        for (int i = 0; i < n; i++) graph[i] = new ArrayList<>();
+        level = new int[n];
+        iter = new int[n];
+    }
+    
+    public static void addEdge(int from, int to, long cap) {
+        graph[from].add(new Edge(to, cap, graph[to].size()));
+        graph[to].add(new Edge(from, 0, graph[from].size() - 1)); // Reverse edge (cap=0)
+    }
+    
+    // BFS to build level graph (layered graph)
+    private static boolean bfs(int s, int t) {
+        Arrays.fill(level, -1);
+        Queue<Integer> q = new LinkedList<>();
+        level[s] = 0;
+        q.offer(s);
+        while (!q.isEmpty()) {
+            int v = q.poll();
+            for (Edge e : graph[v]) {
+                if (e.cap > 0 && level[e.to] < 0) {
+                    level[e.to] = level[v] + 1;
+                    q.offer(e.to);
+                }
+            }
+        }
+        return level[t] >= 0; // Return true if sink is reachable
+    }
+    
+    // DFS to send flow along augmenting paths
+    private static long dfs(int v, int t, long f) {
+        if (v == t) return f;
+        for (; iter[v] < graph[v].size(); iter[v]++) {
+            Edge e = graph[v].get(iter[v]);
+            if (e.cap > 0 && level[v] < level[e.to]) {
+                long d = dfs(e.to, t, Math.min(f, e.cap));
+                if (d > 0) {
+                    e.cap -= d;
+                    graph[e.to].get(e.rev).cap += d; // Update reverse edge
+                    return d;
+                }
+            }
+        }
+        return 0;
+    }
+    
+    public static long maxflow(int s, int t) {
+        long flow = 0;
+        while (bfs(s, t)) {          // Build level graph
+            Arrays.fill(iter, 0);
+            long f;
+            while ((f = dfs(s, t, INF)) > 0) flow += f; // Push until no augmenting path
+        }
+        return flow;
+    }
+    
+    public static void main(String[] args) {
+        // Example: source=0, sink=5, 6 nodes
+        init(6);
+        addEdge(0, 1, 10); addEdge(0, 2, 10);
+        addEdge(1, 3, 4);  addEdge(1, 4, 8);  addEdge(1, 2, 2);
+        addEdge(2, 4, 9);
+        addEdge(3, 5, 10); addEdge(4, 3, 6);  addEdge(4, 5, 10);
+        
+        System.out.println("Max Flow: " + maxflow(0, 5)); // 19
+    }
+}`,
+      },
+      {
+        title: "LCA with Binary Lifting",
+        language: "java",
+        content: `import java.util.*;
+
+public class LCA {
+    
+    // ==================== BINARY LIFTING LCA ====================
+    // Build: O(n log n) | Query: O(log n)
+    // up[v][k] = 2^k-th ancestor of v
+    
+    static final int LOG = 20; // Supports trees with up to 2^20 nodes
+    static int[][] up;
+    static int[] depth;
+    static List<Integer>[] adj;
+    
+    @SuppressWarnings("unchecked")
+    public static void build(int n, int root, int[][] edges) {
+        adj = new ArrayList[n];
+        for (int i = 0; i < n; i++) adj[i] = new ArrayList<>();
+        for (int[] e : edges) { adj[e[0]].add(e[1]); adj[e[1]].add(e[0]); }
+        
+        up = new int[n][LOG];
+        depth = new int[n];
+        
+        // Initialize: up[v][0] = parent of v (direct parent)
+        dfs(root, -1, 0);
+        
+        // Fill binary lifting table
+        for (int k = 1; k < LOG; k++)
+            for (int v = 0; v < n; v++)
+                up[v][k] = up[up[v][k-1]][k-1]; // 2^k ancestor = 2^(k-1) ancestor of 2^(k-1) ancestor
+    }
+    
+    private static void dfs(int v, int parent, int d) {
+        depth[v] = d;
+        up[v][0] = (parent == -1) ? v : parent; // Root's parent is itself
+        for (int u : adj[v])
+            if (u != parent) dfs(u, v, d + 1);
+    }
+    
+    public static int lca(int u, int v) {
+        // Bring both nodes to same depth
+        if (depth[u] < depth[v]) { int t = u; u = v; v = t; }
+        
+        int diff = depth[u] - depth[v];
+        for (int k = 0; k < LOG; k++)
+            if ((diff >> k & 1) == 1) u = up[u][k]; // Jump 2^k levels
+        
+        if (u == v) return u; // Same node — one is ancestor of other
+        
+        // Binary search for LCA: highest point where they're still different
+        for (int k = LOG - 1; k >= 0; k--)
+            if (up[u][k] != up[v][k]) {
+                u = up[u][k];
+                v = up[v][k];
+            }
+        
+        return up[u][0]; // Parent of u (and v) is the LCA
+    }
+    
+    // ==================== 0-1 BFS ====================
+    // Shortest path when edge weights are only 0 or 1
+    // Use deque: 0-weight edges → push front | 1-weight edges → push back
+    
+    public static int[] zeroOneBFS(List<List<int[]>> adj, int src, int V) {
+        int[] dist = new int[V];
+        Arrays.fill(dist, Integer.MAX_VALUE);
+        dist[src] = 0;
+        
+        Deque<Integer> deque = new ArrayDeque<>();
+        deque.addFirst(src);
+        
+        while (!deque.isEmpty()) {
+            int u = deque.pollFirst();
+            
+            for (int[] edge : adj.get(u)) {
+                int v = edge[0], w = edge[1];
+                if (dist[u] + w < dist[v]) {
+                    dist[v] = dist[u] + w;
+                    if (w == 0) deque.addFirst(v);  // 0-weight: add to front
+                    else        deque.addLast(v);   // 1-weight: add to back
+                }
+            }
+        }
+        return dist;
+    }
+    
+    public static void main(String[] args) {
+        // Tree: 0-1-2-3-4-5 with branching
+        int n = 7;
+        int[][] edges = {{0,1},{0,2},{1,3},{1,4},{2,5},{2,6}};
+        build(n, 0, edges);
+        
+        System.out.println("LCA(3,4) = " + lca(3, 4)); // 1
+        System.out.println("LCA(3,5) = " + lca(3, 5)); // 0
+        System.out.println("LCA(4,6) = " + lca(4, 6)); // 0
+        System.out.println("depth[3] = " + depth[3]);  // 2
+    }
+}`,
+      },
+      {
+        title: "Euler Path & Circuit — Hierholzer's Algorithm",
+        language: "java",
+        content: `import java.util.*;
+
+public class EulerPath {
+    
+    // ==================== EULER PATH/CIRCUIT (Undirected) ====================
+    // Euler Circuit: All vertices have even degree
+    // Euler Path: Exactly 2 vertices have odd degree (start and end)
+    
+    public static List<Integer> eulerPath(int V, List<List<Integer>> adj) {
+        int[] degree = new int[V];
+        for (int u = 0; u < V; u++) degree[u] = adj.get(u).size();
+        
+        // Check conditions
+        int oddCount = 0, start = 0;
+        for (int i = 0; i < V; i++) {
+            if (degree[i] % 2 != 0) { oddCount++; start = i; }
+        }
+        if (oddCount != 0 && oddCount != 2) {
+            System.out.println("No Euler path exists");
+            return new ArrayList<>();
+        }
+        
+        // Hierholzer's algorithm using iterative DFS
+        int[] idx = new int[V]; // Current edge index for each vertex
+        List<Integer>[] adjArr = new ArrayList[V];
+        for (int i = 0; i < V; i++) adjArr[i] = new ArrayList<>(adj.get(i));
+        
+        Deque<Integer> stack = new ArrayDeque<>();
+        List<Integer> path = new ArrayList<>();
+        stack.push(start);
+        
+        while (!stack.isEmpty()) {
+            int u = stack.peek();
+            if (idx[u] < adjArr[u].size()) {
+                int v = adjArr[u].get(idx[u]++);
+                // Remove reverse edge (undirected)
+                adjArr[v].remove(Integer.valueOf(u));
+                stack.push(v);
+            } else {
+                path.add(stack.pop()); // Dead end — add to path
+            }
+        }
+        
+        Collections.reverse(path);
+        return path;
+    }
+    
+    // ==================== DIRECTED EULER PATH ====================
+    // Euler Circuit: in-degree == out-degree for all vertices
+    // Euler Path: Exactly one vertex has out-degree - in-degree = 1 (start)
+    //             Exactly one vertex has in-degree - out-degree = 1 (end)
+    
+    public static List<Integer> directedEulerPath(int V, List<List<Integer>> adj) {
+        int[] inDeg = new int[V], outDeg = new int[V];
+        for (int u = 0; u < V; u++) {
+            outDeg[u] = adj.get(u).size();
+            for (int v : adj.get(u)) inDeg[v]++;
+        }
+        
+        int start = 0;
+        for (int i = 0; i < V; i++) {
+            if (outDeg[i] - inDeg[i] == 1) { start = i; break; }
+            if (outDeg[i] > 0) start = i; // Fallback for circuit
+        }
+        
+        int[] idx = new int[V];
+        Deque<Integer> stack = new ArrayDeque<>();
+        List<Integer> path = new ArrayList<>();
+        stack.push(start);
+        
+        while (!stack.isEmpty()) {
+            int u = stack.peek();
+            if (idx[u] < adj.get(u).size()) {
+                stack.push(adj.get(u).get(idx[u]++));
+            } else {
+                path.add(stack.pop());
+            }
+        }
+        
+        Collections.reverse(path);
+        return path;
+    }
+    
+    // ==================== CENTROID DECOMPOSITION ====================
+    // Preprocessing: O(n log n) | Query per centroid: O(log n)
+    
+    static int[] subtreeSize2, centroid;
+    static boolean[] removed;
+    static List<Integer>[] tree2;
+    
+    @SuppressWarnings("unchecked")
+    public static void buildCentroidDecomp(int n, int[][] edges) {
+        tree2 = new ArrayList[n];
+        for (int i = 0; i < n; i++) tree2[i] = new ArrayList<>();
+        for (int[] e : edges) { tree2[e[0]].add(e[1]); tree2[e[1]].add(e[0]); }
+        subtreeSize2 = new int[n];
+        removed = new boolean[n];
+        centroid = new int[n]; // centroid[v] = centroid parent of v
+        Arrays.fill(centroid, -1);
+        
+        decompose(0, -1, n);
+    }
+    
+    private static void computeSize(int v, int p) {
+        subtreeSize2[v] = 1;
+        for (int u : tree2[v])
+            if (u != p && !removed[u]) {
+                computeSize(u, v);
+                subtreeSize2[v] += subtreeSize2[u];
+            }
+    }
+    
+    private static int findCentroid(int v, int p, int treeSize) {
+        for (int u : tree2[v])
+            if (u != p && !removed[u] && subtreeSize2[u] > treeSize / 2)
+                return findCentroid(u, v, treeSize);
+        return v;
+    }
+    
+    private static void decompose(int v, int parent, int treeSize) {
+        computeSize(v, -1);
+        int c = findCentroid(v, -1, treeSize);
+        centroid[c] = parent;
+        removed[c] = true;
+        // Process queries centered at c here...
+        for (int u : tree2[c])
+            if (!removed[u]) decompose(u, c, subtreeSize2[u]);
+    }
+    
+    public static void main(String[] args) {
+        // Undirected graph for Euler circuit
+        List<List<Integer>> adj = new ArrayList<>();
+        for (int i = 0; i < 4; i++) adj.add(new ArrayList<>());
+        // 0-1-2-3-0, 0-2 (all even degree)
+        adj.get(0).add(1); adj.get(1).add(0);
+        adj.get(1).add(2); adj.get(2).add(1);
+        adj.get(2).add(3); adj.get(3).add(2);
+        adj.get(3).add(0); adj.get(0).add(3);
+        adj.get(0).add(2); adj.get(2).add(0);
+        
+        System.out.println("Euler Circuit: " + eulerPath(4, adj));
+    }
+}`,
+      },
+    ],
+    table: {
+      headers: ["Algorithm", "Time Complexity", "Space", "Use Case"],
+      rows: [
+        ["Dinic's Max Flow", "O(V²E)", "O(V+E)", "Max flow, bipartite matching"],
+        ["Ford-Fulkerson (BFS)", "O(VE²)", "O(V+E)", "Simpler max flow"],
+        ["Binary Lifting LCA", "O(n log n) build, O(log n) query", "O(n log n)", "LCA, kth ancestor"],
+        ["Euler Path (Hierholzer)", "O(V+E)", "O(V+E)", "Route inspection, DNA assembly"],
+        ["0-1 BFS", "O(V+E)", "O(V)", "0/1 weighted shortest paths"],
+        ["Centroid Decomposition", "O(n log n)", "O(n log n)", "Tree path queries"],
+      ],
+    },
   },
 ];
