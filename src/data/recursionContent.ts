@@ -742,6 +742,295 @@ public class DivideConquer {
     },
   },
   {
+    id: "recursion-tree",
+    title: "Tree Recursion",
+    difficulty: "Medium",
+    timeComplexity: "O(2^n) — exponential branches per call",
+    spaceComplexity: "O(n) for recursion stack depth",
+    theory: [
+      "Tree Recursion occurs when a function makes MORE than one recursive call per invocation. The call tree branches like a tree, resulting in exponential time complexity in the naive form.",
+      "The classic example is Fibonacci: fib(n) = fib(n-1) + fib(n-2). Each call spawns two more calls, producing a binary tree of calls with 2^n leaves — enormously wasteful due to repeated subproblems.",
+      "Staircase problems, counting paths in a grid, and coin change (counting ways) are all tree recursion problems. The branching factor and depth determine the total nodes explored.",
+      "The antidote to tree recursion's exponential blowup is memoization: store computed results in a cache (HashMap or array). This prunes already-visited branches and reduces time to O(n).",
+      "Understanding tree recursion deeply is the gateway to Dynamic Programming — every DP problem starts as tree recursion that's optimized with caching.",
+    ],
+    keyPoints: [
+      "Tree recursion makes k≥2 recursive calls per invocation — time is O(k^depth)",
+      "The call tree for fib(n) has O(2^n) nodes — exponential without optimization",
+      "Memoization converts tree recursion from O(2^n) → O(n) in most cases",
+      "Count the number of unique subproblems to gauge memoization benefit",
+      "Staircase, path-counting, and partition problems are classic tree recursion patterns",
+    ],
+    code: [
+      {
+        title: "Tree Recursion — Visualization & Fibonacci",
+        language: "java",
+        content: `import java.util.*;
+
+public class TreeRecursion {
+
+    // ===================== FIBONACCI CALL TREE =====================
+    // fib(5) spawns a TREE of 15 total calls:
+    //
+    //                     fib(5)
+    //                   /        \\
+    //              fib(4)        fib(3)
+    //             /     \\        /    \\
+    //         fib(3)  fib(2)  fib(2) fib(1)
+    //         /   \\   /   \\   /   \\
+    //      fib(2)fib(1)fib(1)fib(0)fib(1)fib(0)
+    //      /   \\
+    //   fib(1) fib(0)
+    //
+    // Note: fib(2) appears 3 times, fib(3) appears 2 times → OVERLAP!
+
+    static int callCount = 0;
+
+    // NAIVE — O(2^n) time, massive redundant computation
+    public static long fibNaive(int n) {
+        callCount++;
+        if (n <= 1) return n;
+        return fibNaive(n - 1) + fibNaive(n - 2);  // TWO recursive calls
+    }
+
+    // MEMOIZED — O(n) time, O(n) space
+    static Map<Integer, Long> memo = new HashMap<>();
+
+    public static long fibMemo(int n) {
+        if (n <= 1) return n;
+        if (memo.containsKey(n)) return memo.get(n);   // Prune branch!
+        long result = fibMemo(n - 1) + fibMemo(n - 2);
+        memo.put(n, result);
+        return result;
+    }
+
+    // Count total recursive calls for fib(n) naive
+    public static int countCalls(int n) {
+        if (n <= 1) return 1;
+        return 1 + countCalls(n - 1) + countCalls(n - 2);
+    }
+
+    public static void main(String[] args) {
+        // Demonstrate call explosion
+        for (int n : new int[]{5, 10, 15, 20}) {
+            callCount = 0;
+            fibNaive(n);
+            System.out.printf("fib(%2d): naive calls = %6d, memo calls = %3d%n",
+                n, callCount, n + 1);
+        }
+
+        System.out.println("\\nFib sequence (memoized):");
+        memo.clear();
+        for (int i = 0; i <= 10; i++)
+            System.out.print(fibMemo(i) + " ");
+        System.out.println();
+    }
+}`,
+      },
+      {
+        title: "Staircase Problem — Tree Recursion Pattern",
+        language: "java",
+        content: `import java.util.*;
+
+public class StaircaseRecursion {
+
+    // ===================== STAIRCASE PROBLEM =====================
+    // Count ways to climb n stairs, taking 1 or 2 steps at a time.
+    // Recurrence: ways(n) = ways(n-1) + ways(n-2)
+    //   — Same as Fibonacci! This IS tree recursion.
+    //
+    // Generalized: k distinct step sizes [1, 2, ..., k]
+    //   ways(n) = ways(n-1) + ways(n-2) + ... + ways(n-k)
+    //   Branching factor = k, depth = n → O(k^n) naive
+
+    // NAIVE (exponential)
+    public static int climbNaive(int n) {
+        if (n == 0) return 1; // Reached top: count this path
+        if (n < 0)  return 0; // Overshot: invalid path
+        return climbNaive(n - 1) + climbNaive(n - 2); // 1-step or 2-step
+    }
+
+    // MEMOIZED (linear)
+    public static int climbMemo(int n, int[] dp) {
+        if (n == 0) return 1;
+        if (n < 0)  return 0;
+        if (dp[n] != -1) return dp[n];   // Already computed
+        dp[n] = climbMemo(n-1, dp) + climbMemo(n-2, dp);
+        return dp[n];
+    }
+
+    // K-step generalization (branching factor = k)
+    public static int climbKSteps(int n, int k, Map<Integer, Integer> cache) {
+        if (n == 0) return 1;
+        if (n < 0)  return 0;
+        if (cache.containsKey(n)) return cache.get(n);
+
+        int ways = 0;
+        for (int step = 1; step <= k; step++) {
+            ways += climbKSteps(n - step, k, cache); // Branch for each step
+        }
+        cache.put(n, ways);
+        return ways;
+    }
+
+    // ===================== COUNTING PATHS IN GRID =====================
+    // Count paths from (0,0) to (m-1, n-1) moving only RIGHT or DOWN
+    // Tree recursion: paths(i,j) = paths(i+1,j) + paths(i,j+1)
+    //
+    //  (0,0) → → → →
+    //    ↓           ↓
+    //    ↓     ...   ↓
+    //    ↓           ↓
+    //              (m-1,n-1)
+
+    static int[][] gridMemo;
+
+    public static int countPaths(int i, int j, int m, int n) {
+        if (i == m - 1 && j == n - 1) return 1; // Reached target
+        if (i >= m || j >= n)          return 0; // Out of bounds
+        if (gridMemo[i][j] != -1)      return gridMemo[i][j];
+
+        gridMemo[i][j] = countPaths(i + 1, j, m, n)   // Move DOWN
+                       + countPaths(i, j + 1, m, n);  // Move RIGHT
+        return gridMemo[i][j];
+    }
+
+    public static void main(String[] args) {
+        // Staircase ways
+        System.out.println("Staircase (n=5, 1-2 steps):");
+        int[] dp = new int[6];
+        Arrays.fill(dp, -1);
+        for (int i = 1; i <= 5; i++) {
+            Arrays.fill(dp, -1);
+            System.out.printf("  n=%d → %d ways%n", i, climbMemo(i, dp));
+        }
+
+        System.out.println("\\nK-step staircase (n=5, k=3):");
+        System.out.println("  ways = " + climbKSteps(5, 3, new HashMap<>()));
+
+        System.out.println("\\nGrid paths (3x3):");
+        gridMemo = new int[3][3];
+        for (int[] row : gridMemo) Arrays.fill(row, -1);
+        System.out.println("  paths = " + countPaths(0, 0, 3, 3)); // 6
+    }
+}`,
+      },
+      {
+        title: "Coin Change — Counting Ways (Tree Recursion + Memo)",
+        language: "java",
+        content: `import java.util.*;
+
+public class CoinChangeRecursion {
+
+    // ===================== COIN CHANGE — COUNT WAYS =====================
+    // Given coins[] and amount, count number of ways to make the amount.
+    // Tree recursion: for each coin, try using it and branch.
+    //
+    // countWays(amount, idx) = countWays(amount - coins[idx], idx)   // Use coin
+    //                        + countWays(amount, idx + 1)             // Skip coin
+    //
+    // This is TREE recursion with branching at each coin.
+
+    static Map<String, Long> memo = new HashMap<>();
+
+    public static long countWays(int amount, int[] coins, int idx) {
+        if (amount == 0) return 1;   // Exact change: valid combination
+        if (amount < 0 || idx == coins.length) return 0;
+
+        String key = amount + "," + idx;
+        if (memo.containsKey(key)) return memo.get(key);
+
+        long result = countWays(amount - coins[idx], coins, idx)  // Use current coin (can reuse)
+                    + countWays(amount, coins, idx + 1);           // Move to next coin
+        memo.put(key, result);
+        return result;
+    }
+
+    // ===================== MINIMUM COINS =====================
+    // Find minimum number of coins to make the amount.
+    // Each coin can be used unlimited times.
+    //
+    // minCoins(amount) = 1 + min(minCoins(amount - coin)) for each coin
+    // Tree recursion: branching factor = number of coins
+
+    static int[] minMemo;
+
+    public static int minCoins(int amount, int[] coins) {
+        if (amount == 0) return 0;
+        if (amount < 0)  return Integer.MAX_VALUE / 2; // Sentinel
+
+        if (minMemo[amount] != -1) return minMemo[amount];
+
+        int best = Integer.MAX_VALUE / 2;
+        for (int coin : coins) {
+            int sub = minCoins(amount - coin, coins);
+            if (sub != Integer.MAX_VALUE / 2)
+                best = Math.min(best, 1 + sub); // Branch for each coin
+        }
+        minMemo[amount] = best;
+        return best;
+    }
+
+    // ===================== PARTITION PROBLEM =====================
+    // Count ways to partition n into positive integers (order doesn't matter)
+    // partition(n, max) = sum of partition(n-k, k) for k=1..min(n,max)
+
+    static Map<String, Integer> partMemo = new HashMap<>();
+
+    public static int partition(int n, int max) {
+        if (n == 0) return 1;
+        String key = n + "," + max;
+        if (partMemo.containsKey(key)) return partMemo.get(key);
+
+        int count = 0;
+        for (int k = 1; k <= Math.min(n, max); k++) {
+            count += partition(n - k, k); // Use part k, max future part = k
+        }
+        partMemo.put(key, count);
+        return count;
+    }
+
+    public static void main(String[] args) {
+        int[] coins = {1, 2, 5};
+
+        System.out.println("Coin Change — Count Ways:");
+        for (int amt : new int[]{1, 3, 5, 10}) {
+            memo.clear();
+            System.out.printf("  amount=%2d → %d ways%n", amt, countWays(amt, coins, 0));
+        }
+
+        System.out.println("\\nCoin Change — Min Coins:");
+        for (int amt : new int[]{1, 3, 5, 11}) {
+            minMemo = new int[amt + 1];
+            Arrays.fill(minMemo, -1);
+            int res = minCoins(amt, coins);
+            System.out.printf("  amount=%2d → %d coins%n", amt,
+                res == Integer.MAX_VALUE / 2 ? -1 : res);
+        }
+
+        System.out.println("\\nPartitions of n:");
+        for (int n = 1; n <= 7; n++) {
+            partMemo.clear();
+            System.out.printf("  p(%d) = %d%n", n, partition(n, n));
+        }
+    }
+}`,
+      },
+    ],
+    table: {
+      headers: ["Problem", "Recurrence", "Naive", "Optimized", "Technique"],
+      rows: [
+        ["Fibonacci", "f(n)=f(n-1)+f(n-2)", "O(2^n)", "O(n)", "Memoization"],
+        ["Staircase (k steps)", "f(n)=Σf(n-i)", "O(k^n)", "O(n·k)", "Memoization"],
+        ["Grid Paths", "f(i,j)=f(i+1,j)+f(i,j+1)", "O(2^(m+n))", "O(m·n)", "Memoization"],
+        ["Coin Change (ways)", "f(a)=Σf(a-c)", "O(C^A)", "O(A·C)", "DP Table"],
+        ["Integer Partition", "f(n,k)=Σf(n-i,i)", "O(n^n)", "O(n²)", "Memoization"],
+      ],
+    },
+    warning: "Never use naive tree recursion in contests. Always memoize or convert to DP. fib(50) with naive recursion performs over 2 trillion operations!",
+    tip: "Draw the recursion tree for small inputs (n=4 or n=5). Once you see the repeated nodes, you'll immediately know where to add memoization.",
+  },
+  {
     id: "recursion-advanced",
     title: "Advanced Recursive Problems",
     difficulty: "Hard",
