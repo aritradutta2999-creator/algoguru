@@ -8,9 +8,53 @@ import { AppSidebar } from "@/components/AppSidebar";
 import Index from "./pages/Index";
 import TopicPage from "./pages/TopicPage";
 import NotFound from "./pages/NotFound";
-import { Menu } from "lucide-react";
+import { Menu, Sun, Moon, AArrowUp, AArrowDown } from "lucide-react";
+import { SettingsProvider, useSettings } from "@/contexts/SettingsContext";
 
 const queryClient = new QueryClient();
+
+function HeaderControls() {
+  const { theme, toggleTheme, fontSize, increaseFontSize, decreaseFontSize } = useSettings();
+  const isDark = theme === "dark";
+  const isMin = fontSize === "sm";
+  const isMax = fontSize === "xl";
+
+  return (
+    <div className="flex items-center gap-1">
+      {/* Font size controls */}
+      <button
+        onClick={decreaseFontSize}
+        disabled={isMin}
+        title="Decrease font size"
+        className="flex items-center justify-center w-7 h-7 rounded-md transition-colors disabled:opacity-30"
+        style={{ color: "hsl(var(--muted-foreground))" }}
+      >
+        <AArrowDown size={15} />
+      </button>
+      <button
+        onClick={increaseFontSize}
+        disabled={isMax}
+        title="Increase font size"
+        className="flex items-center justify-center w-7 h-7 rounded-md transition-colors disabled:opacity-30"
+        style={{ color: "hsl(var(--muted-foreground))" }}
+      >
+        <AArrowUp size={15} />
+      </button>
+
+      <div className="w-px h-4 mx-1" style={{ background: "hsl(var(--border))" }} />
+
+      {/* Theme toggle */}
+      <button
+        onClick={toggleTheme}
+        title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+        className="flex items-center justify-center w-7 h-7 rounded-md transition-colors"
+        style={{ color: "hsl(var(--muted-foreground))" }}
+      >
+        {isDark ? <Sun size={15} /> : <Moon size={15} />}
+      </button>
+    </div>
+  );
+}
 
 function AppLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -38,6 +82,11 @@ function AppLayout({ children }: { children: React.ReactNode }) {
               CP Guide — Java Competitive Programming
             </span>
             <div className="flex-1" />
+
+            {/* Font size + theme controls */}
+            <HeaderControls />
+
+            <div className="h-4 w-px mx-1" style={{ background: "hsl(var(--border))" }} />
             <div
               className="hidden sm:flex items-center gap-1.5 text-[10px] px-2.5 py-1 rounded-full font-mono"
               style={{ background: "hsl(var(--primary)/0.1)", color: "hsl(var(--primary))", border: "1px solid hsl(var(--primary)/0.2)" }}
@@ -60,17 +109,19 @@ function AppLayout({ children }: { children: React.ReactNode }) {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AppLayout>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/:topicId" element={<TopicPage />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </AppLayout>
-      </BrowserRouter>
+      <SettingsProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AppLayout>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/:topicId" element={<TopicPage />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </AppLayout>
+        </BrowserRouter>
+      </SettingsProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
