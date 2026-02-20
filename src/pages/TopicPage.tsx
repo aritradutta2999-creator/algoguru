@@ -5,6 +5,7 @@ import { recursionContent } from "@/data/recursionContent";
 import { backtrackingContent } from "@/data/backtrackingContent";
 import { dpContent } from "@/data/dpContent";
 import { graphsContent } from "@/data/graphsContent";
+import { bitManipulationContent } from "@/data/bitManipulationContent";
 import { topics } from "@/data/topics";
 import { ContentSection } from "@/data/recursionContent";
 import { ChevronRight, ChevronLeft, List, X } from "lucide-react";
@@ -14,6 +15,7 @@ const contentMap: Record<string, ContentSection[]> = {
   backtracking: backtrackingContent,
   dp: dpContent,
   graphs: graphsContent,
+  bits: bitManipulationContent,
 };
 
 const topicColorVars: Record<string, string> = {
@@ -21,6 +23,7 @@ const topicColorVars: Record<string, string> = {
   backtracking: "hsl(var(--accent))",
   dp: "hsl(var(--success))",
   graphs: "hsl(var(--warning))",
+  bits: "hsl(var(--info))",
 };
 
 export default function TopicPage() {
