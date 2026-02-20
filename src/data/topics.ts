@@ -88,4 +88,23 @@ export const topics: Topic[] = [
       { id: "graph-advanced", title: "Advanced Graph Algorithms" },
     ],
   },
+  {
+    id: "bits",
+    title: "Bit Manipulation",
+    icon: "⊕",
+    color: "info",
+    description: "Bitwise operations & masking",
+    subtopics: [
+      { id: "bits-intro", title: "Introduction to Bits" },
+      { id: "bits-operators", title: "Basic Bitwise Operators" },
+      { id: "bits-tricks", title: "Common Bit Tricks" },
+      { id: "bits-masking", title: "Bit Masking Fundamentals" },
+      { id: "bits-xor", title: "XOR Properties & Problems" },
+      { id: "bits-counting", title: "Counting Bits & Lookups" },
+      { id: "bits-cp", title: "Bit Manipulation in CP" },
+      { id: "bits-bitmask-dp", title: "Bitmask DP" },
+      { id: "bits-advanced", title: "Advanced Bit Techniques" },
+      { id: "bits-practice", title: "Practice Problems & Patterns" },
+    ],
+  },
 ];

@@ -22,6 +22,7 @@ const topicIcons: Record<string, string> = {
   backtracking: "⟵",
   dp: "⊞",
   graphs: "◉",
+  bits: "⊕",
 };
 
 const topicColorVars: Record<string, string> = {
@@ -29,6 +30,7 @@ const topicColorVars: Record<string, string> = {
   backtracking: "hsl(var(--accent))",
   dp: "hsl(var(--success))",
   graphs: "hsl(var(--warning))",
+  bits: "hsl(var(--info))",
 };
 
 export function AppSidebar() {
@@ -195,6 +197,7 @@ export function AppSidebar() {
             <div>✦ Backtracking & Pruning</div>
             <div>✦ DP → Bitmask & Trees</div>
             <div>✦ Graphs → SCC & Bridges</div>
+            <div>✦ Bits → SOS DP & Trie</div>
           </div>
         </div>
       </SidebarContent>

@@ -23,6 +23,11 @@ const topicColors: Record<string, { color: string; bg: string; border: string }>
     bg: "hsl(var(--warning)/0.08)",
     border: "hsl(var(--warning)/0.2)",
   },
+  bits: {
+    color: "hsl(var(--info))",
+    bg: "hsl(var(--info)/0.08)",
+    border: "hsl(var(--info)/0.2)",
+  },
 };
 
 const topicIcons: Record<string, string> = {
@@ -30,13 +35,14 @@ const topicIcons: Record<string, string> = {
   backtracking: "⟵",
   dp: "⊞",
   graphs: "◉",
+  bits: "⊕",
 };
 
 const quickStats = [
-  { label: "Topics", value: "4", icon: LayoutGrid },
-  { label: "Sections", value: "35+", icon: GitBranch },
-  { label: "Code Examples", value: "60+", icon: Terminal },
-  { label: "Algorithms", value: "50+", icon: Zap },
+  { label: "Topics", value: "5", icon: LayoutGrid },
+  { label: "Sections", value: "45+", icon: GitBranch },
+  { label: "Code Examples", value: "80+", icon: Terminal },
+  { label: "Algorithms", value: "60+", icon: Zap },
 ];
 
 const roadmapSteps = [
@@ -44,6 +50,7 @@ const roadmapSteps = [
   { step: "02", title: "Backtracking", desc: "Systematic search with intelligent pruning", tag: "Search" },
   { step: "03", title: "Dynamic Programming", desc: "From memoization to bitmask DP", tag: "Optimization" },
   { step: "04", title: "Graphs", desc: "Networks, paths, and advanced algorithms", tag: "Advanced" },
+  { step: "05", title: "Bit Manipulation", desc: "Bitwise tricks, masking, SOS DP & Trie XOR", tag: "Expert" },
 ];
 
 export default function Index() {
