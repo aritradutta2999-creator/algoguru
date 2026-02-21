@@ -1223,6 +1223,760 @@ public class BridgesAPs {
     ],
   },
   {
+    id: "graph-euler-tour",
+    title: "Euler Tour & DFS Order",
+    difficulty: "Hard",
+    timeComplexity: "O(V + E) — single DFS pass",
+    spaceComplexity: "O(V)",
+    theory: [
+      "Euler Tour (also called DFS order or tree flattening) linearizes a tree into an array, enabling subtree queries with range data structures (segment trees, BIT).",
+      "The tour records each node twice: tin[v] (entry time) and tout[v] (exit time). The subtree of v corresponds to the interval [tin[v], tout[v]] in the tour array.",
+      "This allows converting subtree queries into range queries, and path queries (combined with LCA) into a constant number of range queries.",
+      "Applications: subtree sum/update queries, LCA via RMQ (Range Minimum Query), offline tree queries, handling tree updates efficiently.",
+      "DFS Order variants: (1) Discovery order — just the entry times. (2) Full Euler tour — record on both entry and exit. (3) Edge-based tour — record each edge traversal.",
+    ],
+    keyPoints: [
+      "tin[v] = when DFS first visits v; tout[v] = when DFS leaves v",
+      "Subtree of v = indices [tin[v], tout[v]] in the tour",
+      "Subtree queries reduce to range queries on the flattened array",
+      "LCA(u,v) can be found as RMQ on Euler tour depths",
+      "Combined with segment tree for O(log n) subtree updates/queries",
+    ],
+    code: [
+      {
+        title: "Euler Tour — Flattening Tree for Range Queries",
+        language: "java",
+        content: `import java.util.*;
+
+public class EulerTour {
+    
+    static int timer = 0;
+    static int[] tin, tout, flat, depth;
+    static List<Integer>[] adj;
+    
+    // ==================== BUILD EULER TOUR ====================
+    
+    @SuppressWarnings("unchecked")
+    public static void buildTour(int n, int[][] edges, int root) {
+        adj = new ArrayList[n];
+        for (int i = 0; i < n; i++) adj[i] = new ArrayList<>();
+        for (int[] e : edges) { adj[e[0]].add(e[1]); adj[e[1]].add(e[0]); }
+        
+        tin = new int[n];
+        tout = new int[n];
+        flat = new int[n]; // flat[i] = node at position i in the tour
+        depth = new int[n];
+        timer = 0;
+        
+        dfs(root, -1, 0);
+    }
+    
+    private static void dfs(int v, int parent, int d) {
+        depth[v] = d;
+        tin[v] = timer;
+        flat[timer] = v;
+        timer++;
+        
+        for (int u : adj[v]) {
+            if (u != parent) dfs(u, v, d + 1);
+        }
+        tout[v] = timer - 1; // Last index in subtree
+    }
+    
+    // ==================== SUBTREE QUERIES USING BIT ====================
+    // Support: update value of node v, query sum of subtree of v
+    
+    static long[] bit;
+    static int bitSize;
+    
+    static void initBIT(int n) {
+        bitSize = n;
+        bit = new long[n + 1];
+    }
+    
+    static void bitUpdate(int i, long delta) {
+        for (i++; i <= bitSize; i += i & (-i)) bit[i] += delta;
+    }
+    
+    static long bitQuery(int i) {
+        long sum = 0;
+        for (i++; i > 0; i -= i & (-i)) sum += bit[i];
+        return sum;
+    }
+    
+    static long bitRangeQuery(int l, int r) {
+        return bitQuery(r) - (l > 0 ? bitQuery(l - 1) : 0);
+    }
+    
+    // Update node value
+    public static void updateNode(int node, long value) {
+        bitUpdate(tin[node], value);
+    }
+    
+    // Query subtree sum
+    public static long querySubtree(int node) {
+        return bitRangeQuery(tin[node], tout[node]);
+    }
+    
+    public static void main(String[] args) {
+        //       0
+        //      / \\
+        //     1   2
+        //    / \\   \\
+        //   3   4   5
+        int n = 6;
+        int[][] edges = {{0,1},{0,2},{1,3},{1,4},{2,5}};
+        buildTour(n, edges, 0);
+        
+        System.out.println("Euler Tour (tin): " + Arrays.toString(tin));
+        System.out.println("Euler Tour (tout): " + Arrays.toString(tout));
+        System.out.println("Flat array: " + Arrays.toString(flat));
+        // tin:  [0, 1, 4, 2, 3, 5]
+        // tout: [5, 3, 5, 2, 3, 5]
+        // Subtree of node 1 = indices [1, 3] = {1, 3, 4}
+        
+        // Subtree query demo
+        initBIT(n);
+        int[] values = {10, 20, 30, 40, 50, 60};
+        for (int i = 0; i < n; i++) updateNode(i, values[i]);
+        
+        System.out.println("Sum subtree(0): " + querySubtree(0)); // 210
+        System.out.println("Sum subtree(1): " + querySubtree(1)); // 110 (20+40+50)
+        System.out.println("Sum subtree(2): " + querySubtree(2)); // 90 (30+60)
+    }
+}`,
+      },
+      {
+        title: "LCA via Euler Tour + Sparse Table (RMQ)",
+        language: "java",
+        content: `import java.util.*;
+
+public class LCAEulerTour {
+    
+    // ==================== LCA VIA RMQ ON EULER TOUR ====================
+    // Build: O(n log n) | Query: O(1)
+    // Record (depth, node) for each step of DFS (both entry and backtrack)
+    
+    static int[] first;     // first[v] = first occurrence of v in euler tour
+    static int[] eulerTour; // sequence of nodes visited
+    static int[] eulerDepth;// depth at each position in tour
+    static int[][] sparse;  // sparse table for RMQ
+    static int tourLen;
+    
+    @SuppressWarnings("unchecked")
+    public static void build(int n, int[][] edges, int root) {
+        List<Integer>[] adj = new ArrayList[n];
+        for (int i = 0; i < n; i++) adj[i] = new ArrayList<>();
+        for (int[] e : edges) { adj[e[0]].add(e[1]); adj[e[1]].add(e[0]); }
+        
+        first = new int[n];
+        eulerTour = new int[2 * n];
+        eulerDepth = new int[2 * n];
+        Arrays.fill(first, -1);
+        tourLen = 0;
+        
+        dfs(adj, root, -1, 0);
+        buildSparseTable();
+    }
+    
+    private static void dfs(List<Integer>[] adj, int v, int parent, int d) {
+        eulerTour[tourLen] = v;
+        eulerDepth[tourLen] = d;
+        if (first[v] == -1) first[v] = tourLen;
+        tourLen++;
+        
+        for (int u : adj[v]) {
+            if (u != parent) {
+                dfs(adj, u, v, d + 1);
+                eulerTour[tourLen] = v; // Record backtrack
+                eulerDepth[tourLen] = d;
+                tourLen++;
+            }
+        }
+    }
+    
+    private static void buildSparseTable() {
+        int LOG = (int)(Math.log(tourLen) / Math.log(2)) + 1;
+        sparse = new int[LOG][tourLen];
+        
+        for (int i = 0; i < tourLen; i++) sparse[0][i] = i;
+        
+        for (int k = 1; k < LOG; k++) {
+            for (int i = 0; i + (1 << k) <= tourLen; i++) {
+                int l = sparse[k-1][i];
+                int r = sparse[k-1][i + (1 << (k-1))];
+                sparse[k][i] = eulerDepth[l] < eulerDepth[r] ? l : r;
+            }
+        }
+    }
+    
+    public static int lca(int u, int v) {
+        int l = first[u], r = first[v];
+        if (l > r) { int t = l; l = r; r = t; }
+        
+        int k = (int)(Math.log(r - l + 1) / Math.log(2));
+        int left = sparse[k][l];
+        int right = sparse[k][r - (1 << k) + 1];
+        int minIdx = eulerDepth[left] < eulerDepth[right] ? left : right;
+        return eulerTour[minIdx];
+    }
+    
+    public static void main(String[] args) {
+        int n = 7;
+        int[][] edges = {{0,1},{0,2},{1,3},{1,4},{2,5},{2,6}};
+        build(n, edges, 0);
+        
+        System.out.println("LCA(3,4) = " + lca(3, 4)); // 1
+        System.out.println("LCA(3,5) = " + lca(3, 5)); // 0
+        System.out.println("LCA(5,6) = " + lca(5, 6)); // 2
+        System.out.println("LCA(4,6) = " + lca(4, 6)); // 0
+    }
+}`,
+      },
+    ],
+  },
+  {
+    id: "graph-hld",
+    title: "Heavy-Light Decomposition",
+    difficulty: "Expert",
+    timeComplexity: "O(n) build | O(log²n) per path query",
+    spaceComplexity: "O(n)",
+    theory: [
+      "Heavy-Light Decomposition (HLD) decomposes a tree into chains (heavy paths) so that any root-to-leaf path crosses at most O(log n) chains.",
+      "Heavy edge: the edge from a node to its child with the largest subtree. All other edges are light edges. Heavy edges form chains.",
+      "Key property: any path from u to v passes through at most O(log n) light edges → O(log n) chain switches.",
+      "Combined with a segment tree on the flattened chains, HLD supports path queries (sum, max, min) and path updates in O(log² n).",
+      "Applications: path sum/max queries, path updates, LCA (as a byproduct), competitive programming tree problems.",
+    ],
+    keyPoints: [
+      "Heavy child = child with largest subtree size",
+      "Any root-to-leaf path has ≤ O(log n) light edges",
+      "Flatten chains into a segment tree for O(log² n) path queries",
+      "head[v] = top node of v's heavy chain (used to 'jump' between chains)",
+      "pos[v] = position of v in the segment tree array",
+    ],
+    code: [
+      {
+        title: "Heavy-Light Decomposition — Full Implementation",
+        language: "java",
+        content: `import java.util.*;
+
+public class HLD {
+    
+    static int[] parent, depth, heavy, head, pos, subSize;
+    static List<Integer>[] adj;
+    static int curPos;
+    
+    // Segment tree for path queries
+    static long[] seg;
+    static int segSize;
+    
+    @SuppressWarnings("unchecked")
+    public static void build(int n, int[][] edges, int root) {
+        adj = new ArrayList[n];
+        parent = new int[n]; depth = new int[n];
+        heavy = new int[n]; head = new int[n];
+        pos = new int[n]; subSize = new int[n];
+        Arrays.fill(heavy, -1);
+        
+        for (int i = 0; i < n; i++) adj[i] = new ArrayList<>();
+        for (int[] e : edges) { adj[e[0]].add(e[1]); adj[e[1]].add(e[0]); }
+        
+        // Step 1: Compute subtree sizes and find heavy children
+        computeSize(root, -1, 0);
+        
+        // Step 2: Decompose into chains
+        curPos = 0;
+        decompose(root, root);
+        
+        // Step 3: Build segment tree
+        segSize = n;
+        seg = new long[4 * n];
+    }
+    
+    private static void computeSize(int v, int par, int d) {
+        parent[v] = par;
+        depth[v] = d;
+        subSize[v] = 1;
+        int maxChild = 0;
+        
+        for (int u : adj[v]) {
+            if (u == par) continue;
+            computeSize(u, v, d + 1);
+            subSize[v] += subSize[u];
+            if (subSize[u] > maxChild) {
+                maxChild = subSize[u];
+                heavy[v] = u; // Heavy child = largest subtree
+            }
+        }
+    }
+    
+    private static void decompose(int v, int h) {
+        head[v] = h;    // Top of current chain
+        pos[v] = curPos++; // Position in segment tree
+        
+        // First, continue the heavy chain
+        if (heavy[v] != -1) {
+            decompose(heavy[v], h); // Same chain head
+        }
+        
+        // Then, start new chains for light children
+        for (int u : adj[v]) {
+            if (u != parent[v] && u != heavy[v]) {
+                decompose(u, u); // New chain starts at u
+            }
+        }
+    }
+    
+    // ==================== SEGMENT TREE ====================
+    
+    static void segUpdate(int node, int lo, int hi, int idx, long val) {
+        if (lo == hi) { seg[node] = val; return; }
+        int mid = (lo + hi) / 2;
+        if (idx <= mid) segUpdate(2*node, lo, mid, idx, val);
+        else segUpdate(2*node+1, mid+1, hi, idx, val);
+        seg[node] = seg[2*node] + seg[2*node+1];
+    }
+    
+    static long segQuery(int node, int lo, int hi, int l, int r) {
+        if (r < lo || hi < l) return 0;
+        if (l <= lo && hi <= r) return seg[node];
+        int mid = (lo + hi) / 2;
+        return segQuery(2*node, lo, mid, l, r)
+             + segQuery(2*node+1, mid+1, hi, l, r);
+    }
+    
+    // ==================== PATH OPERATIONS ====================
+    
+    // Update value of node v
+    public static void update(int v, long val) {
+        segUpdate(1, 0, segSize - 1, pos[v], val);
+    }
+    
+    // Query sum on path from u to v
+    public static long pathQuery(int u, int v) {
+        long result = 0;
+        
+        // Move up chain by chain until u and v are on the same chain
+        while (head[u] != head[v]) {
+            // Always jump the deeper chain
+            if (depth[head[u]] < depth[head[v]]) { int t = u; u = v; v = t; }
+            
+            // Query from u to top of u's chain
+            result += segQuery(1, 0, segSize - 1, pos[head[u]], pos[u]);
+            u = parent[head[u]]; // Jump to parent of chain head
+        }
+        
+        // Now u and v are on the same chain — query the range between them
+        if (depth[u] > depth[v]) { int t = u; u = v; v = t; }
+        result += segQuery(1, 0, segSize - 1, pos[u], pos[v]);
+        
+        return result;
+    }
+    
+    // LCA as a byproduct of HLD
+    public static int lca(int u, int v) {
+        while (head[u] != head[v]) {
+            if (depth[head[u]] < depth[head[v]]) { int t = u; u = v; v = t; }
+            u = parent[head[u]];
+        }
+        return depth[u] < depth[v] ? u : v;
+    }
+    
+    public static void main(String[] args) {
+        //       0
+        //      / \\
+        //     1   2
+        //    / \\   \\
+        //   3   4   5
+        //  /
+        // 6
+        int n = 7;
+        int[][] edges = {{0,1},{0,2},{1,3},{1,4},{2,5},{3,6}};
+        build(n, edges, 0);
+        
+        // Assign values to nodes
+        int[] values = {1, 2, 3, 4, 5, 6, 7};
+        for (int i = 0; i < n; i++) update(i, values[i]);
+        
+        System.out.println("Path sum 6→5: " + pathQuery(6, 5));
+        // 6→3→1→0→2→5 = 7+4+2+1+3+6 = 23
+        System.out.println("Path sum 3→4: " + pathQuery(3, 4));
+        // 3→1→4 = 4+2+5 = 11
+        System.out.println("LCA(6,4) = " + lca(6, 4)); // 1
+        System.out.println("LCA(6,5) = " + lca(6, 5)); // 0
+    }
+}`,
+      },
+    ],
+    table: {
+      headers: ["Operation", "Time Complexity", "Technique"],
+      rows: [
+        ["Build HLD", "O(n)", "Two DFS passes"],
+        ["Path query (sum/max)", "O(log² n)", "O(log n) chains × O(log n) seg tree"],
+        ["Path update", "O(log² n)", "Same as query"],
+        ["Subtree query", "O(log n)", "Single range in seg tree"],
+        ["LCA", "O(log n)", "Chain jumping"],
+      ],
+    },
+  },
+  {
+    id: "graph-matching",
+    title: "Bipartite Matching",
+    difficulty: "Expert",
+    timeComplexity: "Hopcroft-Karp: O(E√V) | Hungarian: O(n³)",
+    spaceComplexity: "O(V + E)",
+    theory: [
+      "Bipartite Matching: Given a bipartite graph (two disjoint sets L and R with edges only between them), find a maximum matching — largest set of edges with no shared endpoints.",
+      "Hungarian Algorithm: Augmenting path-based method. Start with empty matching, repeatedly find augmenting paths (alternating between unmatched and matched edges). O(VE) for simple version.",
+      "Hopcroft-Karp: Finds augmenting paths in phases using BFS (to find shortest augmenting paths) then DFS (to find multiple disjoint augmenting paths). O(E√V).",
+      "König's Theorem: In bipartite graphs, max matching = min vertex cover. This connects matching to covering problems.",
+      "Applications: job assignment, course scheduling, stable matching, network routing, image segmentation.",
+    ],
+    keyPoints: [
+      "Augmenting path: alternating path from unmatched L to unmatched R",
+      "Hopcroft-Karp is fastest: O(E√V) using BFS + DFS phases",
+      "Max matching = Min vertex cover in bipartite graphs (König's theorem)",
+      "Can reduce to max-flow: add source→L edges, R→sink edges, all capacity 1",
+      "Hungarian method for weighted matching (assignment problem) in O(n³)",
+    ],
+    code: [
+      {
+        title: "Hopcroft-Karp Maximum Bipartite Matching",
+        language: "java",
+        content: `import java.util.*;
+
+public class HopcroftKarp {
+    
+    // ==================== HOPCROFT-KARP ====================
+    // O(E√V) — fastest bipartite matching algorithm
+    // L = left vertices [0, n), R = right vertices [0, m)
+    
+    static final int INF = Integer.MAX_VALUE;
+    static List<Integer>[] adj; // adj[u] = list of right vertices u can match to
+    static int[] matchL, matchR; // matchL[u] = right vertex matched to u (-1 if unmatched)
+    static int[] dist; // BFS distance of left vertices
+    static int n, m; // n = |L|, m = |R|
+    
+    @SuppressWarnings("unchecked")
+    public static int maxMatching(int leftSize, int rightSize, int[][] edges) {
+        n = leftSize;
+        m = rightSize;
+        adj = new ArrayList[n];
+        for (int i = 0; i < n; i++) adj[i] = new ArrayList<>();
+        for (int[] e : edges) adj[e[0]].add(e[1]);
+        
+        matchL = new int[n];
+        matchR = new int[m];
+        dist = new int[n];
+        Arrays.fill(matchL, -1);
+        Arrays.fill(matchR, -1);
+        
+        int matching = 0;
+        
+        // Repeat: BFS to find shortest augmenting paths, then DFS to augment
+        while (bfs()) {
+            for (int u = 0; u < n; u++) {
+                if (matchL[u] == -1) { // Start from unmatched left vertices
+                    if (dfs(u)) matching++;
+                }
+            }
+        }
+        return matching;
+    }
+    
+    // BFS: Find shortest augmenting path length
+    private static boolean bfs() {
+        Queue<Integer> queue = new LinkedList<>();
+        
+        for (int u = 0; u < n; u++) {
+            if (matchL[u] == -1) {
+                dist[u] = 0;
+                queue.offer(u);
+            } else {
+                dist[u] = INF;
+            }
+        }
+        
+        boolean found = false;
+        while (!queue.isEmpty()) {
+            int u = queue.poll();
+            for (int v : adj[u]) {
+                int next = matchR[v]; // Left vertex matched to right vertex v
+                if (next == -1) {
+                    found = true; // Found augmenting path
+                } else if (dist[next] == INF) {
+                    dist[next] = dist[u] + 1;
+                    queue.offer(next);
+                }
+            }
+        }
+        return found;
+    }
+    
+    // DFS: Augment along shortest paths
+    private static boolean dfs(int u) {
+        for (int v : adj[u]) {
+            int next = matchR[v];
+            if (next == -1 || (dist[next] == dist[u] + 1 && dfs(next))) {
+                matchL[u] = v;
+                matchR[v] = u;
+                return true;
+            }
+        }
+        dist[u] = INF; // Remove u from layered graph
+        return false;
+    }
+    
+    public static void main(String[] args) {
+        // Left: 0,1,2,3 (workers)
+        // Right: 0,1,2,3 (jobs)
+        // Edges: worker -> jobs they can do
+        int[][] edges = {
+            {0, 0}, {0, 1},
+            {1, 0}, {1, 2},
+            {2, 1}, {2, 2},
+            {3, 2}, {3, 3}
+        };
+        
+        System.out.println("Max Matching: " + maxMatching(4, 4, edges)); // 4
+        System.out.println("Matched pairs:");
+        for (int i = 0; i < 4; i++) {
+            System.out.println("  Worker " + i + " → Job " + matchL[i]);
+        }
+    }
+}`,
+      },
+      {
+        title: "Hungarian Algorithm — Weighted Bipartite Matching",
+        language: "java",
+        content: `import java.util.*;
+
+public class Hungarian {
+    
+    // ==================== HUNGARIAN ALGORITHM ====================
+    // O(n³) — Minimum cost perfect matching in weighted bipartite graph
+    // Also called Kuhn-Munkres algorithm
+    
+    // cost[i][j] = cost of assigning worker i to job j
+    // Returns minimum total cost and the assignment
+    
+    public static int[] minCostMatching(int[][] cost) {
+        int n = cost.length;
+        
+        // u[i], v[j] = potentials (dual variables)
+        int[] u = new int[n + 1], v = new int[n + 1];
+        int[] match = new int[n + 1]; // match[j] = worker assigned to job j
+        int[] way = new int[n + 1];   // way[j] = previous job in augmenting path
+        Arrays.fill(match, 0);
+        
+        for (int i = 1; i <= n; i++) {
+            int[] minv = new int[n + 1];
+            boolean[] used = new boolean[n + 1];
+            Arrays.fill(minv, Integer.MAX_VALUE);
+            
+            match[0] = i;
+            int j0 = 0; // Virtual "unmatched" job
+            
+            do {
+                used[j0] = true;
+                int i0 = match[j0], j1 = 0;
+                int delta = Integer.MAX_VALUE;
+                
+                for (int j = 1; j <= n; j++) {
+                    if (used[j]) continue;
+                    int cur = cost[i0 - 1][j - 1] - u[i0] - v[j];
+                    if (cur < minv[j]) {
+                        minv[j] = cur;
+                        way[j] = j0;
+                    }
+                    if (minv[j] < delta) {
+                        delta = minv[j];
+                        j1 = j;
+                    }
+                }
+                
+                // Update potentials
+                for (int j = 0; j <= n; j++) {
+                    if (used[j]) { u[match[j]] += delta; v[j] -= delta; }
+                    else minv[j] -= delta;
+                }
+                
+                j0 = j1;
+            } while (match[j0] != 0);
+            
+            // Update matching along augmenting path
+            do {
+                int j1 = way[j0];
+                match[j0] = match[j1];
+                j0 = j1;
+            } while (j0 != 0);
+        }
+        
+        // Build result: result[i] = job assigned to worker i (0-indexed)
+        int[] result = new int[n];
+        for (int j = 1; j <= n; j++) {
+            result[match[j] - 1] = j - 1;
+        }
+        return result;
+    }
+    
+    public static void main(String[] args) {
+        int[][] cost = {
+            {9, 2, 7, 8},
+            {6, 4, 3, 7},
+            {5, 8, 1, 8},
+            {7, 6, 9, 4}
+        };
+        
+        int[] assignment = minCostMatching(cost);
+        int totalCost = 0;
+        System.out.println("Optimal Assignment:");
+        for (int i = 0; i < assignment.length; i++) {
+            System.out.println("  Worker " + i + " → Job " + assignment[i]
+                + " (cost " + cost[i][assignment[i]] + ")");
+            totalCost += cost[i][assignment[i]];
+        }
+        System.out.println("Total cost: " + totalCost); // 13
+    }
+}`,
+      },
+    ],
+  },
+  {
+    id: "graph-mcmf",
+    title: "Min-Cost Max-Flow",
+    difficulty: "Expert",
+    timeComplexity: "O(V × E × F) with SPFA | O(V²EF) with Bellman-Ford",
+    spaceComplexity: "O(V + E)",
+    theory: [
+      "Min-Cost Max-Flow (MCMF) finds a maximum flow with minimum total cost in a network where each edge has both capacity and cost per unit of flow.",
+      "The algorithm repeatedly finds the shortest (cheapest) augmenting path from source to sink using SPFA (Shortest Path Faster Algorithm) or Bellman-Ford, then pushes maximum flow along it.",
+      "Unlike plain max-flow, MCMF considers edge costs — useful when we want the cheapest way to route maximum flow.",
+      "Negative costs are supported (the graph may have negative cost edges), which is why SPFA/Bellman-Ford is used instead of Dijkstra.",
+      "Applications: assignment problems (generalizes bipartite matching with costs), transportation problems, project selection, network design optimization.",
+    ],
+    keyPoints: [
+      "Each edge has (capacity, cost): flow ≤ capacity, total cost = Σ flow × cost",
+      "Residual edges have negative cost (sending flow back reduces cost)",
+      "SPFA finds cheapest augmenting path — push max flow along it",
+      "Converges when no more augmenting paths exist (max flow reached)",
+      "Can solve weighted bipartite matching as a special case",
+    ],
+    code: [
+      {
+        title: "Min-Cost Max-Flow — SPFA-based Implementation",
+        language: "java",
+        content: `import java.util.*;
+
+public class MinCostMaxFlow {
+    
+    // ==================== MCMF WITH SPFA ====================
+    
+    static final int INF = Integer.MAX_VALUE;
+    
+    static class Edge {
+        int to, rev;
+        int cap, cost;
+        Edge(int to, int cap, int cost, int rev) {
+            this.to = to; this.cap = cap; this.cost = cost; this.rev = rev;
+        }
+    }
+    
+    static List<Edge>[] graph;
+    static int N;
+    
+    @SuppressWarnings("unchecked")
+    public static void init(int n) {
+        N = n;
+        graph = new ArrayList[n];
+        for (int i = 0; i < n; i++) graph[i] = new ArrayList<>();
+    }
+    
+    public static void addEdge(int from, int to, int cap, int cost) {
+        graph[from].add(new Edge(to, cap, cost, graph[to].size()));
+        graph[to].add(new Edge(from, 0, -cost, graph[from].size() - 1)); // Reverse
+    }
+    
+    // Returns {maxFlow, minCost}
+    public static int[] mcmf(int source, int sink) {
+        int totalFlow = 0, totalCost = 0;
+        
+        while (true) {
+            // SPFA to find shortest (cheapest) path from source to sink
+            int[] dist = new int[N];
+            boolean[] inQueue = new boolean[N];
+            int[] prevNode = new int[N], prevEdge = new int[N];
+            Arrays.fill(dist, INF);
+            dist[source] = 0;
+            
+            Queue<Integer> queue = new LinkedList<>();
+            queue.offer(source);
+            inQueue[source] = true;
+            
+            while (!queue.isEmpty()) {
+                int u = queue.poll();
+                inQueue[u] = false;
+                
+                for (int i = 0; i < graph[u].size(); i++) {
+                    Edge e = graph[u].get(i);
+                    if (e.cap > 0 && dist[u] + e.cost < dist[e.to]) {
+                        dist[e.to] = dist[u] + e.cost;
+                        prevNode[e.to] = u;
+                        prevEdge[e.to] = i;
+                        if (!inQueue[e.to]) {
+                            queue.offer(e.to);
+                            inQueue[e.to] = true;
+                        }
+                    }
+                }
+            }
+            
+            if (dist[sink] == INF) break; // No more augmenting paths
+            
+            // Find bottleneck (max flow we can push)
+            int flow = INF;
+            for (int v = sink; v != source; v = prevNode[v]) {
+                flow = Math.min(flow, graph[prevNode[v]].get(prevEdge[v]).cap);
+            }
+            
+            // Push flow along the path
+            for (int v = sink; v != source; v = prevNode[v]) {
+                Edge e = graph[prevNode[v]].get(prevEdge[v]);
+                e.cap -= flow;
+                graph[e.to].get(e.rev).cap += flow;
+            }
+            
+            totalFlow += flow;
+            totalCost += flow * dist[sink];
+        }
+        
+        return new int[]{totalFlow, totalCost};
+    }
+    
+    public static void main(String[] args) {
+        // Example: 4 nodes, source=0, sink=3
+        init(4);
+        addEdge(0, 1, 3, 1);  // cap=3, cost=1
+        addEdge(0, 2, 2, 5);  // cap=2, cost=5
+        addEdge(1, 2, 1, 2);  // cap=1, cost=2
+        addEdge(1, 3, 2, 3);  // cap=2, cost=3
+        addEdge(2, 3, 3, 1);  // cap=3, cost=1
+        
+        int[] result = mcmf(0, 3);
+        System.out.println("Max Flow: " + result[0]); // 4
+        System.out.println("Min Cost: " + result[1]); // 18
+        
+        // Assignment problem as MCMF:
+        // source → workers (cap=1, cost=0)
+        // workers → jobs (cap=1, cost=assignment_cost)
+        // jobs → sink (cap=1, cost=0)
+    }
+}`,
+      },
+    ],
+  },
+  {
     id: "graph-advanced",
     title: "Advanced Graph Algorithms",
     difficulty: "Expert",

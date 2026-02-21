@@ -1626,6 +1626,693 @@ public class BitmaskDP {
     ],
   },
   {
+    id: "dp-digit",
+    title: "Digit DP",
+    difficulty: "Expert",
+    timeComplexity: "O(D × S × B) where D=digits, S=states, B=base",
+    spaceComplexity: "O(D × S)",
+    theory: [
+      "Digit DP counts numbers in a range [L, R] satisfying digit-based constraints without iterating each number. Works by processing digits from most significant to least significant.",
+      "Key idea: at each digit position, decide how many choices we have. If we're still 'tight' (bounded by the upper limit), the current digit can only go up to the corresponding digit in the limit. If not tight, any digit 0-9 is allowed.",
+      "The 'tight' flag tracks whether we're still constrained by the upper bound. Once we place a digit smaller than the limit, all subsequent digits are free (tight=false).",
+      "Common states: position, tight flag, last digit (for adjacency constraints), sum of digits, leading zeros flag, and problem-specific states.",
+      "To count numbers in [L, R], compute f(R) - f(L-1) where f(N) counts valid numbers in [0, N].",
+    ],
+    keyPoints: [
+      "Process digits left to right, tracking 'tight' constraint",
+      "f(R) - f(L-1) gives count in range [L, R]",
+      "Leading zeros: track separately to avoid counting '007' as having 3 digits",
+      "Memo key = (position, tight, ...problem-specific states)",
+      "Typically O(D × 10 × S) where D = number of digits",
+    ],
+    code: [
+      {
+        title: "Digit DP — Count Numbers with No Adjacent Same Digits",
+        language: "java",
+        content: `import java.util.*;
+
+public class DigitDP {
+    
+    // ==================== TEMPLATE: DIGIT DP ====================
+    // Count numbers in [1, N] with no two adjacent digits the same
+    
+    private static int[][][] memo;
+    private static int[] digits;
+    
+    public static int countInRange(int L, int R) {
+        return count(R) - count(L - 1);
+    }
+    
+    private static int count(int N) {
+        if (N <= 0) return 0;
+        
+        // Extract digits of N
+        String s = String.valueOf(N);
+        int n = s.length();
+        digits = new int[n];
+        for (int i = 0; i < n; i++) digits[i] = s.charAt(i) - '0';
+        
+        // memo[pos][lastDigit][tight]
+        // lastDigit: 0-9 or 10 (no digit placed yet)
+        memo = new int[n][11][2];
+        for (int[][] a : memo) for (int[] b : a) Arrays.fill(b, -1);
+        
+        return solve(0, 10, true, true) - 1; // -1 to exclude 0
+    }
+    
+    // pos: current digit position (0-indexed from left)
+    // last: last digit placed (10 = none yet)
+    // tight: still bounded by N?
+    // leadingZero: haven't placed a non-zero digit yet?
+    private static int solve(int pos, int last, boolean tight, boolean leadingZero) {
+        if (pos == digits.length) return 1; // Valid number formed
+        
+        int t = tight ? 1 : 0;
+        if (memo[pos][last][t] != -1 && !leadingZero) return memo[pos][last][t];
+        
+        int limit = tight ? digits[pos] : 9;
+        int count = 0;
+        
+        for (int d = 0; d <= limit; d++) {
+            if (!leadingZero && d == last) continue; // No adjacent same digits
+            
+            boolean newTight = tight && (d == limit);
+            boolean newLeading = leadingZero && (d == 0);
+            int newLast = newLeading ? 10 : d;
+            
+            count += solve(pos + 1, newLast, newTight, newLeading);
+        }
+        
+        if (!leadingZero) memo[pos][last][t] = count;
+        return count;
+    }
+    
+    public static void main(String[] args) {
+        System.out.println("Count [1,100] no adjacent same: " + countInRange(1, 100));
+        System.out.println("Count [1,1000] no adjacent same: " + countInRange(1, 1000));
+    }
+}`,
+      },
+      {
+        title: "Digit DP — Count Numbers with Digit Sum ≤ K",
+        language: "java",
+        content: `import java.util.*;
+
+public class DigitDPSum {
+    
+    // Count numbers in [1, N] whose digit sum ≤ K
+    
+    private static int[][][] memo;
+    private static int[] digits;
+    private static int maxSum;
+    
+    public static int countDigitSum(int N, int K) {
+        if (N <= 0) return 0;
+        maxSum = K;
+        
+        String s = String.valueOf(N);
+        int n = s.length();
+        digits = new int[n];
+        for (int i = 0; i < n; i++) digits[i] = s.charAt(i) - '0';
+        
+        // memo[pos][currentSum][tight]
+        memo = new int[n][maxSum + 2][2];
+        for (int[][] a : memo) for (int[] b : a) Arrays.fill(b, -1);
+        
+        return solve(0, 0, true) - 1; // -1 for 0
+    }
+    
+    private static int solve(int pos, int sum, boolean tight) {
+        if (sum > maxSum) return 0; // Pruning: digit sum exceeded
+        if (pos == digits.length) return 1;
+        
+        int t = tight ? 1 : 0;
+        if (sum <= maxSum && memo[pos][sum][t] != -1) return memo[pos][sum][t];
+        
+        int limit = tight ? digits[pos] : 9;
+        int count = 0;
+        
+        for (int d = 0; d <= limit; d++) {
+            if (sum + d > maxSum) break; // Pruning
+            count += solve(pos + 1, sum + d, tight && d == limit);
+        }
+        
+        if (sum <= maxSum) memo[pos][sum][t] = count;
+        return count;
+    }
+    
+    // Count numbers in [L, R] with digit sum exactly K
+    public static int countExactSum(int L, int R, int K) {
+        return exactCount(R, K) - exactCount(L - 1, K);
+    }
+    
+    private static int[][][] exactMemo;
+    
+    private static int exactCount(int N, int K) {
+        if (N <= 0) return 0;
+        String s = String.valueOf(N);
+        int n = s.length();
+        digits = new int[n];
+        for (int i = 0; i < n; i++) digits[i] = s.charAt(i) - '0';
+        
+        exactMemo = new int[n][K + 2][2];
+        for (int[][] a : exactMemo) for (int[] b : a) Arrays.fill(b, -1);
+        
+        return exactSolve(0, 0, true, K) - (K == 0 ? 1 : 0);
+    }
+    
+    private static int exactSolve(int pos, int sum, boolean tight, int target) {
+        if (sum > target) return 0;
+        if (pos == digits.length) return sum == target ? 1 : 0;
+        
+        int t = tight ? 1 : 0;
+        if (exactMemo[pos][sum][t] != -1) return exactMemo[pos][sum][t];
+        
+        int limit = tight ? digits[pos] : 9;
+        int count = 0;
+        for (int d = 0; d <= limit; d++) {
+            count += exactSolve(pos + 1, sum + d, tight && d == limit, target);
+        }
+        return exactMemo[pos][sum][t] = count;
+    }
+    
+    public static void main(String[] args) {
+        System.out.println("Numbers in [1,100] with digit sum ≤ 5: " + countDigitSum(100, 5));
+        System.out.println("Numbers in [1,1000] with digit sum = 10: " + countExactSum(1, 1000, 10));
+    }
+}`,
+      },
+    ],
+  },
+  {
+    id: "dp-optimization",
+    title: "DP Optimization Techniques",
+    difficulty: "Expert",
+    timeComplexity: "Varies: O(n²) to O(n log n)",
+    spaceComplexity: "O(n) to O(n²)",
+    theory: [
+      "DP optimizations reduce time complexity by exploiting mathematical properties of the recurrence. These are essential for competitive programming where naive DP is too slow.",
+      "Divide and Conquer DP: When dp[i][j] = min over k (dp[i-1][k] + C(k,j)) and the optimal k is monotonically increasing as j increases, we can use divide and conquer to reduce O(kn) per row to O(n log n).",
+      "Convex Hull Trick (CHT): For recurrences dp[i] = min(dp[j] + b[j] + m[j]×x[i]) where m[j] is monotone, maintain a convex hull of lines. Each query/insert is amortized O(1) with a deque (Li Chao tree for arbitrary order).",
+      "Knuth's Optimization: For interval DP dp[i][j] = min over k in [i,j) of (dp[i][k] + dp[k+1][j] + C(i,j)) where cost C satisfies the quadrangle inequality, the optimal k satisfies opt[i][j-1] ≤ opt[i][j] ≤ opt[i+1][j]. Reduces O(n³) to O(n²).",
+      "Aliens Trick (WQS Binary Search / Lambda Optimization): When the answer is convex as a function of a constraint parameter, binary search on the Lagrange multiplier to remove one DP dimension.",
+    ],
+    keyPoints: [
+      "D&C DP: opt[j] is monotone → O(n log n) per DP layer",
+      "CHT: dp depends linearly on previous state → O(n) with convex hull",
+      "Knuth: Quadrangle inequality on cost → O(n²) interval DP",
+      "Aliens: Convex cost function → binary search on penalty λ",
+      "Always verify the monotonicity/convexity condition before applying!",
+    ],
+    code: [
+      {
+        title: "Divide and Conquer DP Optimization",
+        language: "java",
+        content: `import java.util.*;
+
+public class DivideConquerDP {
+    
+    // ==================== D&C DP OPTIMIZATION ====================
+    // dp[i][j] = min over k ∈ [0, j) of (dp[i-1][k] + cost(k+1, j))
+    // Condition: opt(j) is non-decreasing (where opt(j) = argmin k)
+    // Reduces O(kn) to O(n log n) per row
+    
+    // Example: Split array into k groups to minimize sum of group costs
+    // cost(l, r) = sum of (a[i] - a[j])² for all pairs i,j in [l,r]
+    
+    static long[][] dp;
+    static long[] prefix;
+    
+    // cost(l, r) = (r-l) * prefixSum(l,r) - (sum of elements)²
+    // For simplicity: cost(l,r) = (prefix[r+1] - prefix[l])²
+    static long cost(int l, int r) {
+        long s = prefix[r + 1] - prefix[l];
+        return s * s;
+    }
+    
+    public static long solve(int[] arr, int k) {
+        int n = arr.length;
+        prefix = new long[n + 1];
+        for (int i = 0; i < n; i++) prefix[i + 1] = prefix[i] + arr[i];
+        
+        dp = new long[k + 1][n];
+        
+        // Base case: 1 group
+        for (int j = 0; j < n; j++) dp[1][j] = cost(0, j);
+        
+        // Fill row by row using D&C
+        for (int i = 2; i <= k; i++) {
+            compute(i, 0, n - 1, 0, n - 1);
+        }
+        
+        return dp[k][n - 1];
+    }
+    
+    // D&C: compute dp[layer][lo..hi], knowing opt ∈ [optLo, optHi]
+    private static void compute(int layer, int lo, int hi, int optLo, int optHi) {
+        if (lo > hi) return;
+        
+        int mid = (lo + hi) / 2;
+        int bestK = optLo;
+        dp[layer][mid] = Long.MAX_VALUE;
+        
+        for (int k = optLo; k <= Math.min(mid, optHi); k++) {
+            long val = dp[layer - 1][k] + cost(k + 1, mid);
+            if (val < dp[layer][mid]) {
+                dp[layer][mid] = val;
+                bestK = k;
+            }
+        }
+        
+        // Recurse: left half has opt ∈ [optLo, bestK]
+        //          right half has opt ∈ [bestK, optHi]
+        compute(layer, lo, mid - 1, optLo, bestK);
+        compute(layer, mid + 1, hi, bestK, optHi);
+    }
+    
+    public static void main(String[] args) {
+        int[] arr = {1, 5, 3, 8, 2, 6, 4, 7};
+        int k = 3;
+        System.out.println("Min cost with " + k + " groups: " + solve(arr, k));
+    }
+}`,
+      },
+      {
+        title: "Convex Hull Trick (CHT)",
+        language: "java",
+        content: `import java.util.*;
+
+public class ConvexHullTrick {
+    
+    // ==================== CHT FOR MINIMUM ====================
+    // Lines: y = m*x + b
+    // Query: min y for given x
+    // Requirement: lines added in decreasing slope order (or use Li Chao tree)
+    
+    static long[] slopes, intercepts;
+    static int size, pointer;
+    
+    static void init(int maxLines) {
+        slopes = new long[maxLines];
+        intercepts = new long[maxLines];
+        size = 0;
+        pointer = 0;
+    }
+    
+    // Check if line at index b is unnecessary (dominated by a and c)
+    static boolean bad(int a, int b, int c) {
+        // Intersection of lines a and c is to the left of intersection of a and b
+        return (double)(intercepts[c] - intercepts[a]) * (slopes[a] - slopes[b])
+             <= (double)(intercepts[b] - intercepts[a]) * (slopes[a] - slopes[c]);
+    }
+    
+    // Add line y = m*x + b (slopes must be in decreasing order)
+    static void addLine(long m, long b) {
+        slopes[size] = m;
+        intercepts[size] = b;
+        while (size >= 2 && bad(size - 2, size - 1, size)) {
+            // Remove middle line
+            slopes[size - 1] = slopes[size];
+            intercepts[size - 1] = intercepts[size];
+            size--;
+        }
+        size++;
+    }
+    
+    // Query minimum value at x (x must be non-decreasing for amortized O(1))
+    static long queryMin(long x) {
+        // Move pointer to the right until we find the optimal line
+        while (pointer + 1 < size &&
+               slopes[pointer + 1] * x + intercepts[pointer + 1]
+               <= slopes[pointer] * x + intercepts[pointer]) {
+            pointer++;
+        }
+        return slopes[pointer] * x + intercepts[pointer];
+    }
+    
+    // ==================== EXAMPLE: MINIMIZE dp[i] = min(dp[j] + a[j]*b[i]) ====================
+    // dp[j] + a[j] * b[i] is a linear function of b[i] with slope a[j] and intercept dp[j]
+    
+    public static long[] solveProblem(long[] a, long[] b) {
+        int n = a.length;
+        long[] dp = new long[n];
+        
+        init(n);
+        addLine(a[0], 0); // dp[0] = 0, slope = a[0]
+        
+        for (int i = 1; i < n; i++) {
+            dp[i] = queryMin(b[i]);
+            addLine(a[i], dp[i]);
+        }
+        
+        return dp;
+    }
+    
+    public static void main(String[] args) {
+        // Example: dp[i] = min over j < i of (dp[j] + a[j] * b[i])
+        long[] a = {3, 1, 4, 1, 5};
+        long[] b = {2, 3, 1, 4, 2};
+        long[] dp = solveProblem(a, b);
+        System.out.println("DP values: " + Arrays.toString(dp));
+    }
+}`,
+      },
+      {
+        title: "Knuth's Optimization — O(n³) → O(n²) Interval DP",
+        language: "java",
+        content: `import java.util.*;
+
+public class KnuthOptimization {
+    
+    // ==================== KNUTH'S OPTIMIZATION ====================
+    // Applies to: dp[i][j] = min over k ∈ [i,j) of (dp[i][k] + dp[k+1][j] + C(i,j))
+    // Condition: cost C(i,j) satisfies QUADRANGLE INEQUALITY
+    //   C(a,c) + C(b,d) ≤ C(a,d) + C(b,c) for a ≤ b ≤ c ≤ d
+    // Result: opt[i][j-1] ≤ opt[i][j] ≤ opt[i+1][j]
+    // Reduces O(n³) to O(n²)
+    
+    // Example: Optimal Binary Search Tree
+    // Given keys with frequencies freq[], build BST minimizing weighted path length
+    
+    public static int optimalBST(int[] freq) {
+        int n = freq.length;
+        
+        // Prefix sums of frequencies
+        int[] prefix = new int[n + 1];
+        for (int i = 0; i < n; i++) prefix[i + 1] = prefix[i] + freq[i];
+        
+        int[][] dp = new int[n][n];
+        int[][] opt = new int[n][n]; // Optimal split points
+        
+        // Base case: single keys
+        for (int i = 0; i < n; i++) {
+            dp[i][i] = freq[i];
+            opt[i][i] = i;
+        }
+        
+        // Fill by increasing interval length
+        for (int len = 2; len <= n; len++) {
+            for (int i = 0; i <= n - len; i++) {
+                int j = i + len - 1;
+                dp[i][j] = Integer.MAX_VALUE;
+                int cost = prefix[j + 1] - prefix[i]; // C(i,j) = sum of freq[i..j]
+                
+                // KEY: Knuth's optimization — search only [opt[i][j-1], opt[i+1][j]]
+                int lo = opt[i][j - 1];
+                int hi = (j + 1 < n) ? opt[i + 1][j] : j;
+                
+                for (int k = lo; k <= Math.min(hi, j); k++) {
+                    int val = (k > i ? dp[i][k - 1] : 0)
+                            + (k < j ? dp[k + 1][j] : 0)
+                            + cost;
+                    if (val < dp[i][j]) {
+                        dp[i][j] = val;
+                        opt[i][j] = k;
+                    }
+                }
+            }
+        }
+        
+        return dp[0][n - 1];
+    }
+    
+    public static void main(String[] args) {
+        int[] freq = {25, 50, 15, 10};
+        System.out.println("Optimal BST cost: " + optimalBST(freq));
+        // Without Knuth: O(n³), With Knuth: O(n²)
+    }
+}`,
+      },
+      {
+        title: "Aliens Trick (WQS Binary Search)",
+        language: "java",
+        content: `import java.util.*;
+
+public class AliensTrick {
+    
+    // ==================== WQS BINARY SEARCH ====================
+    // AKA "Aliens Trick" or "Lambda Optimization"
+    //
+    // Problem: Minimize f(k) = dp cost when using EXACTLY k segments/items
+    // Condition: f(k) is CONVEX (f(k-1) + f(k+1) >= 2*f(k))
+    //
+    // Trick: Instead of constraining to exactly k items, add a penalty λ
+    // per item: g(λ) = min over all m of (f(m) + λ*m)
+    // Binary search on λ to find the value where optimal m = k
+    //
+    // Reduces 2D DP to 1D DP + binary search
+    
+    // Example: Partition array into exactly K segments minimizing cost
+    // cost of segment [l,r] = (prefix[r+1] - prefix[l])²
+    
+    static long[] prefix;
+    
+    static long segCost(int l, int r) {
+        long s = prefix[r + 1] - prefix[l];
+        return s * s;
+    }
+    
+    // Solve with penalty lambda: dp[i] = min over j (dp[j] + cost(j+1,i) + lambda)
+    // Returns {min_cost, number_of_segments}
+    static long[] solveWithPenalty(int[] arr, long lambda) {
+        int n = arr.length;
+        long[] dp = new long[n + 1];
+        int[] cnt = new int[n + 1]; // Number of segments used
+        Arrays.fill(dp, Long.MAX_VALUE / 2);
+        dp[0] = 0;
+        cnt[0] = 0;
+        
+        for (int i = 1; i <= n; i++) {
+            for (int j = 0; j < i; j++) {
+                long val = dp[j] + segCost(j, i - 1) + lambda;
+                if (val < dp[i] || (val == dp[i] && cnt[j] + 1 < cnt[i])) {
+                    dp[i] = val;
+                    cnt[i] = cnt[j] + 1;
+                }
+            }
+        }
+        return new long[]{dp[n], cnt[n]};
+    }
+    
+    public static long solve(int[] arr, int K) {
+        int n = arr.length;
+        prefix = new long[n + 1];
+        for (int i = 0; i < n; i++) prefix[i + 1] = prefix[i] + arr[i];
+        
+        // Binary search on lambda
+        long lo = 0, hi = (long) 1e18;
+        long answer = Long.MAX_VALUE;
+        
+        while (lo <= hi) {
+            long mid = (lo + hi) / 2;
+            long[] result = solveWithPenalty(arr, mid);
+            long cost = result[0];
+            int segments = (int) result[1];
+            
+            // cost = f(segments) + mid * segments
+            // So f(segments) = cost - mid * segments
+            if (segments <= K) {
+                answer = cost - mid * K; // Adjust for exactly K segments
+                hi = mid - 1;
+            } else {
+                lo = mid + 1;
+            }
+        }
+        return answer;
+    }
+    
+    public static void main(String[] args) {
+        int[] arr = {1, 5, 3, 8, 2, 6, 4, 7};
+        int K = 3;
+        System.out.println("Min cost with exactly " + K + " segments: " + solve(arr, K));
+    }
+}`,
+      },
+    ],
+  },
+  {
+    id: "dp-matrix-exp",
+    title: "Matrix Exponentiation",
+    difficulty: "Expert",
+    timeComplexity: "O(k³ log n) where k = matrix size",
+    spaceComplexity: "O(k²)",
+    theory: [
+      "Matrix Exponentiation accelerates linear recurrences from O(n) to O(k³ log n), where k is the number of state variables. Essential when n is very large (up to 10¹⁸).",
+      "Key insight: if state[i] = A × state[i-1] (matrix multiplication), then state[n] = Aⁿ × state[0]. Computing Aⁿ via binary exponentiation takes O(k³ log n).",
+      "Fibonacci: F(n) = [[1,1],[1,0]]^n × [[F(1)],[F(0)]]. This gives O(log n) Fibonacci computation even for n = 10¹⁸.",
+      "Generalizes to any linear recurrence: f(n) = c₁f(n-1) + c₂f(n-2) + ... + cₖf(n-k). Build a k×k companion matrix.",
+      "Applications: large Fibonacci, Tribonacci, counting paths of length n in a graph, tiling problems with large n, linear recurrence speedup.",
+    ],
+    keyPoints: [
+      "Convert linear recurrence to matrix form: state[n] = A^n × state[0]",
+      "Use fast matrix exponentiation: A^n in O(k³ log n)",
+      "k = number of terms in the recurrence",
+      "Works for n up to 10¹⁸ (impossible with iterative DP)",
+      "Counting paths of length n in graph = (adjacency matrix)^n",
+    ],
+    code: [
+      {
+        title: "Matrix Exponentiation — Fast Power",
+        language: "java",
+        content: `import java.util.*;
+
+public class MatrixExponentiation {
+    
+    static final long MOD = 1_000_000_007;
+    
+    // ==================== MATRIX MULTIPLICATION ====================
+    
+    static long[][] multiply(long[][] A, long[][] B) {
+        int n = A.length, m = B[0].length, p = B.length;
+        long[][] C = new long[n][m];
+        for (int i = 0; i < n; i++)
+            for (int k = 0; k < p; k++) // Optimize cache usage
+                if (A[i][k] != 0)
+                    for (int j = 0; j < m; j++)
+                        C[i][j] = (C[i][j] + A[i][k] * B[k][j]) % MOD;
+        return C;
+    }
+    
+    // ==================== MATRIX FAST POWER ====================
+    
+    static long[][] matPow(long[][] M, long power) {
+        int n = M.length;
+        long[][] result = new long[n][n];
+        for (int i = 0; i < n; i++) result[i][i] = 1; // Identity matrix
+        
+        while (power > 0) {
+            if ((power & 1) == 1) result = multiply(result, M);
+            M = multiply(M, M);
+            power >>= 1;
+        }
+        return result;
+    }
+    
+    // ==================== FIBONACCI IN O(log n) ====================
+    // F(n) = [[1,1],[1,0]]^n applied to [F(1), F(0)]
+    
+    public static long fibonacci(long n) {
+        if (n <= 1) return n;
+        long[][] M = {{1, 1}, {1, 0}};
+        long[][] result = matPow(M, n - 1);
+        return result[0][0]; // F(n) = result[0][0] * F(1) + result[0][1] * F(0)
+    }
+    
+    // ==================== GENERAL LINEAR RECURRENCE ====================
+    // f(n) = c1*f(n-1) + c2*f(n-2) + ... + ck*f(n-k)
+    // Companion matrix:
+    // [[c1, c2, ..., ck],
+    //  [1,  0,  ..., 0 ],
+    //  [0,  1,  ..., 0 ],
+    //  [          ..., 0]]
+    
+    public static long linearRecurrence(long[] coeffs, long[] initial, long n) {
+        int k = coeffs.length;
+        if (n < k) return initial[(int) n] % MOD;
+        
+        // Build companion matrix
+        long[][] M = new long[k][k];
+        for (int j = 0; j < k; j++) M[0][j] = ((coeffs[j] % MOD) + MOD) % MOD;
+        for (int i = 1; i < k; i++) M[i][i - 1] = 1;
+        
+        // Compute M^(n-k+1) × initial_state
+        long[][] result = matPow(M, n - k + 1);
+        
+        long ans = 0;
+        for (int j = 0; j < k; j++) {
+            ans = (ans + result[0][j] * (initial[k - 1 - j] % MOD)) % MOD;
+        }
+        return ans;
+    }
+    
+    public static void main(String[] args) {
+        // Fibonacci
+        System.out.println("F(10) = " + fibonacci(10));   // 55
+        System.out.println("F(50) = " + fibonacci(50));   // 12586269025 mod 10^9+7
+        System.out.println("F(10^18) mod 10^9+7 = " + fibonacci(1_000_000_000_000_000_000L));
+        
+        // Tribonacci: f(n) = f(n-1) + f(n-2) + f(n-3)
+        // f(0)=0, f(1)=0, f(2)=1
+        long[] triCoeffs = {1, 1, 1};
+        long[] triInitial = {0, 0, 1};
+        System.out.println("Trib(10) = " + linearRecurrence(triCoeffs, triInitial, 10));
+    }
+}`,
+      },
+      {
+        title: "Count Paths of Length N in Graph via Matrix Exponentiation",
+        language: "java",
+        content: `public class GraphPaths {
+    
+    static final long MOD = 1_000_000_007;
+    
+    // ==================== COUNTING PATHS OF EXACT LENGTH ====================
+    // Number of paths of length exactly n from u to v = (A^n)[u][v]
+    // where A is the adjacency matrix
+    
+    static long[][] multiply(long[][] A, long[][] B) {
+        int n = A.length;
+        long[][] C = new long[n][n];
+        for (int i = 0; i < n; i++)
+            for (int k = 0; k < n; k++)
+                if (A[i][k] != 0)
+                    for (int j = 0; j < n; j++)
+                        C[i][j] = (C[i][j] + A[i][k] * B[k][j]) % MOD;
+        return C;
+    }
+    
+    static long[][] matPow(long[][] M, long p) {
+        int n = M.length;
+        long[][] result = new long[n][n];
+        for (int i = 0; i < n; i++) result[i][i] = 1;
+        while (p > 0) {
+            if ((p & 1) == 1) result = multiply(result, M);
+            M = multiply(M, M);
+            p >>= 1;
+        }
+        return result;
+    }
+    
+    // Count paths of exact length 'len' from 'src' to 'dst' in a graph
+    public static long countPaths(int V, int[][] edges, int src, int dst, long len) {
+        long[][] adj = new long[V][V];
+        for (int[] e : edges) {
+            adj[e[0]][e[1]] = 1;
+            // adj[e[1]][e[0]] = 1; // Uncomment for undirected
+        }
+        
+        long[][] result = matPow(adj, len);
+        return result[src][dst];
+    }
+    
+    // ==================== TILING WITH MATRIX EXPONENTIATION ====================
+    // Count ways to tile 2×n board with 1×2 dominoes
+    // Recurrence: f(n) = f(n-1) + f(n-2) (same as Fibonacci!)
+    // f(1) = 1, f(2) = 2
+    
+    public static long tilingWays(long n) {
+        if (n <= 2) return n;
+        long[][] M = {{1, 1}, {1, 0}};
+        long[][] result = matPow(M, n);
+        return result[0][0]; // f(n)
+    }
+    
+    public static void main(String[] args) {
+        // Graph: 0→1→2→0 (triangle), 0→2
+        int[][] edges = {{0,1},{1,2},{2,0},{0,2}};
+        System.out.println("Paths of length 3 from 0→0: "
+            + countPaths(3, edges, 0, 0, 3));
+        System.out.println("Paths of length 10 from 0→2: "
+            + countPaths(3, edges, 0, 2, 10));
+        
+        System.out.println("2×10 tiling ways: " + tilingWays(10)); // 89
+        System.out.println("2×10^18 tiling: " + tilingWays(1_000_000_000_000_000_000L));
+    }
+}`,
+      },
+    ],
+  },
+  {
     id: "dp-advanced",
     title: "Advanced DP Patterns",
     difficulty: "Expert",
