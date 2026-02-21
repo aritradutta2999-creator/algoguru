@@ -40,9 +40,9 @@ const topicIcons: Record<string, string> = {
 
 const quickStats = [
   { label: "Topics", value: "5", icon: LayoutGrid },
-  { label: "Sections", value: "45+", icon: GitBranch },
-  { label: "Code Examples", value: "80+", icon: Terminal },
-  { label: "Algorithms", value: "60+", icon: Zap },
+  { label: "Sections", value: "55+", icon: GitBranch },
+  { label: "Code Examples", value: "100+", icon: Terminal },
+  { label: "Algorithms", value: "75+", icon: Zap },
 ];
 
 const roadmapSteps = [
