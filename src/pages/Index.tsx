@@ -28,6 +28,11 @@ const topicColors: Record<string, { color: string; bg: string; border: string }>
     bg: "hsl(var(--info)/0.08)",
     border: "hsl(var(--info)/0.2)",
   },
+  heaps: {
+    color: "hsl(var(--heap))",
+    bg: "hsl(var(--heap)/0.08)",
+    border: "hsl(var(--heap)/0.2)",
+  },
 };
 
 const topicIcons: Record<string, string> = {
