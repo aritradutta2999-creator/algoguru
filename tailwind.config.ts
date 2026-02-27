@@ -66,6 +66,7 @@ export default {
         },
         warning: "hsl(var(--warning))",
         info: "hsl(var(--info))",
+        heap: "hsl(var(--heap))",
         code: {
           bg: "hsl(var(--code-bg))",
           border: "hsl(var(--code-border))",

@@ -28,6 +28,11 @@ const topicColors: Record<string, { color: string; bg: string; border: string }>
     bg: "hsl(var(--info)/0.08)",
     border: "hsl(var(--info)/0.2)",
   },
+  heaps: {
+    color: "hsl(var(--heap))",
+    bg: "hsl(var(--heap)/0.08)",
+    border: "hsl(var(--heap)/0.2)",
+  },
 };
 
 const topicIcons: Record<string, string> = {
@@ -36,13 +41,14 @@ const topicIcons: Record<string, string> = {
   dp: "⊞",
   graphs: "◉",
   bits: "⊕",
+  heaps: "△",
 };
 
 const quickStats = [
-  { label: "Topics", value: "5", icon: LayoutGrid },
-  { label: "Sections", value: "55+", icon: GitBranch },
-  { label: "Code Examples", value: "100+", icon: Terminal },
-  { label: "Algorithms", value: "75+", icon: Zap },
+  { label: "Topics", value: "6", icon: LayoutGrid },
+  { label: "Sections", value: "65+", icon: GitBranch },
+  { label: "Code Examples", value: "120+", icon: Terminal },
+  { label: "Algorithms", value: "85+", icon: Zap },
 ];
 
 const roadmapSteps = [
@@ -51,6 +57,7 @@ const roadmapSteps = [
   { step: "03", title: "Dynamic Programming", desc: "From memoization to bitmask DP", tag: "Optimization" },
   { step: "04", title: "Graphs", desc: "Networks, paths, and advanced algorithms", tag: "Advanced" },
   { step: "05", title: "Bit Manipulation", desc: "Bitwise tricks, masking, SOS DP & Trie XOR", tag: "Expert" },
+  { step: "06", title: "Heaps & Priority Queues", desc: "From basics to indexed PQ, two-heap pattern & Huffman", tag: "Essential" },
 ];
 
 export default function Index() {
