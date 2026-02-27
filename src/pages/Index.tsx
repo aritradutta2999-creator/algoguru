@@ -57,6 +57,7 @@ const roadmapSteps = [
   { step: "03", title: "Dynamic Programming", desc: "From memoization to bitmask DP", tag: "Optimization" },
   { step: "04", title: "Graphs", desc: "Networks, paths, and advanced algorithms", tag: "Advanced" },
   { step: "05", title: "Bit Manipulation", desc: "Bitwise tricks, masking, SOS DP & Trie XOR", tag: "Expert" },
+  { step: "06", title: "Heaps & Priority Queues", desc: "From basics to indexed PQ, two-heap pattern & Huffman", tag: "Essential" },
 ];
 
 export default function Index() {
