@@ -17,6 +17,7 @@ const contentMap: Record<string, ContentSection[]> = {
   dp: dpContent,
   graphs: graphsContent,
   bits: bitManipulationContent,
+  heaps: heapContent,
 };
 
 const topicColorVars: Record<string, string> = {
