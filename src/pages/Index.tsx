@@ -45,10 +45,10 @@ const topicIcons: Record<string, string> = {
 };
 
 const quickStats = [
-  { label: "Topics", value: "5", icon: LayoutGrid },
-  { label: "Sections", value: "55+", icon: GitBranch },
-  { label: "Code Examples", value: "100+", icon: Terminal },
-  { label: "Algorithms", value: "75+", icon: Zap },
+  { label: "Topics", value: "6", icon: LayoutGrid },
+  { label: "Sections", value: "65+", icon: GitBranch },
+  { label: "Code Examples", value: "120+", icon: Terminal },
+  { label: "Algorithms", value: "85+", icon: Zap },
 ];
 
 const roadmapSteps = [
