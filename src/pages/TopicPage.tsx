@@ -6,6 +6,7 @@ import { backtrackingContent } from "@/data/backtrackingContent";
 import { dpContent } from "@/data/dpContent";
 import { graphsContent } from "@/data/graphsContent";
 import { bitManipulationContent } from "@/data/bitManipulationContent";
+import { heapContent } from "@/data/heapContent";
 import { topics } from "@/data/topics";
 import { ContentSection } from "@/data/recursionContent";
 import { ChevronRight, ChevronLeft, List, X } from "lucide-react";
