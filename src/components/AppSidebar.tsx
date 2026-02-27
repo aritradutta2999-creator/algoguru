@@ -23,6 +23,7 @@ const topicIcons: Record<string, string> = {
   dp: "⊞",
   graphs: "◉",
   bits: "⊕",
+  heaps: "△",
 };
 
 const topicColorVars: Record<string, string> = {
