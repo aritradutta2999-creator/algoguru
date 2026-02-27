@@ -26,6 +26,7 @@ const topicColorVars: Record<string, string> = {
   dp: "hsl(var(--success))",
   graphs: "hsl(var(--warning))",
   bits: "hsl(var(--info))",
+  heaps: "hsl(var(--heap))",
 };
 
 export default function TopicPage() {

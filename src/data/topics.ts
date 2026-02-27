@@ -114,4 +114,23 @@ export const topics: Topic[] = [
       { id: "bits-practice", title: "Practice Problems & Patterns" },
     ],
   },
+  {
+    id: "heaps",
+    title: "Heaps & Priority Queues",
+    icon: "△",
+    color: "heap",
+    description: "Priority-based data structures",
+    subtopics: [
+      { id: "heap-intro", title: "Introduction to Heaps" },
+      { id: "heap-build", title: "Building a Heap from Scratch" },
+      { id: "heap-pq", title: "Java PriorityQueue API" },
+      { id: "heap-sort", title: "Heap Sort Algorithm" },
+      { id: "heap-topk", title: "Top-K Element Problems" },
+      { id: "heap-two", title: "Two-Heap Pattern" },
+      { id: "heap-merge", title: "Merge K Sorted Structures" },
+      { id: "heap-graphs", title: "Heaps in Graph Algorithms" },
+      { id: "heap-advanced", title: "Advanced Heap Variants" },
+      { id: "heap-practice", title: "Practice Problems & Patterns" },
+    ],
+  },
 ];
