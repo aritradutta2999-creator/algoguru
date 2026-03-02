@@ -17,8 +17,8 @@ export function ContentRenderer({ section }: ContentRendererProps) {
   return (
     <div id={section.id} className="mb-14 scroll-mt-20 animate-fade-in">
       {/* Section header */}
-      <div className="flex flex-wrap items-center gap-3 mb-4">
-        <h2 className="text-2xl font-bold" style={{ color: "hsl(var(--foreground))" }}>
+      <div className="flex flex-wrap items-center gap-3 mb-5">
+        <h2 className="text-3xl font-extrabold tracking-tight" style={{ color: "hsl(var(--foreground))" }}>
           {section.title}
         </h2>
         {section.difficulty && (
@@ -49,9 +49,9 @@ export function ContentRenderer({ section }: ContentRendererProps) {
       )}
 
       {/* Theory paragraphs */}
-      <div className="space-y-3 mb-5">
+      <div className="space-y-4 mb-6">
         {section.theory.map((para, i) => (
-          <p key={i} className="text-sm leading-7" style={{ color: "hsl(var(--muted-foreground))" }}>
+          <p key={i} className="text-base leading-8 font-medium" style={{ color: "hsl(var(--muted-foreground))" }}>
             {para}
           </p>
         ))}
@@ -66,7 +66,7 @@ export function ContentRenderer({ section }: ContentRendererProps) {
           </div>
           <ul className="space-y-1.5">
             {section.keyPoints.map((point, i) => (
-              <li key={i} className="flex items-start gap-2 text-sm" style={{ color: "hsl(var(--foreground)/0.85)" }}>
+              <li key={i} className="flex items-start gap-2 text-[0.95rem] leading-7 font-medium" style={{ color: "hsl(var(--foreground)/0.85)" }}>
                 <span className="mt-1 flex-shrink-0" style={{ color: "hsl(var(--primary))" }}>▸</span>
                 {point}
               </li>
@@ -82,7 +82,7 @@ export function ContentRenderer({ section }: ContentRendererProps) {
             style={{ color: "hsl(var(--primary))" }}>
             💡 Note
           </div>
-          <p className="text-sm leading-6" style={{ color: "hsl(var(--foreground)/0.85)" }}>{section.note}</p>
+          <p className="text-[0.95rem] leading-7 font-medium" style={{ color: "hsl(var(--foreground)/0.85)" }}>{section.note}</p>
         </div>
       )}
 
@@ -93,7 +93,7 @@ export function ContentRenderer({ section }: ContentRendererProps) {
             style={{ color: "hsl(var(--success))" }}>
             ✓ Pro Tip
           </div>
-          <p className="text-sm leading-6" style={{ color: "hsl(var(--foreground)/0.85)" }}>{section.tip}</p>
+          <p className="text-[0.95rem] leading-7 font-medium" style={{ color: "hsl(var(--foreground)/0.85)" }}>{section.tip}</p>
         </div>
       )}
 
@@ -104,7 +104,7 @@ export function ContentRenderer({ section }: ContentRendererProps) {
             style={{ color: "hsl(var(--accent))" }}>
             ⚠ Warning
           </div>
-          <p className="text-sm leading-6" style={{ color: "hsl(var(--foreground)/0.85)" }}>{section.warning}</p>
+          <p className="text-[0.95rem] leading-7 font-medium" style={{ color: "hsl(var(--foreground)/0.85)" }}>{section.warning}</p>
         </div>
       )}
 
