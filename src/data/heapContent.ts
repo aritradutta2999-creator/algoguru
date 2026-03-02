@@ -259,6 +259,263 @@ public class MinHeap {
     tip: "When implementing heapify-down iteratively (non-recursive), use a while loop — it avoids stack overhead for very large heaps.",
   },
 
+  // ─── Section 2.5: Max Heap, Validation & Conversion ───
+  {
+    id: "heap-maxheap",
+    title: "Max Heap, Heap Validation & Conversion",
+    difficulty: "Easy",
+    theory: [
+      "While Min-Heap gives the smallest element at the root, a Max-Heap gives the largest. The only difference in implementation is the comparison direction — in heapify, we compare for the LARGEST child instead of the smallest.",
+      "Implementing a Max-Heap from scratch follows the exact same structure as Min-Heap: heapify-up after insert (swap with parent if current > parent), and heapify-down after extract (swap with the LARGER child if current < child).",
+      "Checking if an array represents a valid Min-Heap: For every node at index i, verify that arr[i] ≤ arr[2*i+1] (left child) and arr[i] ≤ arr[2*i+2] (right child). If any violation is found, return false. This runs in O(n).",
+      "Similarly, checking for Max-Heap: verify arr[i] ≥ arr[2*i+1] and arr[i] ≥ arr[2*i+2] for all internal nodes.",
+      "Converting a Min-Heap to a Max-Heap: You cannot simply reverse the array. Instead, treat the min-heap array as an arbitrary array and build a max-heap from it using bottom-up heapify in O(n). The old min-heap structure is completely discarded — you rebuild from scratch.",
+      "The key insight: buildHeap (bottom-up heapify) works on ANY array, regardless of its current state. So converting between heap types is always O(n).",
+    ],
+    keyPoints: [
+      "Max-Heap: parent ≥ children — root is the maximum",
+      "Only the comparison operator changes between min and max heap",
+      "Validation: check parent-child relationship for all internal nodes — O(n)",
+      "Conversion: treat as raw array and rebuild with opposite heapify — O(n)",
+      "You CANNOT convert min→max by simply reversing or negating",
+    ],
+    code: [
+      {
+        title: "Complete Max-Heap Implementation from Scratch",
+        language: "java",
+        content: `public class MaxHeap {
+    private int[] heap;
+    private int size;
+    private int capacity;
+
+    public MaxHeap(int capacity) {
+        this.capacity = capacity;
+        this.size = 0;
+        this.heap = new int[capacity];
+    }
+
+    private int parent(int i) { return (i - 1) / 2; }
+    private int left(int i)   { return 2 * i + 1; }
+    private int right(int i)  { return 2 * i + 2; }
+
+    private void swap(int i, int j) {
+        int temp = heap[i];
+        heap[i] = heap[j];
+        heap[j] = temp;
+    }
+
+    // ── Heapify Up: bubble up if current > parent ──
+    private void heapifyUp(int i) {
+        while (i > 0 && heap[i] > heap[parent(i)]) {
+            swap(i, parent(i));
+            i = parent(i);
+        }
+    }
+
+    // ── Heapify Down: sink if current < largest child ──
+    private void heapifyDown(int i) {
+        int largest = i;
+        int l = left(i), r = right(i);
+
+        if (l < size && heap[l] > heap[largest]) largest = l;
+        if (r < size && heap[r] > heap[largest]) largest = r;
+
+        if (largest != i) {
+            swap(i, largest);
+            heapifyDown(largest);
+        }
+    }
+
+    public void insert(int val) {
+        if (size == capacity) throw new RuntimeException("Heap is full");
+        heap[size] = val;
+        size++;
+        heapifyUp(size - 1);
+    }
+
+    public int peek() {
+        if (size == 0) throw new RuntimeException("Heap is empty");
+        return heap[0]; // root = maximum element
+    }
+
+    public int extractMax() {
+        if (size == 0) throw new RuntimeException("Heap is empty");
+        int max = heap[0];
+        heap[0] = heap[size - 1];
+        size--;
+        heapifyDown(0);
+        return max;
+    }
+
+    public int size() { return size; }
+
+    public static void main(String[] args) {
+        MaxHeap h = new MaxHeap(10);
+        h.insert(10); h.insert(30); h.insert(20);
+        h.insert(5);  h.insert(40); h.insert(15);
+
+        System.out.println("Max: " + h.peek());          // 40
+        System.out.println("Extract: " + h.extractMax()); // 40
+        System.out.println("New Max: " + h.peek());       // 30
+        System.out.println("Extract: " + h.extractMax()); // 30
+        System.out.println("Extract: " + h.extractMax()); // 20
+    }
+}`,
+      },
+      {
+        title: "Check if Array Represents a Min-Heap or Max-Heap",
+        language: "java",
+        content: `public class HeapValidator {
+
+    // Check if array is a valid Min-Heap
+    public static boolean isMinHeap(int[] arr, int n) {
+        // Only need to check internal nodes (indices 0 to n/2 - 1)
+        for (int i = 0; i <= (n - 2) / 2; i++) {
+            int left = 2 * i + 1;
+            int right = 2 * i + 2;
+
+            // Check left child: parent must be ≤ left child
+            if (left < n && arr[i] > arr[left]) {
+                System.out.println("Violation at index " + i + 
+                    ": parent " + arr[i] + " > left child " + arr[left]);
+                return false;
+            }
+
+            // Check right child: parent must be ≤ right child
+            if (right < n && arr[i] > arr[right]) {
+                System.out.println("Violation at index " + i + 
+                    ": parent " + arr[i] + " > right child " + arr[right]);
+                return false;
+            }
+        }
+        return true;
+    }
+
+    // Check if array is a valid Max-Heap
+    public static boolean isMaxHeap(int[] arr, int n) {
+        for (int i = 0; i <= (n - 2) / 2; i++) {
+            int left = 2 * i + 1;
+            int right = 2 * i + 2;
+
+            if (left < n && arr[i] < arr[left]) return false;
+            if (right < n && arr[i] < arr[right]) return false;
+        }
+        return true;
+    }
+
+    // Recursive approach for Min-Heap validation
+    public static boolean isMinHeapRecursive(int[] arr, int i, int n) {
+        // Base case: leaf node
+        if (i >= (n - 1) / 2) return true;
+
+        int left = 2 * i + 1;
+        int right = 2 * i + 2;
+
+        boolean valid = true;
+        if (left < n)  valid = valid && (arr[i] <= arr[left]);
+        if (right < n) valid = valid && (arr[i] <= arr[right]);
+
+        return valid 
+            && isMinHeapRecursive(arr, left, n) 
+            && isMinHeapRecursive(arr, right, n);
+    }
+
+    public static void main(String[] args) {
+        int[] minHeap = {1, 3, 5, 7, 9, 8, 10};
+        int[] notHeap = {1, 3, 5, 2, 9, 8, 10};
+        int[] maxHeap = {50, 30, 40, 10, 20, 35, 38};
+
+        System.out.println("Is minHeap valid? " + isMinHeap(minHeap, minHeap.length));   // true
+        System.out.println("Is notHeap valid? " + isMinHeap(notHeap, notHeap.length));   // false
+        System.out.println("Is maxHeap valid? " + isMaxHeap(maxHeap, maxHeap.length));   // true
+        System.out.println("Recursive check:  " + isMinHeapRecursive(minHeap, 0, minHeap.length)); // true
+    }
+}`,
+      },
+      {
+        title: "Convert Min-Heap to Max-Heap (and Vice Versa)",
+        language: "java",
+        content: `import java.util.Arrays;
+
+public class HeapConversion {
+
+    // ── Convert Min-Heap array to Max-Heap ──
+    // Strategy: Ignore old heap structure, rebuild as max-heap using O(n) bottom-up
+    public static void convertMinToMax(int[] arr) {
+        int n = arr.length;
+        // Start from last internal node, apply max-heapify down
+        for (int i = n / 2 - 1; i >= 0; i--) {
+            maxHeapifyDown(arr, n, i);
+        }
+    }
+
+    private static void maxHeapifyDown(int[] arr, int n, int i) {
+        int largest = i;
+        int left = 2 * i + 1;
+        int right = 2 * i + 2;
+
+        if (left < n && arr[left] > arr[largest])   largest = left;
+        if (right < n && arr[right] > arr[largest]) largest = right;
+
+        if (largest != i) {
+            int temp = arr[i]; arr[i] = arr[largest]; arr[largest] = temp;
+            maxHeapifyDown(arr, n, largest);
+        }
+    }
+
+    // ── Convert Max-Heap array to Min-Heap ──
+    public static void convertMaxToMin(int[] arr) {
+        int n = arr.length;
+        for (int i = n / 2 - 1; i >= 0; i--) {
+            minHeapifyDown(arr, n, i);
+        }
+    }
+
+    private static void minHeapifyDown(int[] arr, int n, int i) {
+        int smallest = i;
+        int left = 2 * i + 1;
+        int right = 2 * i + 2;
+
+        if (left < n && arr[left] < arr[smallest])   smallest = left;
+        if (right < n && arr[right] < arr[smallest]) smallest = right;
+
+        if (smallest != i) {
+            int temp = arr[i]; arr[i] = arr[smallest]; arr[smallest] = temp;
+            minHeapifyDown(arr, n, smallest);
+        }
+    }
+
+    public static void main(String[] args) {
+        // Start with a valid min-heap
+        int[] minHeap = {1, 3, 6, 5, 9, 8};
+        System.out.println("Min-Heap: " + Arrays.toString(minHeap));
+        // [1, 3, 6, 5, 9, 8]
+
+        convertMinToMax(minHeap);
+        System.out.println("Max-Heap: " + Arrays.toString(minHeap));
+        // [9, 5, 8, 3, 1, 6] — valid max-heap!
+
+        // Verify: is it a valid max-heap?
+        boolean valid = true;
+        for (int i = 0; i < minHeap.length / 2; i++) {
+            int l = 2 * i + 1, r = 2 * i + 2;
+            if (l < minHeap.length && minHeap[i] < minHeap[l]) valid = false;
+            if (r < minHeap.length && minHeap[i] < minHeap[r]) valid = false;
+        }
+        System.out.println("Valid max-heap? " + valid); // true
+
+        // Now convert back to min-heap
+        convertMaxToMin(minHeap);
+        System.out.println("Back to Min-Heap: " + Arrays.toString(minHeap));
+        // Valid min-heap again
+    }
+}`,
+      },
+    ],
+    warning: "A common mistake is trying to convert min-heap to max-heap by negating all values or reversing the array — this does NOT produce a valid max-heap. Always rebuild using bottom-up heapify.",
+    note: "Both validation and conversion are O(n) operations. Validation only checks internal nodes (indices 0 to n/2-1) since leaf nodes have no children to violate the heap property.",
+  },
+
   // ─── Section 3: Java PriorityQueue API ───
   {
     id: "heap-pq",

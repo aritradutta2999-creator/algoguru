@@ -123,6 +123,7 @@ export const topics: Topic[] = [
     subtopics: [
       { id: "heap-intro", title: "Introduction to Heaps" },
       { id: "heap-build", title: "Building a Heap from Scratch" },
+      { id: "heap-maxheap", title: "Max Heap, Validation & Conversion" },
       { id: "heap-pq", title: "Java PriorityQueue API" },
       { id: "heap-sort", title: "Heap Sort Algorithm" },
       { id: "heap-topk", title: "Top-K Element Problems" },
