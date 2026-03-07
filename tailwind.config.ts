@@ -13,8 +13,8 @@ export default {
     extend: {
       fontFamily: {
         mono: ["JetBrains Mono", "Fira Code", "monospace"],
-        sans: ["Space Grotesk", "system-ui", "sans-serif"],
-        display: ["Space Grotesk", "system-ui", "sans-serif"],
+        sans: ["Outfit", "Inter", "system-ui", "sans-serif"],
+        display: ["Outfit", "Inter", "system-ui", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -88,30 +88,30 @@ export default {
           to: { height: "0" },
         },
         "glow-pulse": {
-          "0%, 100%": { boxShadow: "0 0 20px hsl(190 100% 50% / 0.2)" },
-          "50%": { boxShadow: "0 0 40px hsl(190 100% 50% / 0.4)" },
+          "0%, 100%": { boxShadow: "0 0 20px hsl(var(--primary) / 0.15)" },
+          "50%": { boxShadow: "0 0 40px hsl(var(--primary) / 0.3)" },
         },
         "slide-in": {
           from: { opacity: "0", transform: "translateX(-8px)" },
           to: { opacity: "1", transform: "translateX(0)" },
         },
         "fade-in": {
-          from: { opacity: "0", transform: "translateY(8px)" },
+          from: { opacity: "0", transform: "translateY(12px)" },
           to: { opacity: "1", transform: "translateY(0)" },
         },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-        "glow-pulse": "glow-pulse 3s ease-in-out infinite",
-        "slide-in": "slide-in 0.3s ease-out",
-        "fade-in": "fade-in 0.4s ease-out",
+        "glow-pulse": "glow-pulse 4s ease-in-out infinite",
+        "slide-in": "slide-in 0.4s cubic-bezier(0.22, 1, 0.36, 1)",
+        "fade-in": "fade-in 0.5s cubic-bezier(0.22, 1, 0.36, 1)",
       },
       backgroundImage: {
-        "gradient-primary": "linear-gradient(135deg, hsl(var(--primary)), hsl(200 100% 60%))",
-        "gradient-card": "linear-gradient(145deg, hsl(var(--card)), hsl(222 35% 11%))",
-        "gradient-hero": "linear-gradient(135deg, hsl(var(--background)) 0%, hsl(222 40% 9%) 50%, hsl(var(--background)) 100%)",
-        "gradient-sidebar": "linear-gradient(180deg, hsl(var(--sidebar-background)), hsl(222 40% 7%))",
+        "gradient-primary": "linear-gradient(135deg, hsl(var(--primary)), hsl(280 80% 65%))",
+        "gradient-card": "linear-gradient(145deg, hsl(var(--card)), hsl(230 20% 6%))",
+        "gradient-hero": "radial-gradient(ellipse 80% 50% at 50% -10%, hsl(var(--primary) / 0.15), transparent)",
+        "gradient-sidebar": "linear-gradient(180deg, hsl(var(--sidebar-background)), hsl(230 22% 4%))",
       },
     },
   },
