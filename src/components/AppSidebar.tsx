@@ -3,9 +3,6 @@ import { useLocation, useNavigate } from "react-router-dom";
 import {
   Sidebar,
   SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -16,6 +13,7 @@ import {
 import { topics } from "@/data/topics";
 import { ChevronDown, Home, BookOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { motion, AnimatePresence } from "framer-motion";
 
 const topicIcons: Record<string, string> = {
   recursion: "↻",
@@ -44,7 +42,7 @@ export function AppSidebar() {
   const [openTopics, setOpenTopics] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {};
     topics.forEach((t) => {
-      initial[t.id] = t.subtopics.some((s) => currentPath === `/${t.id}` || currentHash === s.id);
+      initial[t.id] = t.subtopics.some(() => currentPath === `/${t.id}`);
     });
     return initial;
   });
@@ -63,41 +61,50 @@ export function AppSidebar() {
 
   return (
     <Sidebar className="border-r" style={{ borderColor: "hsl(var(--sidebar-border))", background: "hsl(var(--sidebar-background))" }}>
-      <div className="flex items-center gap-3 px-4 py-4 border-b" style={{ borderColor: "hsl(var(--sidebar-border))" }}>
+      {/* Logo */}
+      <div className="flex items-center gap-3 px-5 py-5 border-b" style={{ borderColor: "hsl(var(--sidebar-border))" }}>
         <div
-          className="flex items-center justify-center w-8 h-8 rounded-lg font-bold text-sm font-mono"
-          style={{ background: "hsl(var(--primary)/0.15)", color: "hsl(var(--primary))", border: "1px solid hsl(var(--primary)/0.3)" }}
+          className="flex items-center justify-center w-9 h-9 rounded-xl font-bold text-sm font-mono"
+          style={{
+            background: "var(--gradient-primary)",
+            color: "hsl(var(--primary-foreground))",
+            boxShadow: "0 2px 12px hsl(var(--primary)/0.25)",
+          }}
         >
-          CP
+          AG
         </div>
         <div>
-          <div className="text-sm font-bold" style={{ color: "hsl(var(--foreground))" }}>
-            CP Guide
+          <div className="text-sm font-bold tracking-tight" style={{ color: "hsl(var(--foreground))" }}>
+            AlgoGuru
           </div>
-          <div className="text-xs" style={{ color: "hsl(var(--muted-foreground))" }}>
-            Basics → Advanced
+          <div className="text-[10px] font-medium" style={{ color: "hsl(var(--muted-foreground))" }}>
+            CP Study Guide
           </div>
         </div>
       </div>
 
-      <SidebarContent className="px-2 py-3">
+      <SidebarContent className="px-3 py-4">
         {/* Home */}
-        <div className="mb-1">
+        <div className="mb-2">
           <button
             onClick={() => navigate("/")}
             className={cn(
-              "flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150",
+              "flex items-center gap-2.5 w-full px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200",
               currentPath === "/"
-                ? "text-[hsl(var(--primary))] bg-[hsl(var(--primary)/0.1)]"
-                : "text-[hsl(var(--sidebar-foreground))] hover:bg-[hsl(var(--sidebar-accent))]"
+                ? ""
+                : "hover:bg-muted/50"
             )}
+            style={{
+              color: currentPath === "/" ? "hsl(var(--primary))" : "hsl(var(--sidebar-foreground))",
+              background: currentPath === "/" ? "hsl(var(--primary)/0.08)" : undefined,
+            }}
           >
             <Home size={15} />
             <span>Home</span>
           </button>
         </div>
 
-        <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest font-mono mt-2 mb-1" style={{ color: "hsl(var(--muted-foreground))" }}>
+        <div className="px-3.5 py-2 text-[10px] font-bold uppercase tracking-[0.15em] font-mono" style={{ color: "hsl(var(--muted-foreground))" }}>
           Topics
         </div>
 
@@ -109,27 +116,23 @@ export function AppSidebar() {
 
             return (
               <SidebarMenuItem key={topic.id}>
-                {/* Topic header */}
-                <SidebarMenuButton
-                  asChild
-                  className="h-auto p-0"
-                >
+                <SidebarMenuButton asChild className="h-auto p-0">
                   <button
                     onClick={() => {
                       toggleTopic(topic.id);
                       navigate(`/${topic.id}`);
                     }}
                     className={cn(
-                      "flex items-center justify-between w-full px-3 py-2.5 rounded-lg text-sm font-semibold transition-all duration-150 group",
-                      isActive
-                        ? "bg-[hsl(var(--sidebar-accent))]"
-                        : "hover:bg-[hsl(var(--sidebar-accent)/0.5)]"
+                      "flex items-center justify-between w-full px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 group"
                     )}
+                    style={{
+                      background: isActive ? "hsl(var(--sidebar-accent))" : undefined,
+                    }}
                   >
                     <div className="flex items-center gap-2.5">
                       <span
-                        className="flex items-center justify-center w-6 h-6 rounded text-xs font-bold font-mono"
-                        style={{ background: `${color}1a`, color }}
+                        className="flex items-center justify-center w-7 h-7 rounded-lg text-xs font-bold font-mono"
+                        style={{ background: `${color}12`, color }}
                       >
                         {topicIcons[topic.id]}
                       </span>
@@ -139,7 +142,7 @@ export function AppSidebar() {
                     </div>
                     <ChevronDown
                       size={13}
-                      className="transition-transform duration-200"
+                      className="transition-transform duration-300"
                       style={{
                         color: "hsl(var(--muted-foreground))",
                         transform: isOpen ? "rotate(180deg)" : "rotate(0deg)",
@@ -148,58 +151,64 @@ export function AppSidebar() {
                   </button>
                 </SidebarMenuButton>
 
-                {/* Subtopics */}
-                {isOpen && (
-                  <SidebarMenuSub className="ml-3 mt-0.5 border-l pl-3" style={{ borderColor: `${color}30` }}>
-                    {topic.subtopics.map((sub) => {
-                      const active = isSubActive(topic.id, sub.id);
-                      return (
-                        <SidebarMenuSubItem key={sub.id}>
-                          <SidebarMenuSubButton asChild className="h-auto p-0">
-                            <button
-                              onClick={() => navigate(`/${topic.id}#${sub.id}`)}
-                              className={cn(
-                                "flex items-center gap-2 w-full px-2.5 py-1.5 rounded-md text-xs transition-all duration-150 text-left",
-                                active
-                                  ? "font-semibold"
-                                  : "hover:bg-[hsl(var(--sidebar-accent)/0.5)]"
-                              )}
-                              style={{
-                                color: active ? color : "hsl(var(--sidebar-foreground)/0.8)",
-                                background: active ? `${color}15` : undefined,
-                              }}
-                            >
-                              <span
-                                className="w-1 h-1 rounded-full flex-shrink-0"
-                                style={{ background: active ? color : "hsl(var(--muted-foreground)/0.4)" }}
-                              />
-                              {sub.title}
-                            </button>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                      );
-                    })}
-                  </SidebarMenuSub>
-                )}
+                <AnimatePresence>
+                  {isOpen && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                      className="overflow-hidden"
+                    >
+                      <SidebarMenuSub className="ml-4 mt-1 border-l pl-3" style={{ borderColor: `${color}20` }}>
+                        {topic.subtopics.map((sub) => {
+                          const active = isSubActive(topic.id, sub.id);
+                          return (
+                            <SidebarMenuSubItem key={sub.id}>
+                              <SidebarMenuSubButton asChild className="h-auto p-0">
+                                <button
+                                  onClick={() => navigate(`/${topic.id}#${sub.id}`)}
+                                  className={cn(
+                                    "flex items-center gap-2 w-full px-2.5 py-1.5 rounded-lg text-xs transition-all duration-200 text-left"
+                                  )}
+                                  style={{
+                                    color: active ? color : "hsl(var(--sidebar-foreground)/0.75)",
+                                    background: active ? `${color}10` : undefined,
+                                    fontWeight: active ? 600 : 400,
+                                  }}
+                                >
+                                  <span
+                                    className="w-1.5 h-1.5 rounded-full flex-shrink-0 transition-colors"
+                                    style={{ background: active ? color : "hsl(var(--muted-foreground)/0.3)" }}
+                                  />
+                                  {sub.title}
+                                </button>
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                          );
+                        })}
+                      </SidebarMenuSub>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </SidebarMenuItem>
             );
           })}
         </SidebarMenu>
 
-        {/* Footer */}
-        <div className="mt-6 mx-2 p-3 rounded-xl" style={{ background: "hsl(var(--primary)/0.06)", border: "1px solid hsl(var(--primary)/0.15)" }}>
-          <div className="flex items-center gap-2 mb-1.5">
+        {/* Footer card */}
+        <div className="mt-8 mx-1 p-4 rounded-2xl" style={{ background: "hsl(var(--primary)/0.05)", border: "1px solid hsl(var(--primary)/0.1)" }}>
+          <div className="flex items-center gap-2 mb-2">
             <BookOpen size={13} style={{ color: "hsl(var(--primary))" }} />
             <span className="text-xs font-semibold" style={{ color: "hsl(var(--primary))" }}>
               Coverage
             </span>
           </div>
-          <div className="text-[10px] space-y-0.5 font-mono" style={{ color: "hsl(var(--muted-foreground))" }}>
-            <div>✦ Recursion → Advanced</div>
-            <div>✦ Backtracking & Pruning</div>
-            <div>✦ DP → Bitmask & Trees</div>
-            <div>✦ Graphs → SCC & Bridges</div>
-            <div>✦ Bits → SOS DP & Trie</div>
+          <div className="text-[10px] space-y-1 font-mono" style={{ color: "hsl(var(--muted-foreground))" }}>
+            <div>✦ 6 Major Topics</div>
+            <div>✦ 65+ Sections</div>
+            <div>✦ 120+ Code Examples</div>
+            <div>✦ Beginner → Advanced</div>
           </div>
         </div>
       </SidebarContent>

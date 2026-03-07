@@ -20,37 +20,35 @@ function HeaderControls() {
   const isMax = fontSize === "xl";
 
   return (
-    <div className="flex items-center gap-1">
-      {/* Font size controls */}
+    <div className="flex items-center gap-0.5">
       <button
         onClick={decreaseFontSize}
         disabled={isMin}
         title="Decrease font size"
-        className="flex items-center justify-center w-7 h-7 rounded-md transition-colors disabled:opacity-30"
+        className="flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-200 disabled:opacity-25 hover:bg-muted"
         style={{ color: "hsl(var(--muted-foreground))" }}
       >
-        <AArrowDown size={15} />
+        <AArrowDown size={14} />
       </button>
       <button
         onClick={increaseFontSize}
         disabled={isMax}
         title="Increase font size"
-        className="flex items-center justify-center w-7 h-7 rounded-md transition-colors disabled:opacity-30"
+        className="flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-200 disabled:opacity-25 hover:bg-muted"
         style={{ color: "hsl(var(--muted-foreground))" }}
       >
-        <AArrowUp size={15} />
+        <AArrowUp size={14} />
       </button>
 
-      <div className="w-px h-4 mx-1" style={{ background: "hsl(var(--border))" }} />
+      <div className="w-px h-4 mx-1.5" style={{ background: "hsl(var(--border))" }} />
 
-      {/* Theme toggle */}
       <button
         onClick={toggleTheme}
         title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
-        className="flex items-center justify-center w-7 h-7 rounded-md transition-colors"
+        className="flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-200 hover:bg-muted"
         style={{ color: "hsl(var(--muted-foreground))" }}
       >
-        {isDark ? <Sun size={15} /> : <Moon size={15} />}
+        {isDark ? <Sun size={14} /> : <Moon size={14} />}
       </button>
     </div>
   );
@@ -64,39 +62,37 @@ function AppLayout({ children }: { children: React.ReactNode }) {
         <div className="flex-1 flex flex-col min-w-0">
           {/* Top bar */}
           <header
-            className="h-12 flex items-center gap-3 px-4 border-b flex-shrink-0 sticky top-0 z-40"
+            className="h-14 flex items-center gap-3 px-5 border-b flex-shrink-0 sticky top-0 z-40"
             style={{
               borderColor: "hsl(var(--border))",
-              background: "hsl(var(--background)/0.95)",
-              backdropFilter: "blur(12px)",
+              background: "hsl(var(--background)/0.85)",
+              backdropFilter: "blur(16px)",
             }}
           >
             <SidebarTrigger
-              className="flex items-center justify-center w-7 h-7 rounded-md transition-colors"
+              className="flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-200 hover:bg-muted"
               style={{ color: "hsl(var(--muted-foreground))" }}
             >
-              <Menu size={15} />
+              <Menu size={16} />
             </SidebarTrigger>
             <div className="h-4 w-px" style={{ background: "hsl(var(--border))" }} />
-            <span className="text-xs font-mono" style={{ color: "hsl(var(--muted-foreground))" }}>
-              CP Guide — Java Competitive Programming
+            <span className="text-xs font-medium tracking-wide" style={{ color: "hsl(var(--muted-foreground))" }}>
+              AlgoGuru
             </span>
             <div className="flex-1" />
 
-            {/* Font size + theme controls */}
             <HeaderControls />
 
             <div className="h-4 w-px mx-1" style={{ background: "hsl(var(--border))" }} />
             <div
-              className="hidden sm:flex items-center gap-1.5 text-[10px] px-2.5 py-1 rounded-full font-mono"
-              style={{ background: "hsl(var(--primary)/0.1)", color: "hsl(var(--primary))", border: "1px solid hsl(var(--primary)/0.2)" }}
+              className="hidden sm:flex items-center gap-2 text-[11px] px-3 py-1.5 rounded-full font-mono font-medium"
+              style={{ background: "hsl(var(--primary)/0.08)", color: "hsl(var(--primary))", border: "1px solid hsl(var(--primary)/0.12)" }}
             >
               <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "hsl(var(--primary))" }} />
-              Java · Basics → Advanced
+              Java · CP Guide
             </div>
           </header>
 
-          {/* Page content */}
           <main className="flex-1 overflow-y-auto">
             {children}
           </main>
