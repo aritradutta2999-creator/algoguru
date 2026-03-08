@@ -4,6 +4,7 @@ import { useSettings } from "@/contexts/SettingsContext";
 import { ContentRenderer } from "@/components/ContentRenderer";
 import { recursionContent } from "@/data/recursionContent";
 import { backtrackingContent } from "@/data/backtrackingContent";
+import { stackQueueContent } from "@/data/stackQueueContent";
 import { dpContent } from "@/data/dpContent";
 import { graphsContent } from "@/data/graphsContent";
 import { bitManipulationContent } from "@/data/bitManipulationContent";
