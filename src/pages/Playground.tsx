@@ -146,11 +146,13 @@ export default function Playground() {
     setIsRunning(true);
     setOutput("");
     try {
+      // Wandbox saves code as prog.java, so strip 'public' from class declarations
+      const processedCode = code.replace(/public\s+class\s+/g, "class ");
       const res = await fetch(WANDBOX_API, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          code,
+          code: processedCode,
           compiler: selectedCompiler.compiler,
           stdin,
           "compiler-option-raw": "",
