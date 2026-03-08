@@ -1,3 +1,16 @@
+export interface DiagramBox {
+  label: string;
+  children?: DiagramBox[];
+  color?: string; // CSS var like "primary", "accent", "success"
+}
+
+export interface Diagram {
+  type: "layers" | "hierarchy" | "flow" | "table-visual";
+  title: string;
+  data: DiagramBox[];
+  direction?: "vertical" | "horizontal";
+}
+
 export interface ContentSection {
   id: string;
   title: string;
@@ -6,6 +19,7 @@ export interface ContentSection {
   spaceComplexity?: string;
   theory: string[];
   keyPoints?: string[];
+  diagram?: Diagram;
   code?: {
     title: string;
     language: string;
