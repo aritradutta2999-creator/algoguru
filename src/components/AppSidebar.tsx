@@ -104,29 +104,6 @@ export function AppSidebar() {
       </div>
 
       <SidebarContent className="px-3 py-4">
-        {/* Mode Switcher */}
-        <div className="mb-4 mx-1 p-1 rounded-xl flex gap-1" style={{ background: "hsl(var(--muted)/0.5)", border: "1px solid hsl(var(--border))" }}>
-          {modes.map((mode) => (
-            <button
-              key={mode.id}
-              onClick={() => {
-                setMode(mode.id);
-                navigate("/");
-              }}
-              className={cn(
-                "flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-[11px] font-semibold transition-all duration-200"
-              )}
-              style={{
-                background: currentMode.id === mode.id ? "hsl(var(--primary)/0.12)" : "transparent",
-                color: currentMode.id === mode.id ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))",
-                boxShadow: currentMode.id === mode.id ? "0 1px 4px hsl(var(--primary)/0.15)" : "none",
-              }}
-            >
-              {modeIcons[mode.id]}
-              {mode.label}
-            </button>
-          ))}
-        </div>
 
         {/* Home */}
         <div className="mb-2">
