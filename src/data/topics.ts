@@ -32,7 +32,7 @@ export const topics: Topic[] = [
   {
     id: "backtracking",
     title: "Backtracking",
-    icon: "⟵",
+    icon: "←",
     color: "accent",
     description: "Systematic search with pruning",
     subtopics: [
