@@ -197,6 +197,18 @@ export function ContentRenderer({ section, isPractice }: ContentRendererProps) {
   const navigate = useNavigate();
   const classified = classifyTheoryLines(section.theory);
 
+  // Group header (no theory, no code) — render as a styled divider
+  const isGroupHeader = section.theory.length === 0 && (!section.code || section.code.length === 0);
+  if (isGroupHeader) {
+    return (
+      <div id={section.id} className="cr-group-header scroll-mt-24">
+        <span className={`cr-diff-badge ${difficultyClass[section.difficulty || ""] || ""}`}>
+          {section.title}
+        </span>
+      </div>
+    );
+  }
+
   const openInPlayground = () => {
     const problemData = {
       id: section.id,
