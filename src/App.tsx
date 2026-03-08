@@ -8,11 +8,26 @@ import { AppSidebar } from "@/components/AppSidebar";
 import Index from "./pages/Index";
 import TopicPage from "./pages/TopicPage";
 import NotFound from "./pages/NotFound";
-import { Menu, Sun, Moon, AArrowUp, AArrowDown } from "lucide-react";
+import { Menu, Sun, Moon, AArrowUp, AArrowDown, ZoomIn } from "lucide-react";
 import { SettingsProvider, useSettings } from "@/contexts/SettingsContext";
 import { ModeProvider, useMode } from "@/contexts/ModeContext";
 
 const queryClient = new QueryClient();
+
+const ZOOM_MAP: Record<string, string> = { sm: "85%", md: "100%", lg: "115%", xl: "125%" };
+
+function ZoomDisplay() {
+  const { fontSize } = useSettings();
+  return (
+    <div
+      className="hidden sm:flex items-center gap-1.5 text-[11px] px-3 py-1.5 rounded-full font-mono font-medium"
+      style={{ background: "hsl(var(--muted)/0.5)", color: "hsl(var(--foreground))", border: "1px solid hsl(var(--border))" }}
+    >
+      <ZoomIn size={12} style={{ color: "hsl(var(--muted-foreground))" }} />
+      {ZOOM_MAP[fontSize] || "100%"}
+    </div>
+  );
+}
 
 function HeaderControls() {
   const { theme, toggleTheme, fontSize, increaseFontSize, decreaseFontSize } = useSettings();
@@ -87,13 +102,7 @@ function AppLayout({ children }: { children: React.ReactNode }) {
             <HeaderControls />
 
             <div className="h-4 w-px mx-1" style={{ background: "hsl(var(--border))" }} />
-            <div
-              className="hidden sm:flex items-center gap-2 text-[11px] px-3 py-1.5 rounded-full font-mono font-medium"
-              style={{ background: "hsl(var(--primary)/0.08)", color: "hsl(var(--primary))", border: "1px solid hsl(var(--primary)/0.12)" }}
-            >
-              <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "hsl(var(--primary))" }} />
-              {currentMode.id === "ds" ? "Java · CP Guide" : "Java · Language Guide"}
-            </div>
+            <ZoomDisplay />
           </header>
 
           <main className="flex-1 overflow-y-auto">
