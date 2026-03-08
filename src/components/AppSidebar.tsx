@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/sidebar";
 import { topics } from "@/data/topics";
 import { javaTopics } from "@/data/javaTopics";
-import { ChevronDown, Home, BookOpen, Layers, Coffee, ZoomIn, ZoomOut, RotateCcw } from "lucide-react";
+import { ChevronDown, Home, BookOpen, Layers, Coffee, Search, X } from "lucide-react";
 import { useSettings } from "@/contexts/SettingsContext";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
