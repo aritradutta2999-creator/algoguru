@@ -348,14 +348,13 @@
     @apply font-bold;
   }
 
-  /* ═══ Theory Section — Clean Editorial ═══ */
+  /* ═══ Theory Section — Clean Open Text ═══ */
   .theory-section {
-    @apply mb-8 pl-5;
-    border-left: 2px solid hsl(var(--primary)/0.15);
+    @apply mb-10;
   }
   .theory-paragraph {
-    @apply text-[15px] leading-[2.1] mb-5;
-    color: hsl(var(--foreground)/0.82);
+    @apply text-[15.5px] leading-[2] mb-6;
+    color: hsl(var(--foreground)/0.75);
   }
   .theory-paragraph:last-child {
     @apply mb-0;
