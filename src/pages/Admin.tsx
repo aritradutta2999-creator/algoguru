@@ -3,13 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { Users, BarChart3, Shield, Trash2, Loader2, UserCog } from "lucide-react";
+import { Users, BarChart3, Shield, Trash2, Loader2, UserCog, Ban, ShieldCheck } from "lucide-react";
 
 interface UserEntry {
   id: string;
   email: string;
   created_at: string;
   last_sign_in_at: string | null;
+  banned_until: string | null;
   profile: { display_name: string | null; avatar_url: string | null } | null;
   roles: string[];
 }
@@ -24,6 +25,11 @@ function adminApi(action: string, params: Record<string, unknown> = {}) {
   return supabase.functions.invoke("admin-api", {
     body: { action, ...params },
   });
+}
+
+function isBanned(user: UserEntry) {
+  if (!user.banned_until) return false;
+  return new Date(user.banned_until) > new Date();
 }
 
 export default function Admin() {
@@ -66,6 +72,25 @@ export default function Admin() {
     else {
       toast({ title: "User deleted" });
       setUsers((prev) => prev.filter((u) => u.id !== userId));
+    }
+  };
+
+  const handleBan = async (userId: string, email: string) => {
+    if (!confirm(`Ban user ${email}? They will be unable to log in.`)) return;
+    const { error } = await adminApi("ban_user", { userId, permanent: true });
+    if (error) toast({ title: "Error", description: "Failed to ban user", variant: "destructive" });
+    else {
+      toast({ title: "User banned" });
+      loadData();
+    }
+  };
+
+  const handleUnban = async (userId: string) => {
+    const { error } = await adminApi("unban_user", { userId });
+    if (error) toast({ title: "Error", description: "Failed to unban user", variant: "destructive" });
+    else {
+      toast({ title: "User unbanned" });
+      loadData();
     }
   };
 
@@ -126,7 +151,7 @@ export default function Admin() {
           <Loader2 className="animate-spin" size={20} style={{ color: "hsl(var(--muted-foreground))" }} />
         </div>
       ) : tab === "users" ? (
-        <UsersTab users={users} onDelete={handleDelete} onSetRole={handleSetRole} />
+        <UsersTab users={users} onDelete={handleDelete} onSetRole={handleSetRole} onBan={handleBan} onUnban={handleUnban} />
       ) : (
         <AnalyticsTab stats={stats} />
       )}
@@ -138,10 +163,14 @@ function UsersTab({
   users,
   onDelete,
   onSetRole,
+  onBan,
+  onUnban,
 }: {
   users: UserEntry[];
   onDelete: (id: string, email: string) => void;
   onSetRole: (id: string, role: string) => void;
+  onBan: (id: string, email: string) => void;
+  onUnban: (id: string) => void;
 }) {
   return (
     <div className="rounded-xl overflow-hidden" style={{ border: "1px solid hsl(var(--border))" }}>
@@ -150,6 +179,7 @@ function UsersTab({
           <thead>
             <tr style={{ background: "hsl(var(--muted)/0.3)" }}>
               <th className="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider" style={{ color: "hsl(var(--muted-foreground))" }}>User</th>
+              <th className="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider" style={{ color: "hsl(var(--muted-foreground))" }}>Status</th>
               <th className="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider" style={{ color: "hsl(var(--muted-foreground))" }}>Role</th>
               <th className="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider" style={{ color: "hsl(var(--muted-foreground))" }}>Joined</th>
               <th className="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider" style={{ color: "hsl(var(--muted-foreground))" }}>Last Login</th>
@@ -157,69 +187,105 @@ function UsersTab({
             </tr>
           </thead>
           <tbody>
-            {users.map((user) => (
-              <tr
-                key={user.id}
-                className="transition-colors hover:bg-muted/30"
-                style={{ borderTop: "1px solid hsl(var(--border)/0.5)" }}
-              >
-                <td className="px-4 py-3">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
-                      style={{ background: "hsl(var(--primary)/0.15)", color: "hsl(var(--primary))" }}
-                    >
-                      {(user.profile?.display_name?.[0] || user.email[0]).toUpperCase()}
-                    </div>
-                    <div>
-                      <div className="font-medium" style={{ color: "hsl(var(--foreground))" }}>
-                        {user.profile?.display_name || "—"}
+            {users.map((user) => {
+              const banned = isBanned(user);
+              const isAdminUser = user.roles.includes("admin");
+              return (
+                <tr
+                  key={user.id}
+                  className="transition-colors hover:bg-muted/30"
+                  style={{ borderTop: "1px solid hsl(var(--border)/0.5)", opacity: banned ? 0.6 : 1 }}
+                >
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
+                        style={{ background: banned ? "hsl(var(--destructive)/0.15)" : "hsl(var(--primary)/0.15)", color: banned ? "hsl(var(--destructive))" : "hsl(var(--primary))" }}
+                      >
+                        {(user.profile?.display_name?.[0] || user.email[0]).toUpperCase()}
                       </div>
-                      <div className="text-xs" style={{ color: "hsl(var(--muted-foreground))" }}>
-                        {user.email}
+                      <div>
+                        <div className="font-medium" style={{ color: "hsl(var(--foreground))" }}>
+                          {user.profile?.display_name || "—"}
+                        </div>
+                        <div className="text-xs" style={{ color: "hsl(var(--muted-foreground))" }}>
+                          {user.email}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </td>
-                <td className="px-4 py-3">
-                  <select
-                    value={user.roles[0] || "user"}
-                    onChange={(e) => onSetRole(user.id, e.target.value)}
-                    disabled={user.roles.includes("admin")}
-                    className="text-xs px-2 py-1 rounded-lg outline-none"
-                    style={{
-                      background: "hsl(var(--muted)/0.5)",
-                      color: user.roles.includes("admin") ? "hsl(var(--primary))" : "hsl(var(--foreground))",
-                      border: "1px solid hsl(var(--border))",
-                    }}
-                  >
-                    <option value="user">User</option>
-                    <option value="moderator">Moderator</option>
-                    <option value="admin">Admin</option>
-                  </select>
-                </td>
-                <td className="px-4 py-3 text-xs" style={{ color: "hsl(var(--muted-foreground))" }}>
-                  {new Date(user.created_at).toLocaleDateString()}
-                </td>
-                <td className="px-4 py-3 text-xs" style={{ color: "hsl(var(--muted-foreground))" }}>
-                  {user.last_sign_in_at
-                    ? new Date(user.last_sign_in_at).toLocaleDateString()
-                    : "Never"}
-                </td>
-                <td className="px-4 py-3 text-right">
-                  {!user.roles.includes("admin") && (
-                    <button
-                      onClick={() => onDelete(user.id, user.email)}
-                      className="p-1.5 rounded-lg transition-colors hover:bg-destructive/10"
-                      style={{ color: "hsl(var(--destructive))" }}
-                      title="Delete user"
+                  </td>
+                  <td className="px-4 py-3">
+                    {banned ? (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: "hsl(var(--destructive)/0.15)", color: "hsl(var(--destructive))" }}>
+                        <Ban size={10} /> Banned
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: "hsl(var(--success)/0.15)", color: "hsl(var(--success))" }}>
+                        <ShieldCheck size={10} /> Active
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    <select
+                      value={user.roles[0] || "user"}
+                      onChange={(e) => onSetRole(user.id, e.target.value)}
+                      disabled={isAdminUser}
+                      className="text-xs px-2 py-1 rounded-lg outline-none"
+                      style={{
+                        background: "hsl(var(--muted)/0.5)",
+                        color: isAdminUser ? "hsl(var(--primary))" : "hsl(var(--foreground))",
+                        border: "1px solid hsl(var(--border))",
+                      }}
                     >
-                      <Trash2 size={14} />
-                    </button>
-                  )}
-                </td>
-              </tr>
-            ))}
+                      <option value="user">User</option>
+                      <option value="moderator">Moderator</option>
+                      <option value="admin">Admin</option>
+                    </select>
+                  </td>
+                  <td className="px-4 py-3 text-xs" style={{ color: "hsl(var(--muted-foreground))" }}>
+                    {new Date(user.created_at).toLocaleDateString()}
+                  </td>
+                  <td className="px-4 py-3 text-xs" style={{ color: "hsl(var(--muted-foreground))" }}>
+                    {user.last_sign_in_at
+                      ? new Date(user.last_sign_in_at).toLocaleDateString()
+                      : "Never"}
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    {!isAdminUser && (
+                      <div className="flex items-center justify-end gap-1">
+                        {banned ? (
+                          <button
+                            onClick={() => onUnban(user.id)}
+                            className="p-1.5 rounded-lg transition-colors hover:bg-success/10"
+                            style={{ color: "hsl(var(--success))" }}
+                            title="Unban user"
+                          >
+                            <ShieldCheck size={14} />
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => onBan(user.id, user.email)}
+                            className="p-1.5 rounded-lg transition-colors hover:bg-warning/10"
+                            style={{ color: "hsl(var(--accent))" }}
+                            title="Ban user"
+                          >
+                            <Ban size={14} />
+                          </button>
+                        )}
+                        <button
+                          onClick={() => onDelete(user.id, user.email)}
+                          className="p-1.5 rounded-lg transition-colors hover:bg-destructive/10"
+                          style={{ color: "hsl(var(--destructive))" }}
+                          title="Delete user"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
