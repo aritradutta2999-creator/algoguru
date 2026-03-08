@@ -260,14 +260,24 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
-            <AppLayout>
+            <AuthProvider>
               <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/playground" element={<Playground />} />
-                <Route path="/:topicId" element={<TopicPage />} />
-                <Route path="*" element={<NotFound />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/*" element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <Routes>
+                        <Route path="/" element={<Index />} />
+                        <Route path="/playground" element={<Playground />} />
+                        <Route path="/:topicId" element={<TopicPage />} />
+                        <Route path="*" element={<NotFound />} />
+                      </Routes>
+                    </AppLayout>
+                  </ProtectedRoute>
+                } />
               </Routes>
-            </AppLayout>
+            </AuthProvider>
           </BrowserRouter>
         </ModeProvider>
       </SettingsProvider>
