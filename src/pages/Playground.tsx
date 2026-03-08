@@ -119,6 +119,7 @@ export default function Playground() {
   const [copied, setCopied] = useState(false);
   const [stdin, setStdin] = useState("");
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showTemplateMenu, setShowTemplateMenu] = useState(false);
   
   const editorRef = useRef<any>(null);
 
