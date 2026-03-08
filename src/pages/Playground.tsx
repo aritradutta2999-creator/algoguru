@@ -7,7 +7,7 @@ import {
   Code2, RotateCcw, Sun, Moon, Palette,
   AlignLeft, ChevronDown, Keyboard, Settings, Maximize, Minimize,
   FileCode, Plus, Pencil, Trash2, Save, X,
-  BookOpen, ArrowLeft,
+  BookOpen, ArrowLeft, Download,
 } from "lucide-react";
 import Editor, { OnMount } from "@monaco-editor/react";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
@@ -315,6 +315,18 @@ export default function Playground() {
     }
   }, [code, stdin, selectedCompiler]);
 
+  const downloadCode = useCallback(() => {
+    const classMatch = code.match(/public\s+class\s+(\w+)/);
+    const fileName = classMatch ? `${classMatch[1]}.java` : "Main.java";
+    const blob = new Blob([code], { type: "text/x-java-source" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = fileName;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [code]);
+
   const copyCode = useCallback(() => {
     navigator.clipboard.writeText(code);
     setCopied(true);
@@ -584,6 +596,17 @@ export default function Playground() {
             Reset
           </button>
 
+          {/* Download */}
+          <button
+            onClick={downloadCode}
+            title="Download as .java file"
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-all hover:bg-muted"
+            style={{ color: "hsl(var(--muted-foreground))", border: "1px solid hsl(var(--border))" }}
+          >
+            <Download size={13} />
+            Download
+          </button>
+
           {/* Format */}
           <button
             onClick={formatCode}
@@ -700,6 +723,14 @@ export default function Playground() {
                     {copied ? "Copied!" : "Copy Code"}
                   </button>
                   <button
+                    onClick={() => { downloadCode(); setShowSettingsMenu(false); }}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-left text-[11px] transition-colors hover:bg-muted"
+                    style={{ color: "hsl(var(--foreground))" }}
+                  >
+                    <Download size={13} />
+                    Download .java
+                  </button>
+                  <button
                     onClick={() => { resetCode(); setShowSettingsMenu(false); }}
                     className="w-full flex items-center gap-2 px-3 py-2.5 text-left text-[11px] transition-colors hover:bg-muted"
                     style={{ color: "hsl(var(--foreground))" }}
@@ -730,6 +761,15 @@ export default function Playground() {
             >
               <RotateCcw size={13} />
               Reset
+            </button>
+            <button
+              onClick={downloadCode}
+              title="Download as .java file"
+              className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all hover:bg-muted"
+              style={{ color: "hsl(var(--muted-foreground))", border: "1px solid hsl(var(--border))" }}
+            >
+              <Download size={13} />
+              Download
             </button>
             <button
               onClick={formatCode}
