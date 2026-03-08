@@ -20,7 +20,7 @@ import { useMode, APP_MODES } from "@/contexts/ModeContext";
 
 const topicIcons: Record<string, string> = {
   recursion: "↻",
-  backtracking: "⟵",
+  backtracking: "←",
   dp: "⊞",
   graphs: "◉",
   bits: "⊕",
