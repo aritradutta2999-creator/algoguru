@@ -91,9 +91,6 @@ function AppLayout({ children }: { children: React.ReactNode }) {
             <div className="flex-1" />
 
             <HeaderControls />
-
-            <div className="h-4 w-px mx-1" style={{ background: "hsl(var(--border))" }} />
-            <ZoomDisplay />
           </header>
 
           <main className="flex-1 overflow-y-auto">
