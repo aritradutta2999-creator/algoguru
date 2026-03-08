@@ -130,6 +130,27 @@ public class ClimbingStairs {
     }
 }`,
       },
+      {
+        title: "Space Optimization — Modulo Trick (O(1) Memory)",
+        language: "java",
+        content: `// When dp[i] only depends on dp[i-1] and dp[i-2], 
+// we only need to keep 3 values at any time.
+// Use i % 3 as the index → O(1) space!
+public static int climbModuloTrick(int n) {
+    if (n <= 2) return n;
+    int[] dp = new int[3]; // Only 3 slots!
+    dp[0 % 3] = 0;
+    dp[1 % 3] = 1;
+    dp[2 % 3] = 2;
+    for (int i = 3; i <= n; i++) {
+        dp[i % 3] = dp[(i - 1) % 3] + dp[(i - 2) % 3];
+    }
+    return dp[n % 3];
+}
+// This trick generalizes: if dp[i] depends on last K values,
+// use dp[i % (K+1)] to reduce space from O(n) to O(K).
+// Works for: Fibonacci, Climbing Stairs, Tribonacci, etc.`
+      },
     ],
     table: {
       headers: ["Approach", "Time", "Space", "Overhead", "Best For"],
