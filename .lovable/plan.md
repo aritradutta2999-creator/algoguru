@@ -1,49 +1,113 @@
 
 
-# Upgrade Content Renderer UI — Theory & Non-Code Blocks
+# Add Bit Manipulation Topic -- Basics to Advanced
 
-## Problem
-The theory block, key points, notes, tips, warnings, and other non-code content blocks look flat and need a premium visual upgrade throughout the application.
+## Overview
+Add a comprehensive **Bit Manipulation** topic as the 5th section in the CP Guide, following the same architecture and patterns used by existing topics. The content will be split across multiple subtopics (each rendered as a separate scrollable section on one page), with each section containing focused theory and multiple dedicated code blocks.
 
-## Changes
+## Content Structure (Subtopics)
 
-### 1. Theory Block Redesign (`ContentRenderer.tsx`)
-- Add a labeled header with icon ("📖 Theory" or "Understanding the Problem") like other boxes
-- Replace plain bullet dots with numbered step indicators (gradient-styled circles)
-- Add subtle left accent border like highlight-box
-- Increase padding, add inner spacing between paragraphs
-- Add a subtle gradient background instead of flat card color
+The Bit Manipulation topic will have **10 subtopics**, progressing from absolute basics to expert-level techniques:
 
-### 2. Key Points Block Upgrade
-- Replace plain dots with checkmark icons or numbered badges
-- Add alternating subtle backgrounds per item for scanability
-- Make the header more prominent with a gradient underline
+1. **Introduction to Bits & Number Systems** (Easy)
+   - Binary representation, decimal-to-binary conversion
+   - How integers are stored (32-bit, 64-bit), signed vs unsigned
+   - Code: Binary conversion utility, printing binary representation in Java
 
-### 3. Note / Tip / Warning Boxes
-- Add subtle inner glow/gradient backgrounds
-- Improve icon styling (use Lucide icons instead of emoji: `Lightbulb`, `CheckCircle`, `AlertTriangle`)
-- Add a colored top-bar accent in addition to left border
+2. **Basic Bitwise Operators** (Easy)
+   - AND, OR, XOR, NOT, Left Shift, Right Shift (arithmetic vs logical)
+   - Truth tables, operator precedence
+   - Code: Demonstrating each operator with examples, Odd/Even check using AND
 
-### 4. Section Header Upgrade
-- Add a subtle gradient underline below the title
-- Make difficulty badge slightly larger with a glow effect
-- Add a small decorative element (e.g., colored line) before the title
+3. **Common Bit Tricks & Hacks** (Easy-Medium)
+   - Check if number is power of 2
+   - Count set bits (Brian Kernighan's algorithm)
+   - Toggle, set, clear, check specific bit
+   - Swap two numbers without temp variable
+   - Code: Each trick as a separate code block with explanation
 
-### 5. Complexity Badges
-- Add subtle icon (Clock for Time, Database for Space) before labels
-- Slightly larger with more prominent styling
+4. **Bit Masking Fundamentals** (Medium)
+   - What is a bitmask, creating and using masks
+   - Extracting/setting bit ranges
+   - Using bitmasks for subset representation
+   - Code: Subset generation using bitmasks, permission flags example
 
-### 6. Table Styling
-- Add rounded corners to header cells
-- Subtle row hover effect
-- Better header gradient
+5. **XOR Properties & Problems** (Medium)
+   - XOR properties (self-inverse, associativity, commutativity)
+   - Find the single non-repeating element
+   - Find two non-repeating elements
+   - XOR from 1 to N in O(1)
+   - Code: Each problem as a separate code block
 
-### 7. CSS Updates (`index.css`)
-- New `.theory-block` class with gradient background + left accent
-- Updated `.highlight-box`, `.tip-box`, `.warning-box` with improved gradients and inner glow
-- New `.theory-step` class for numbered theory items
+6. **Counting Bits & Lookups** (Medium)
+   - Counting set bits: naive, Kernighan, lookup table, `Integer.bitCount()`
+   - Counting bits for all numbers 0 to N (DP approach)
+   - Hamming distance, total Hamming distance
+   - Code: All approaches compared, DP solution for counting bits
 
-### Files to Edit
-- `src/components/ContentRenderer.tsx` — Main rendering upgrades
-- `src/index.css` — New/updated CSS classes
+7. **Bit Manipulation in Competitive Programming** (Hard)
+   - Maximum XOR subarray (using Trie)
+   - Minimum XOR pair
+   - XOR queries on arrays (prefix XOR)
+   - Bitwise AND/OR of ranges
+   - Code: Trie-based max XOR, prefix XOR queries, range AND
+
+8. **Bitmask DP** (Hard)
+   - Subset enumeration with bitmask
+   - Travelling Salesman Problem (TSP) with bitmask DP
+   - Assignment Problem
+   - Iterating over all submasks of a mask
+   - Code: TSP implementation, assignment problem, submask enumeration
+
+9. **Advanced Bit Techniques** (Expert)
+   - Gosper's Hack (iterating subsets of size k)
+   - Bit-parallel algorithms
+   - Gray Code generation
+   - Bitboard representation (chess/game programming)
+   - SOS DP (Sum over Subsets)
+   - Code: Gosper's Hack, Gray Code, SOS DP
+
+10. **Practice Problems & Patterns** (Expert)
+    - Comprehensive problem set with solutions
+    - Patterns summary: when to use which technique
+    - Complexity reference table for all bit operations
+    - Code: Selected hard problems with full Java solutions
+
+## Files to Create / Modify
+
+### 1. Create `src/data/bitManipulationContent.ts`
+- Export `bitManipulationContent: ContentSection[]` with all 10 sections
+- Each section uses the existing `ContentSection` interface (id, title, difficulty, theory, keyPoints, code blocks, tables, notes, tips, warnings)
+- Multiple code blocks per section (not one giant block)
+
+### 2. Modify `src/data/topics.ts`
+- Add a new topic entry:
+  - id: `"bits"`
+  - title: `"Bit Manipulation"`
+  - icon: `"⊕"`
+  - color: `"info"` (a new color, or reuse an existing one)
+  - description: `"Bitwise operations & masking"`
+  - subtopics: all 10 subtopic entries with matching IDs
+
+### 3. Modify `src/pages/TopicPage.tsx`
+- Import `bitManipulationContent`
+- Add `bits: bitManipulationContent` to the `contentMap`
+- Add `bits` to `topicColorVars`
+
+### 4. Modify `src/components/AppSidebar.tsx`
+- Add `bits` entry to `topicIcons` and `topicColorVars`
+
+### 5. Modify `src/pages/Index.tsx`
+- Add `bits` to `topicColors` and `topicIcons` maps
+- Update quick stats (Topics: 5, Sections: 45+, Code Examples: 80+)
+- Add "Bit Manipulation" to the roadmap steps
+
+### 6. Modify `src/index.css`
+- Add an `--info` CSS variable color (e.g., a distinct purple/magenta) for the new topic if needed, or assign an existing color
+
+## Approach
+- Follow the exact same `ContentSection` data schema
+- Each subtopic gets its own `id` matching the sidebar entry
+- Code blocks are split by concept (e.g., "Brian Kernighan's Algorithm" is one block, "Toggle Bit" is another)
+- Difficulty progresses: Easy -> Easy -> Medium -> Medium -> Medium -> Medium -> Hard -> Hard -> Expert -> Expert
 
