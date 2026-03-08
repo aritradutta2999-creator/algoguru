@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useSettings } from "@/contexts/SettingsContext";
 import { ContentRenderer } from "@/components/ContentRenderer";
 import { recursionContent } from "@/data/recursionContent";
 import { backtrackingContent } from "@/data/backtrackingContent";
@@ -79,6 +80,7 @@ export default function TopicPage() {
   const [tocOpen, setTocOpen] = useState(false);
   const mainRef = useRef<HTMLDivElement>(null);
   const [activeSection, setActiveSection] = useState<string>("");
+  const { contentWidth } = useSettings();
 
   const isDSMode = currentMode.id === "ds";
   const isPracticeMode = currentMode.id === "practice";
