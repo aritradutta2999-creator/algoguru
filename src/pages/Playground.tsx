@@ -137,7 +137,7 @@ function instrumentCodeForDebug(source: string, breakpointLines: Set<number>): s
 
   // Track initialized variables with their scope depth
   // When brace depth drops below a variable's declared depth, it's out of scope
-  const initializedVars: { name: string; line: number; isArray: boolean; scopeDepth: number }[] = [];
+  const initializedVars: { name: string; line: number; isArray: boolean; is2dArray: boolean; scopeDepth: number }[] = [];
 
   let braceDepth = 0;
 
