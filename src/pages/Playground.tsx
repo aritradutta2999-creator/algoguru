@@ -192,8 +192,34 @@ export default function Playground() {
   };
 
   const formatCode = useCallback(() => {
-    editorRef.current?.getAction("editor.action.formatDocument")?.run();
-  }, []);
+    const raw = code;
+    if (!raw.trim()) return;
+
+    const lines = raw.split('\n');
+    const formatted: string[] = [];
+    let indent = 0;
+
+    for (let line of lines) {
+      let trimmed = line.trim();
+      if (!trimmed) { formatted.push(''); continue; }
+
+      // Decrease indent before closing braces
+      const closers = (trimmed.match(/^[}\])]/g) || []).length;
+      if (closers > 0 && indent > 0) indent--;
+
+      formatted.push('    '.repeat(Math.max(indent, 0)) + trimmed);
+
+      // Count openers and closers for next line
+      const opens = (trimmed.match(/[{(\[]/g) || []).length;
+      const closes = (trimmed.match(/[}\])]/g) || []).length;
+      indent += opens - closes;
+      // Re-adjust if we already handled leading closer
+      if (closers > 0) indent += closers;
+      indent = Math.max(indent, 0);
+    }
+
+    setCode(formatted.join('\n'));
+  }, [code]);
 
   const resetCode = useCallback(() => {
     setCode(DEFAULT_CODE);
