@@ -125,7 +125,9 @@ const SOLARIZED_DARK_THEME = {
  * showing the line number and any visible local variables.
  */
 // Types that are arrays and need Arrays.toString() or Arrays.deepToString()
-const ARRAY_TYPE_PATTERN = /\[\]/;
+const ARRAY_1D_PATTERN = /^\w+\[\]$/;  // e.g., int[], String[]
+const ARRAY_2D_PATTERN = /\[\]\[\]/;    // e.g., int[][], String[][]
+const ARRAY_ANY_PATTERN = /\[\]/;       // any array
 
 function instrumentCodeForDebug(source: string, breakpointLines: Set<number>): string {
   if (breakpointLines.size === 0) return source;
