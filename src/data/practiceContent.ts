@@ -7,6 +7,7 @@ import { graphsEasy, graphsMedium, graphsHard } from "./practice/graphsProblems"
 import { treesEasy, treesMedium, treesHard } from "./practice/treesProblems";
 import { greedyEasy, greedyMedium, greedyHard } from "./practice/greedyProblems";
 import { stackQueueEasy, stackQueueMedium, stackQueueHard } from "./practice/stackQueueProblems";
+import { mathEasy, mathMedium, mathHard } from "./practice/mathProblems";
 
 // Re-export for backwards compatibility
 export { arraysEasy, arraysMedium, arraysHard };
@@ -17,6 +18,7 @@ export { graphsEasy, graphsMedium, graphsHard };
 export { treesEasy, treesMedium, treesHard };
 export { greedyEasy, greedyMedium, greedyHard };
 export { stackQueueEasy, stackQueueMedium, stackQueueHard };
+export { mathEasy, mathMedium, mathHard };
 
 // ═══════════════════════════════════════════════════════
 // HELPER: Create a difficulty group header section
@@ -78,5 +80,10 @@ export const practiceContentMap: Record<string, ContentSection[]> = {
     groupHeader("stackq-easy", "Easy Problems", "Easy"), ...stackQueueEasy,
     groupHeader("stackq-medium", "Medium Problems", "Medium"), ...stackQueueMedium,
     groupHeader("stackq-hard", "Hard Problems", "Hard"), ...stackQueueHard,
+  ],
+  "practice-math": [
+    groupHeader("math-easy", "Easy Problems", "Easy"), ...mathEasy,
+    groupHeader("math-medium", "Medium Problems", "Medium"), ...mathMedium,
+    groupHeader("math-hard", "Hard Problems", "Hard"), ...mathHard,
   ],
 };
