@@ -6,10 +6,12 @@ export const segmentTreeContent: ContentSection[] = [
     title: "What is a Segment Tree?",
     difficulty: "Medium",
     theory: [
-      "A **Segment Tree** is a binary tree where each node stores information about a range (segment) of the array. The root covers the full array, and each leaf covers one element.",
-      "It allows **point updates** and **range queries** in **O(log n)** time — much faster than brute force O(n).",
-      "Common uses: range sum, range min/max, range GCD, count of elements in range. It's the go-to data structure for range query problems in competitive programming.",
-      "The tree is stored in a flat array of size **4n** (to handle all levels). Node `i` has children at `2*i` and `2*i+1`."
+      "A **Segment Tree** is a data structure that stores information about array intervals as a tree. It allows answering **range queries** (sum, min, max, GCD) and **modifications** (point update, range update) in **O(log n)** time.",
+      "The tree is built using divide-and-conquer: the root stores info about the full array, each node splits its segment into two halves. Leaf nodes correspond to individual elements. Internal nodes store the **merge** of their children (e.g., sum, min).",
+      "**Memory**: Requires **4n** vertices. The exact count is 2·2^⌈log₂n⌉ ≤ 4n. The height is O(log n) since segment sizes halve at each level.",
+      "**Query complexity proof**: At each level of the tree, we visit at most **4 vertices** (at most 2 partial overlaps per side). Since there are O(log n) levels, total query time is O(log n).",
+      "**Generalization**: Any **associative** operation works as the merge function — sum, min, max, GCD, XOR, matrix multiplication, etc. The identity element serves as the 'no overlap' return value (0 for sum, ∞ for min, -∞ for max).",
+      "**Advanced variants**: Persistent segment tree (keeps all versions), 2D segment tree (O(log²n) rectangle queries), merge sort tree (stores sorted lists at each node for order-statistic queries), implicit/dynamic segment tree (creates nodes on demand for huge ranges)."
     ],
     diagram: {
       type: "hierarchy",

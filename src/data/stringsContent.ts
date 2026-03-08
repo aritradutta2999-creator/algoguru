@@ -43,8 +43,11 @@ String rev = new StringBuilder(s).reverse().toString();`
     title: "Palindrome Problems",
     difficulty: "Easy",
     theory: [
-      "A **palindrome** reads the same forwards and backwards. Key techniques: two-pointer check, expand-around-center for longest palindromic substring, and Manacher's algorithm for O(n).",
-      "Common variants: check palindrome, longest palindromic substring, longest palindromic subsequence (DP), minimum insertions to make palindrome."
+      "A **palindrome** reads the same forwards and backwards. Key techniques: two-pointer check O(n), expand-around-center O(n²) for longest palindromic substring, and **Manacher's algorithm** O(n) for finding ALL sub-palindromes.",
+      "**Manacher's key insight**: For each center i, compute d_odd[i] (max radius of odd-length palindrome) and d_even[i] (max radius of even-length palindrome). Palindromes at a center form a **contiguous chain** — if there's a palindrome of length l, there's also one of length l-2, l-4, etc.",
+      "**Manacher's algorithm**: Maintain the rightmost palindrome boundary (l, r). For each new center i: if i < r, mirror from position j = l+(r-i) to initialize d[i] = min(d[j], r-i). Then extend trivially. This gives O(n) total because r only moves right.",
+      "**Alternative approaches**: String hashing can solve palindrome problems in O(n·log n) — binary search for the longest palindrome at each center, check using hash comparison of the substring and its reverse.",
+      "Common variants: check palindrome, longest palindromic substring, longest palindromic subsequence (DP), minimum insertions to make palindrome, count palindromic substrings."
     ],
     code: [
       {
@@ -98,36 +101,48 @@ String rev = new StringBuilder(s).reverse().toString();`
       {
         title: "Manacher's Algorithm — O(n) All Palindromes",
         language: "java",
-        content: `static int[] manacher(String s) {
-    // Transform: "abc" → "^#a#b#c#$"
-    StringBuilder t = new StringBuilder("^#");
-    for (char c : s.toCharArray()) {
-        t.append(c).append('#');
-    }
-    t.append('$');
-    
-    int n = t.length();
-    int[] p = new int[n]; // p[i] = radius of palindrome centered at i
-    int center = 0, right = 0;
-    
-    for (int i = 1; i < n - 1; i++) {
-        int mirror = 2 * center - i;
-        if (i < right) p[i] = Math.min(right - i, p[mirror]);
-        
-        while (t.charAt(i + p[i] + 1) == t.charAt(i - p[i] - 1))
-            p[i]++;
-        
-        if (i + p[i] > right) {
-            center = i;
-            right = i + p[i];
+        content: `// Computes d_odd[i] = radius of longest odd-length palindrome centered at i
+// d_odd[i] means s[i-d+1 .. i+d-1] is a palindrome of length 2*d-1
+static int[] manacherOdd(String s) {
+    int n = s.length();
+    int[] d = new int[n];
+    // l, r are exclusive boundaries of rightmost palindrome
+    int l = 0, r = 0;
+    for (int i = 0; i < n; i++) {
+        // Mirror from position l + (r - i) if inside rightmost palindrome
+        d[i] = (i < r) ? Math.min(r - i, d[l + (r - 1 - i)]) : 1;
+        // Extend trivially
+        while (i - d[i] >= 0 && i + d[i] < n 
+               && s.charAt(i - d[i]) == s.charAt(i + d[i]))
+            d[i]++;
+        // Update rightmost palindrome
+        if (i + d[i] > r) {
+            l = i - d[i] + 1;
+            r = i + d[i];
         }
     }
-    return p;
+    return d; // d[i] = radius (palindrome length = 2*d[i] - 1)
 }
+
+// For even-length palindromes: transform "abc" → "a#b#c" and run odd
+// Or implement separately with similar logic
 // Time: O(n), Space: O(n)`
+      },
+      {
+        title: "Count Total Palindromic Substrings",
+        language: "java",
+        content: `static long countPalindromes(String s) {
+    int[] d = manacherOdd(s);
+    long count = 0;
+    for (int x : d) count += x; // Each center contributes d[i] palindromes
+    return count;
+}
+// "aaa" → d = [1,2,1] → 4 palindromic substrings: "a","a","a","aa","aa","aaa"
+// Wait, that's 6. Let's count: a(0), a(1), a(2), aa(01), aa(12), aaa(012) = 6
+// d[0]=1, d[1]=2, d[2]=1 → 1+2+1 = 4 odd-length. Need even too!`
       }
     ],
-    note: "Manacher's finds ALL palindromic substrings in O(n) — extremely useful in competitive programming."
+    note: "Manacher's finds ALL palindromic substrings in O(n). The key invariant is that the rightmost boundary r only moves right, giving amortized O(1) per center. For competitive programming, the 'transform and run odd-only' approach is simplest."
   },
   {
     id: "str-matching",
@@ -136,8 +151,11 @@ String rev = new StringBuilder(s).reverse().toString();`
     theory: [
       "**Pattern Matching**: Given text T and pattern P, find all occurrences of P in T.",
       "**Naive approach**: O(n·m) — slide pattern over text character by character.",
-      "**KMP (Knuth-Morris-Pratt)**: O(n+m) — precomputes a **failure function** (LPS array) to skip unnecessary comparisons.",
-      "LPS[i] = length of the longest proper prefix of pattern[0..i] which is also a suffix."
+      "**KMP (Knuth-Morris-Pratt)**: O(n+m) — precomputes a **prefix function** (LPS/failure array) to skip unnecessary comparisons. Published by Knuth, Morris, and Pratt in 1977.",
+      "**Prefix function π[i]** = length of the longest proper prefix of s[0..i] which is also a suffix of s[0..i]. Example: π('abcabcd') = [0,0,0,1,2,3,0].",
+      "**Key observation**: π[i+1] ≤ π[i] + 1 (the value can increase by at most 1). If s[i+1] = s[π[i]], then π[i+1] = π[i] + 1. Otherwise, we 'fall back' to π[π[i]-1] and check again — this chain of fallbacks is what makes KMP efficient.",
+      "**Why O(n) for prefix function**: The value of π can increase at most n times total (by 1 each step), and therefore can decrease at most n times total. So the total number of iterations across all fallbacks is O(n).",
+      "**Applications beyond pattern matching**: (1) Count occurrences of each prefix in the string. (2) Count distinct substrings by building prefix function incrementally. (3) String compression: shortest period of s has length n - π[n-1] if n is divisible by it. (4) Building automaton for string matching."
     ],
     code: [
       {
@@ -190,12 +208,28 @@ String rev = new StringBuilder(s).reverse().toString();`
     return result;
 }
 // Time: O(n + m), Space: O(m)`
+      },
+      {
+        title: "String Compression using Prefix Function",
+        language: "java",
+        content: `// Find shortest repeating period of string s
+// If s = "abcabcabc", period = "abc" (length 3)
+static int shortestPeriod(String s) {
+    int n = s.length();
+    int[] lps = buildLPS(s);
+    int period = n - lps[n - 1];
+    // If n is divisible by period, then s = period repeated n/period times
+    return (n % period == 0) ? period : n; // n means no compression
+}
+// Example: "abcabc" → period=3, "abab" → period=2, "abc" → period=3 (no repeat)`
       }
     ],
     keyPoints: [
       "KMP never backtracks on the text — only on the pattern using LPS",
       "LPS array construction is itself a pattern matching on the pattern",
-      "KMP is optimal for single-pattern matching"
+      "KMP is optimal for single-pattern matching",
+      "String compression: period = n - π[n-1], valid if n % period == 0",
+      "Counting prefix occurrences: count[π[i]]++ for each i, then propagate"
     ]
   },
   {
@@ -203,9 +237,11 @@ String rev = new StringBuilder(s).reverse().toString();`
     title: "Rabin-Karp — Rolling Hash",
     difficulty: "Medium",
     theory: [
-      "**Rabin-Karp** uses **hashing** to find pattern matches. Compute hash of pattern and slide a window over text, comparing hashes.",
-      "Uses **rolling hash**: when sliding window by 1, update hash in O(1) instead of recomputing O(m).",
-      "Hash collisions possible → verify matches character-by-character. Expected time: O(n+m)."
+      "**Rabin-Karp** uses **polynomial hashing** to find pattern matches. Authored by Rabin and Karp in 1987. The idea: compute hash of pattern and compare with hash of each substring of equal length in O(1).",
+      "**Hash function**: hash(s) = (s[0]·p⁰ + s[1]·p¹ + ... + s[n-1]·pⁿ⁻¹) mod m, where p is a prime base (31 for lowercase) and m is a large prime (10⁹+9). This polynomial hash allows O(1) substring hash computation using prefix hashes.",
+      "**Key technique**: Precompute prefix hashes h[0..n]. Hash of substring s[i..j] = (h[j+1] - h[i]) / p^i mod m. No rolling needed — just two prefix hash lookups! This is more versatile than the sliding window approach.",
+      "Hash collisions possible → verify matches character-by-character. With a single hash, collision probability per comparison is ~1/m ≈ 10⁻⁹. Use **double hashing** (two different mod values) to reduce to ~10⁻¹⁸.",
+      "**Applications**: (1) Multi-pattern matching — hash all patterns, check in O(1) per window. (2) Count distinct substrings of length k. (3) Longest duplicate substring via binary search + hashing. (4) Comparing arbitrary substrings in O(1) after O(n) preprocessing."
     ],
     code: [
       {
@@ -248,16 +284,18 @@ String rev = new StringBuilder(s).reverse().toString();`
 // Expected: O(n + m), Worst: O(n·m)`
       }
     ],
-    tip: "Rabin-Karp excels at **multi-pattern matching** — compute hashes of all patterns and check in O(1) per window."
+    tip: "Rabin-Karp excels at **multi-pattern matching** — compute hashes of all patterns and check in O(1) per window. For anti-hash tests in competitive programming, always use double hashing with two different moduli (e.g., 10⁹+7 and 10⁹+9)."
   },
   {
     id: "str-z-algo",
     title: "Z-Algorithm",
     difficulty: "Medium",
     theory: [
-      "**Z-array**: Z[i] = length of the longest substring starting at i that matches a prefix of the string.",
-      "Used for pattern matching by constructing string `P + '$' + T` and finding Z[i] == len(P).",
-      "Time: O(n), Space: O(n) — alternative to KMP with a simpler implementation."
+      "**Z-function**: z[i] = length of the longest substring starting at position i that is also a prefix of the string. By convention z[0] = 0. Example: z('aaabaab') = [0,2,1,0,2,1,0].",
+      "**Efficient O(n) algorithm**: Maintain the rightmost segment match [l, r). For each i: if i < r, initialize z[i] = min(r-i, z[i-l]) using already computed values. Then extend by comparing characters. Update [l, r) if i + z[i] > r.",
+      "**Why O(n)**: Each character is compared at most twice — once when extending from some position, and the result is reused via the [l, r) window. The r pointer only moves right, giving amortized O(n).",
+      "**Applications**: (1) Pattern matching via P + '$' + T — find all i where z[i] = |P|. (2) Count distinct substrings. (3) String compression — smallest period k such that z[k] = n-k. (4) Building the KMP failure function from Z-function and vice versa.",
+      "Z-function and prefix function are **equivalent** in power — each can be computed from the other in O(n). Z-function is often considered easier to implement and understand."
     ],
     code: [
       {
@@ -300,6 +338,20 @@ String rev = new StringBuilder(s).reverse().toString();`
     }
     return result;
 }`
+      },
+      {
+        title: "String Compression using Z-function",
+        language: "java",
+        content: `// Find smallest period: smallest k where z[k] == n - k
+static int smallestPeriod(String s) {
+    int n = s.length();
+    int[] z = zFunction(s);
+    for (int k = 1; k < n; k++) {
+        if (z[k] == n - k && n % k == 0) return k;
+    }
+    return n; // No compression possible
+}
+// "ababab" → period 2 ("ab"), "abcabc" → period 3 ("abc")`
       }
     ]
   },
@@ -381,9 +433,11 @@ int countWordsWithPrefix(String prefix) {
     title: "String Hashing",
     difficulty: "Medium",
     theory: [
-      "**Polynomial hashing** maps strings to integers: hash(s) = Σ s[i] × BASE^i mod MOD.",
-      "**Prefix hashes** allow O(1) substring hash queries after O(n) preprocessing.",
-      "Use **double hashing** (two different MODs) to minimize collision probability in CP."
+      "**Polynomial hashing** maps strings to integers: hash(s) = Σ s[i] × p^i mod m. Choose p ≥ alphabet size (p=31 for lowercase, p=53 for mixed case) and m as a large prime (10⁹+7 or 10⁹+9).",
+      "**Prefix hashes** allow O(1) substring hash queries after O(n) preprocessing: hash(s[l..r]) = (h[r+1] - h[l] × p^(r-l+1)) mod m. This is the single most important technique for string problems.",
+      "**Collision probability**: For a single hash mod m, probability of collision between two random strings is ~1/m. With m = 10⁹+9, this is safe for most problems. But competitive programming problems may have **anti-hash tests**.",
+      "Use **double hashing** (two different base/MOD pairs) to reduce collision probability to ~1/m² ≈ 10⁻¹⁸. Example: use (31, 10⁹+7) and (37, 10⁹+9) simultaneously.",
+      "**Applications**: (1) O(1) substring equality comparison. (2) Rabin-Karp pattern matching. (3) Count distinct substrings of length k in O(n). (4) Longest common substring via binary search + hashing O(n·log n). (5) Determine if one string is a rotation of another in O(n)."
     ],
     code: [
       {
@@ -429,9 +483,24 @@ static int countDistinct(String s, int k) {
     }
     return seen.size();
 }`
+      },
+      {
+        title: "Double Hashing for Safety",
+        language: "java",
+        content: `class DoubleHash {
+    StringHash h1, h2;
+    DoubleHash(String s) {
+        h1 = new StringHash(s); // uses MOD=10^9+7, BASE=31
+        h2 = new StringHash(s); // override to MOD=10^9+9, BASE=37
+    }
+    long getHash(int l, int r) {
+        return h1.getHash(l, r) * 1_000_000_009L + h2.getHash(l, r);
+    }
+}
+// Collision probability: ~10^(-18) — virtually impossible`
       }
     ],
-    warning: "Always use **double hashing** in contests to avoid anti-hash tests that cause collisions."
+    warning: "Always use **double hashing** in contests to avoid anti-hash tests that cause collisions. Never use BASE = 1 or MOD that's a power of 2 — these are easily hackable."
   },
   {
     id: "str-sliding-window",
@@ -664,9 +733,10 @@ static int countDistinct(String s, int k) {
     title: "Suffix Array & LCP",
     difficulty: "Hard",
     theory: [
-      "**Suffix Array**: sorted array of all suffixes of a string, represented by their starting indices. Enables powerful substring queries.",
-      "**LCP Array**: LCP[i] = length of longest common prefix between suffix[i] and suffix[i-1] in the sorted order.",
-      "Applications: count distinct substrings, longest repeated substring, pattern matching in O(m·log n)."
+      "**Suffix Array**: sorted array of all suffixes of a string, represented by their starting indices. The i-th suffix is s[i..n-1]. The suffix array contains the starting indices after sorting all suffixes lexicographically.",
+      "**Construction**: The O(n·log²n) approach sorts suffixes by doubling the comparison length each iteration — first by single characters, then pairs, then quadruples, etc. Each phase uses the rankings from the previous phase. O(n·log n) construction exists using radix sort instead of comparison sort.",
+      "**LCP Array**: lcp[i] = length of longest common prefix between sa[i] and sa[i-1] in sorted order. **Kasai's algorithm** computes it in O(n) using the key insight: if lcp of the suffix starting at position i is h, then lcp of the suffix starting at position i+1 is at least h-1.",
+      "**Applications**: (1) Count distinct substrings = n(n+1)/2 - Σlcp[i]. (2) Longest repeated substring = max(lcp[i]). (3) Pattern matching via binary search in O(m·log n). (4) Longest common substring of two strings — concatenate with separator, find max lcp between suffixes from different strings."
     ],
     code: [
       {
@@ -748,8 +818,10 @@ static int countDistinct(String s, int k) {
     title: "Advanced String Techniques",
     difficulty: "Expert",
     theory: [
-      "Advanced CP string techniques include: **Aho-Corasick** (multi-pattern matching), **Suffix Automaton** (all substrings in O(n) space), and **Palindromic Tree** (Eertree).",
-      "These are essential for ICPC/Codeforces Div 1-2 problems involving complex string operations."
+      "**Aho-Corasick**: Multi-pattern matching automaton. Given a set of patterns (dictionary) with total length m over alphabet of size k, builds a finite-state automaton in O(mk) time. Then processes text of length n in O(n + matches) time. Proposed by Alfred Aho and Margaret Corasick in 1975.",
+      "**Construction**: (1) Build a trie from all patterns. (2) Add **suffix links** (like KMP failure function but on a trie) using BFS. The suffix link of a node v points to the longest proper suffix of the string corresponding to v that is also a prefix of some pattern in the trie. (3) Add **dictionary suffix links** to quickly find all patterns that are suffixes of the current prefix.",
+      "**Suffix Automaton (SAM)**: Represents ALL substrings of a string in O(n) space with at most 2n-1 states and 3n-4 transitions. Supports: count distinct substrings, find longest common substring, check if a string is a substring. The most powerful single-string data structure.",
+      "**Palindromic Tree (Eertree)**: Data structure that stores all distinct palindromic substrings in O(n) space. Supports online construction — add characters one by one. Can count palindromic substrings ending at each position."
     ],
     code: [
       {

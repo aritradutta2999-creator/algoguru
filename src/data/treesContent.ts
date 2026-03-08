@@ -916,9 +916,11 @@ static int dfsCount(TreeNode node, long currSum, int target, Map<Long, Integer> 
     title: "Fenwick Tree (BIT)",
     difficulty: "Medium",
     theory: [
-      "**Fenwick Tree** (Binary Indexed Tree) supports point update and prefix sum query in O(log n) with much less code than Segment Tree.",
-      "Uses the concept that each index i is responsible for a range determined by the lowest set bit of i.",
-      "Cannot natively handle arbitrary range updates — use with difference arrays for range add + point query."
+      "**Fenwick Tree** (Binary Indexed Tree / BIT) supports point update and prefix sum query in O(log n). Invented by Peter Fenwick in 1994. Uses only O(n) memory — same as the original array — and is very cache-friendly.",
+      "**Key idea**: Each index i is responsible for a range determined by the **lowest set bit** of i. Index i stores the sum of elements in range [i - lowbit(i) + 1, i], where lowbit(i) = i & (-i). This creates a clever implicit tree structure.",
+      "**Operations**: Prefix sum query walks DOWN by clearing the lowest set bit: i -= i & (-i). Point update walks UP by adding the lowest set bit: i += i & (-i). Both visit O(log n) nodes.",
+      "**Fenwick vs Segment Tree**: Fenwick has 2-5x smaller constant factor, simpler code (~10 lines), and better cache performance. But it only natively supports prefix queries (not arbitrary range) and requires an **inverse operation** (works for sum, XOR, but NOT for min/max).",
+      "**Range update + point query**: Use a Fenwick tree on the difference array. **Range update + range query**: Use two Fenwick trees with the identity: sum(1..x) = B1(x)·x - B2(x), update both on range [l,r]."
     ],
     code: [
       {
@@ -981,8 +983,11 @@ static FenwickTree buildFast(int[] arr) {
     title: "Advanced Tree Techniques",
     difficulty: "Expert",
     theory: [
-      "Advanced: **Heavy-Light Decomposition** (path queries in O(log²n)), **Centroid Decomposition** (divide & conquer on trees), **Tree DP**, **Rerooting technique**.",
-      "These are essential for hard CP problems involving path queries and subtree operations."
+      "**Heavy-Light Decomposition (HLD)**: Decomposes tree into O(log n) chains such that any root-to-leaf path crosses at most O(log n) chains. Each chain is stored contiguously, enabling path queries in O(log²n) with a segment tree on each chain.",
+      "**Centroid Decomposition**: Find the centroid (vertex whose removal splits tree into subtrees of size ≤ n/2), make it root, recurse on subtrees. Creates a centroid tree of height O(log n). Enables distance queries, path counting, and nearest marked vertex in O(n log n).",
+      "**DSU (Disjoint Set Union / Union-Find)**: Supports union and find in nearly O(1) amortized (inverse Ackermann). Two optimizations: **path compression** (make all nodes point directly to root during find) and **union by rank/size** (attach smaller tree under larger). Both together give O(α(n)) per operation.",
+      "**DSU applications**: Kruskal's MST, dynamic connectivity, connected components online, minimum spanning forest. **DSU with rollback**: don't use path compression, use union by rank only — allows undoing unions for offline divide-and-conquer.",
+      "**Sparse Table**: Preprocess in O(n log n), answer **idempotent** range queries (min, max, GCD) in O(1). Stores st[k][i] = answer for range [i, i+2^k-1]. Query [l,r]: overlap two precomputed ranges of length 2^k where k = ⌊log₂(r-l+1)⌋. Only works on **immutable** arrays."
     ],
     code: [
       {
