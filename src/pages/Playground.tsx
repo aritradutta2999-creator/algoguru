@@ -12,6 +12,7 @@ import {
 import Editor, { OnMount } from "@monaco-editor/react";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import { ALL_SNIPPETS, PRIORITY_LABELS } from "@/data/javaSnippets";
+import { STATIC_COMPLETIONS_MAP, INSTANCE_COMPLETIONS_MAP, ALL_INSTANCE_METHODS, JAVA_KEYWORDS, JAVA_TYPES } from "@/data/javaAutoComplete";
 import { CP_TEMPLATES } from "@/data/cpTemplates";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
