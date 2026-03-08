@@ -143,59 +143,8 @@ export default function Playground() {
   const editorRef = useRef<any>(null);
 
   useEffect(() => {
-    let isMounted = true;
-
-    const loadCompilers = async () => {
-      try {
-        const res = await fetch("https://wandbox.org/api/list.json");
-        if (!res.ok) return;
-
-        const list = await res.json() as Array<{ language?: string; name?: string }>;
-        const javaItems = list
-          .filter((item) => item.language === "Java" && item.name?.startsWith("openjdk-jdk-"))
-          .map((item) => item.name as string);
-
-        const unique = Array.from(new Set(javaItems));
-        if (!unique.length || !isMounted) return;
-
-        const parsed = unique
-          .map((compiler) => {
-            const match = compiler.match(/openjdk-jdk-(\d+)/);
-            const major = match ? Number(match[1]) : 0;
-            return {
-              label: major ? `Java ${major}` : compiler,
-              compiler,
-              major,
-            };
-          })
-          .sort((a, b) => b.major - a.major)
-          .map(({ label, compiler }) => ({ label, compiler }));
-
-        // Ensure Java 21 & 17 always appear
-        const existingIds = new Set(parsed.map((c) => c.compiler));
-        for (const fb of FALLBACK_JAVA_COMPILERS) {
-          if (!existingIds.has(fb.compiler)) {
-            parsed.push(fb);
-          }
-        }
-        // Re-sort: highest version first
-        parsed.sort((a, b) => {
-          const majA = Number(a.label.replace("Java ", "")) || 0;
-          const majB = Number(b.label.replace("Java ", "")) || 0;
-          return majB - majA;
-        });
-
-        setAvailableCompilers(parsed);
-        setSelectedCompiler(parsed[0]);
-      } catch {
-        // keep fallback compilers
-      }
-    };
-
-    loadCompilers();
-    return () => {
-      isMounted = false;
-    };
+    setAvailableCompilers(FALLBACK_JAVA_COMPILERS);
+    setSelectedCompiler(FALLBACK_JAVA_COMPILERS[0]);
   }, []);
 
   const handleEditorMount: OnMount = (editor, monaco) => {
