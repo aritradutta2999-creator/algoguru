@@ -1,4 +1,5 @@
 import { useState, useMemo, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -22,7 +23,6 @@ import Admin from "./pages/Admin";
 import { topics } from "@/data/topics";
 import { javaTopics } from "@/data/javaTopics";
 import { practiceTopics } from "@/data/practiceTopics";
-import { motion, AnimatePresence } from "framer-motion";
 
 // Import all content maps for deep search
 import { recursionContent } from "@/data/recursionContent";
@@ -169,7 +169,7 @@ function SearchButton() {
         </kbd>
       </button>
 
-      {open && (
+      {open && createPortal(
         <div className="fixed inset-0 flex items-center justify-center" style={{ zIndex: 9999 }} onClick={() => setOpen(false)}>
           <div className="fixed inset-0" style={{ background: "hsl(var(--background)/0.75)", backdropFilter: "blur(8px)" }} />
           <div
@@ -177,86 +177,87 @@ function SearchButton() {
             style={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", boxShadow: "0 25px 80px hsl(var(--foreground)/0.2)", maxHeight: "65vh" }}
             onClick={(e) => e.stopPropagation()}
           >
-              {/* Search header */}
-              <div className="flex items-center gap-3 px-5 py-4 border-b" style={{ borderColor: "hsl(var(--border))" }}>
-                <div className="flex items-center justify-center w-9 h-9 rounded-xl" style={{ background: "hsl(var(--primary)/0.1)" }}>
-                  <Search size={20} strokeWidth={2.5} style={{ color: "hsl(var(--primary))" }} />
-                </div>
-                <input
-                  ref={inputRef}
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Search topics, algorithms, problems..."
-                  className="flex-1 bg-transparent text-base font-medium outline-none"
-                  style={{ color: "hsl(var(--foreground))" }}
-                />
-                {query && (
-                  <span className="text-[11px] font-mono px-2 py-0.5 rounded-lg" style={{ background: "hsl(var(--muted))", color: "hsl(var(--muted-foreground))" }}>
-                    {totalResults}
-                  </span>
-                )}
-                <button onClick={() => setOpen(false)} className="p-1.5 rounded-lg hover:bg-muted transition-colors" style={{ color: "hsl(var(--muted-foreground))" }}>
-                  <X size={16} />
-                </button>
+            {/* Search header */}
+            <div className="flex items-center gap-3 px-5 py-4 border-b" style={{ borderColor: "hsl(var(--border))" }}>
+              <div className="flex items-center justify-center w-9 h-9 rounded-xl" style={{ background: "hsl(var(--primary)/0.1)" }}>
+                <Search size={20} strokeWidth={2.5} style={{ color: "hsl(var(--primary))" }} />
               </div>
+              <input
+                ref={inputRef}
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search topics, algorithms, problems..."
+                className="flex-1 bg-transparent text-base font-medium outline-none"
+                style={{ color: "hsl(var(--foreground))" }}
+              />
+              {query && (
+                <span className="text-[11px] font-mono px-2 py-0.5 rounded-lg" style={{ background: "hsl(var(--muted))", color: "hsl(var(--muted-foreground))" }}>
+                  {totalResults}
+                </span>
+              )}
+              <button onClick={() => setOpen(false)} className="p-1.5 rounded-lg hover:bg-muted transition-colors" style={{ color: "hsl(var(--muted-foreground))" }}>
+                <X size={16} />
+              </button>
+            </div>
 
-              {/* Results */}
-              <div className="max-h-[400px] overflow-y-auto">
-                {totalResults === 0 ? (
-                  <div className="px-5 py-10 text-center">
-                    <div className="text-2xl mb-2">🔍</div>
-                    <div className="text-sm font-medium" style={{ color: "hsl(var(--muted-foreground))" }}>No results for "{query}"</div>
-                    <div className="text-xs mt-1" style={{ color: "hsl(var(--muted-foreground)/0.6)" }}>Try searching for "Two Sum", "DFS", or "Backtracking"</div>
-                  </div>
-                ) : (
-                  <>
-                    {/* Topics */}
-                    {grouped.topics.length > 0 && (
-                      <div>
-                        <div className="px-5 py-2 text-[10px] font-bold uppercase tracking-widest" style={{ color: "hsl(var(--muted-foreground))", background: "hsl(var(--muted)/0.3)" }}>
-                          Topics
-                        </div>
-                        {grouped.topics.slice(0, 8).map((item) => (
-                          <SearchResultItem key={item.path} item={item} onSelect={() => { navigate(item.path); setOpen(false); }} />
-                        ))}
-                      </div>
-                    )}
-                    {/* Subtopics / Sections */}
-                    {grouped.subtopics.length > 0 && (
-                      <div>
-                        <div className="px-5 py-2 text-[10px] font-bold uppercase tracking-widest" style={{ color: "hsl(var(--muted-foreground))", background: "hsl(var(--muted)/0.3)" }}>
-                          Sections
-                        </div>
-                        {grouped.subtopics.slice(0, 10).map((item) => (
-                          <SearchResultItem key={item.path} item={item} onSelect={() => { navigate(item.path); setOpen(false); }} />
-                        ))}
-                      </div>
-                    )}
-                    {/* Problems / Algorithms */}
-                    {grouped.problems.length > 0 && (
-                      <div>
-                        <div className="px-5 py-2 text-[10px] font-bold uppercase tracking-widest" style={{ color: "hsl(var(--muted-foreground))", background: "hsl(var(--muted)/0.3)" }}>
-                          Problems & Algorithms ({grouped.problems.length})
-                        </div>
-                        {grouped.problems.slice(0, 20).map((item) => (
-                          <SearchResultItem key={item.path} item={item} onSelect={() => { navigate(item.path); setOpen(false); }} />
-                        ))}
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-
-              {/* Footer */}
-              <div className="flex items-center justify-between px-5 py-2.5 border-t text-[10px]" style={{ borderColor: "hsl(var(--border))", color: "hsl(var(--muted-foreground))" }}>
-                <span className="font-mono">{allSearchItems.length} items indexed</span>
-                <div className="flex items-center gap-3">
-                  <span><kbd className="px-1.5 py-0.5 rounded font-mono text-[9px]" style={{ background: "hsl(var(--muted))", border: "1px solid hsl(var(--border))" }}>↑↓</kbd> navigate</span>
-                  <span><kbd className="px-1.5 py-0.5 rounded font-mono text-[9px]" style={{ background: "hsl(var(--muted))", border: "1px solid hsl(var(--border))" }}>esc</kbd> close</span>
+            {/* Results */}
+            <div className="max-h-[400px] overflow-y-auto">
+              {totalResults === 0 ? (
+                <div className="px-5 py-10 text-center">
+                  <div className="text-2xl mb-2">🔍</div>
+                  <div className="text-sm font-medium" style={{ color: "hsl(var(--muted-foreground))" }}>No results for "{query}"</div>
+                  <div className="text-xs mt-1" style={{ color: "hsl(var(--muted-foreground)/0.6)" }}>Try searching for "Two Sum", "DFS", or "Backtracking"</div>
                 </div>
+              ) : (
+                <>
+                  {/* Topics */}
+                  {grouped.topics.length > 0 && (
+                    <div>
+                      <div className="px-5 py-2 text-[10px] font-bold uppercase tracking-widest" style={{ color: "hsl(var(--muted-foreground))", background: "hsl(var(--muted)/0.3)" }}>
+                        Topics
+                      </div>
+                      {grouped.topics.slice(0, 8).map((item) => (
+                        <SearchResultItem key={item.path} item={item} onSelect={() => { navigate(item.path); setOpen(false); }} />
+                      ))}
+                    </div>
+                  )}
+                  {/* Subtopics / Sections */}
+                  {grouped.subtopics.length > 0 && (
+                    <div>
+                      <div className="px-5 py-2 text-[10px] font-bold uppercase tracking-widest" style={{ color: "hsl(var(--muted-foreground))", background: "hsl(var(--muted)/0.3)" }}>
+                        Sections
+                      </div>
+                      {grouped.subtopics.slice(0, 10).map((item) => (
+                        <SearchResultItem key={item.path} item={item} onSelect={() => { navigate(item.path); setOpen(false); }} />
+                      ))}
+                    </div>
+                  )}
+                  {/* Problems / Algorithms */}
+                  {grouped.problems.length > 0 && (
+                    <div>
+                      <div className="px-5 py-2 text-[10px] font-bold uppercase tracking-widest" style={{ color: "hsl(var(--muted-foreground))", background: "hsl(var(--muted)/0.3)" }}>
+                        Problems & Algorithms ({grouped.problems.length})
+                      </div>
+                      {grouped.problems.slice(0, 20).map((item) => (
+                        <SearchResultItem key={item.path} item={item} onSelect={() => { navigate(item.path); setOpen(false); }} />
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center justify-between px-5 py-2.5 border-t text-[10px]" style={{ borderColor: "hsl(var(--border))", color: "hsl(var(--muted-foreground))" }}>
+              <span className="font-mono">{allSearchItems.length} items indexed</span>
+              <div className="flex items-center gap-3">
+                <span><kbd className="px-1.5 py-0.5 rounded font-mono text-[9px]" style={{ background: "hsl(var(--muted))", border: "1px solid hsl(var(--border))" }}>↑↓</kbd> navigate</span>
+                <span><kbd className="px-1.5 py-0.5 rounded font-mono text-[9px]" style={{ background: "hsl(var(--muted))", border: "1px solid hsl(var(--border))" }}>esc</kbd> close</span>
               </div>
+            </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </>
   );
