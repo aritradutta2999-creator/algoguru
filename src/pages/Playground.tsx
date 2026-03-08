@@ -213,17 +213,30 @@ export default function Playground() {
 
           // === Collections ===
           { label: "lst", detail: "ArrayList", insertText: "List<${1:Integer}> ${2:list} = new ArrayList<>();", documentation: "New ArrayList" },
+          { label: "ArrayList", detail: "ArrayList declaration", insertText: "ArrayList<${1:Integer}> ${2:list} = new ArrayList<>();", documentation: "ArrayList class" },
+          { label: "List", detail: "List declaration", insertText: "List<${1:Integer}> ${2:list} = new ArrayList<>();", documentation: "List interface" },
           { label: "ll", detail: "LinkedList", insertText: "LinkedList<${1:Integer}> ${2:list} = new LinkedList<>();", documentation: "New LinkedList" },
+          { label: "LinkedList", detail: "LinkedList declaration", insertText: "LinkedList<${1:Integer}> ${2:list} = new LinkedList<>();", documentation: "LinkedList class" },
           { label: "map", detail: "HashMap", insertText: "Map<${1:String}, ${2:Integer}> ${3:map} = new HashMap<>();", documentation: "New HashMap" },
+          { label: "HashMap", detail: "HashMap declaration", insertText: "HashMap<${1:String}, ${2:Integer}> ${3:map} = new HashMap<>();", documentation: "HashMap class" },
+          { label: "Map", detail: "Map declaration", insertText: "Map<${1:String}, ${2:Integer}> ${3:map} = new HashMap<>();", documentation: "Map interface" },
           { label: "tmap", detail: "TreeMap", insertText: "TreeMap<${1:Integer}, ${2:Integer}> ${3:map} = new TreeMap<>();", documentation: "New TreeMap (sorted)" },
+          { label: "TreeMap", detail: "TreeMap declaration", insertText: "TreeMap<${1:Integer}, ${2:Integer}> ${3:map} = new TreeMap<>();", documentation: "TreeMap class" },
           { label: "lhm", detail: "LinkedHashMap", insertText: "LinkedHashMap<${1:String}, ${2:Integer}> ${3:map} = new LinkedHashMap<>();", documentation: "New LinkedHashMap (insertion order)" },
           { label: "set", detail: "HashSet", insertText: "Set<${1:Integer}> ${2:set} = new HashSet<>();", documentation: "New HashSet" },
+          { label: "HashSet", detail: "HashSet declaration", insertText: "HashSet<${1:Integer}> ${2:set} = new HashSet<>();", documentation: "HashSet class" },
+          { label: "Set", detail: "Set declaration", insertText: "Set<${1:Integer}> ${2:set} = new HashSet<>();", documentation: "Set interface" },
           { label: "tset", detail: "TreeSet", insertText: "TreeSet<${1:Integer}> ${2:set} = new TreeSet<>();", documentation: "New TreeSet (sorted)" },
+          { label: "TreeSet", detail: "TreeSet declaration", insertText: "TreeSet<${1:Integer}> ${2:set} = new TreeSet<>();", documentation: "TreeSet class" },
           { label: "lhs", detail: "LinkedHashSet", insertText: "LinkedHashSet<${1:Integer}> ${2:set} = new LinkedHashSet<>();", documentation: "New LinkedHashSet" },
           { label: "st", detail: "Stack", insertText: "Stack<${1:Integer}> ${2:stack} = new Stack<>();", documentation: "New Stack" },
+          { label: "Stack", detail: "Stack declaration", insertText: "Stack<${1:Integer}> ${2:stack} = new Stack<>();", documentation: "Stack class" },
           { label: "que", detail: "Queue (LinkedList)", insertText: "Queue<${1:Integer}> ${2:queue} = new LinkedList<>();", documentation: "New Queue" },
+          { label: "Queue", detail: "Queue declaration", insertText: "Queue<${1:Integer}> ${2:queue} = new LinkedList<>();", documentation: "Queue interface" },
           { label: "deq", detail: "Deque (ArrayDeque)", insertText: "Deque<${1:Integer}> ${2:deque} = new ArrayDeque<>();", documentation: "New ArrayDeque" },
+          { label: "Deque", detail: "Deque declaration", insertText: "Deque<${1:Integer}> ${2:deque} = new ArrayDeque<>();", documentation: "Deque interface" },
           { label: "pq", detail: "PriorityQueue (min)", insertText: "PriorityQueue<${1:Integer}> ${2:pq} = new PriorityQueue<>();", documentation: "Min-heap PriorityQueue" },
+          { label: "PriorityQueue", detail: "PriorityQueue declaration", insertText: "PriorityQueue<${1:Integer}> ${2:pq} = new PriorityQueue<>();", documentation: "PriorityQueue class" },
           { label: "pqmax", detail: "PriorityQueue (max)", insertText: "PriorityQueue<${1:Integer}> ${2:pq} = new PriorityQueue<>(Collections.reverseOrder());", documentation: "Max-heap PriorityQueue" },
           { label: "pqcust", detail: "PriorityQueue custom comparator", insertText: "PriorityQueue<${1:int[]}> ${2:pq} = new PriorityQueue<>((a, b) -> ${3:a[0] - b[0]});", documentation: "PriorityQueue with custom comparator" },
 
@@ -282,6 +295,8 @@ export default function Playground() {
           { label: "bsearch", detail: "Binary search template", insertText: "int lo = ${1:0}, hi = ${2:n - 1}, ans = -1;\nwhile (lo <= hi) {\n\tint mid = lo + (hi - lo) / 2;\n\tif (${3:check(mid)}) {\n\t\tans = mid;\n\t\tlo = mid + 1;\n\t} else {\n\t\thi = mid - 1;\n\t}\n}", documentation: "Binary search template" },
         ];
 
+        const priorityLabels = new Set(["main", "psvm", "sout", "ArrayList", "HashMap", "List", "Set", "Map", "Scanner", "PriorityQueue"]);
+
         return {
           suggestions: snippets.map((s) => ({
             label: s.label,
@@ -290,6 +305,8 @@ export default function Playground() {
             insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
             detail: s.detail,
             documentation: s.documentation,
+            filterText: `${s.label} ${s.detail}`,
+            sortText: `${priorityLabels.has(s.label) ? "0" : "1"}_${s.label.toLowerCase()}`,
             range,
           })),
         };
@@ -568,7 +585,11 @@ export default function Playground() {
                     autoClosingBrackets: "always",
                     autoClosingQuotes: "always",
                     formatOnPaste: true,
-                    suggest: { showKeywords: true },
+                    suggest: { showKeywords: true, showSnippets: true },
+                    quickSuggestions: { other: true, comments: false, strings: true },
+                    quickSuggestionsDelay: 0,
+                    suggestOnTriggerCharacters: true,
+                    snippetSuggestions: "top",
                     tabSize: 4,
                     wordWrap: "on",
                     smoothScrolling: true,
