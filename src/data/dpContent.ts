@@ -44,13 +44,15 @@ export const dpContent: ContentSection[] = [
         }
       ]
     },
-    note: "DP is a skill that improves with practice. Don't try to memorize solutions — understand the thought process. For each problem, practice defining the state and recurrence from scratch.",
+    note: "DP is a skill that improves with practice. Don't try to memorize solutions — understand the thought process. For each problem, practice defining the state and recurrence from scratch. Best practice resources: AtCoder Educational DP Contest (26 problems A-Z) and CSES Problem Set (DP section).",
     keyPoints: [
       "DP = Recursion + Memoization (or equivalently, smart iteration order)",
       "Define the state clearly: dp[i] = 'minimum cost to reach position i'",
       "Recurrence relation comes from the recursive solution",
+      "Runtime = work per subproblem × number of subproblems",
       "Bottom-up avoids recursion overhead and stack overflow for large inputs",
-      "Space optimization: often only the last 1-2 rows of the DP table are needed",
+      "Space optimization: use modulo trick `dp[i % k]` when only last k states are needed",
+      "Classic problems to master: 0-1 Knapsack, Subset Sum, LIS, LCS, Edit Distance, Coin Change, Grid Paths, Rod Cutting, Longest Palindromic Subsequence",
     ],
     code: [
       {
