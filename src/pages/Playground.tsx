@@ -249,6 +249,9 @@ function instrumentCodeForDebug(source: string, breakpointLines: Set<number>): s
       let debugExpr: string;
       if (availableVars.length > 0) {
         const parts = availableVars.map(v => {
+          if (v.is2dArray) {
+            return `" ${v.name}=" + java.util.Arrays.deepToString(${v.name})`;
+          }
           if (v.isArray) {
             return `" ${v.name}=" + java.util.Arrays.toString(${v.name})`;
           }
