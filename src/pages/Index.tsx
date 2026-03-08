@@ -43,10 +43,10 @@ export default function Index() {
   const activeTopics = isDSMode ? topics : javaTopics;
 
   const dsStats = [
-    { label: "Topics", value: "6", icon: LayoutGrid },
-    { label: "Sections", value: "65+", icon: GitBranch },
-    { label: "Code Examples", value: "120+", icon: Terminal },
-    { label: "Algorithms", value: "85+", icon: Zap },
+    { label: "Topics", value: "9", icon: LayoutGrid },
+    { label: "Sections", value: "100+", icon: GitBranch },
+    { label: "Code Examples", value: "200+", icon: Terminal },
+    { label: "Algorithms", value: "120+", icon: Zap },
   ];
 
   const javaStats = [
