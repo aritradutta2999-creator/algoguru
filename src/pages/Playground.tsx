@@ -124,47 +124,122 @@ const SOLARIZED_DARK_THEME = {
  * For each breakpoint line, we inject a System.out.println before that line
  * showing the line number and any visible local variables.
  */
+// Types that are arrays and need Arrays.toString() or Arrays.deepToString()
+const ARRAY_TYPE_PATTERN = /\[\]/;
+
 function instrumentCodeForDebug(source: string, breakpointLines: Set<number>): string {
   if (breakpointLines.size === 0) return source;
 
   const lines = source.split("\n");
   const result: string[] = [];
 
-  // Track declared AND initialized variables with their declaration line
-  // Only include variables that have been assigned a value (to avoid compile errors with uninitialized vars)
-  const initializedVars: { name: string; line: number }[] = [];
+  // Track initialized variables: name, line declared, and whether it's an array type
+  const initializedVars: { name: string; line: number; isArray: boolean }[] = [];
+
+  // Track brace depth to know if we're inside a method body
+  // Depth 0 = outside class, 1 = inside class (fields/methods), 2+ = inside method body
+  let braceDepth = 0;
+  // Track if we've entered at least one method (depth >= 2 means inside method body)
+  let inMethodBody = false;
 
   for (let i = 0; i < lines.length; i++) {
     const lineNum = i + 1;
     const line = lines[i];
     const trimmed = line.trim();
 
-    // Match initialized variable declarations: Type varName = value;
-    // Must have '=' to ensure the variable is initialized (avoids compile-time errors)
-    const initMatch = trimmed.match(
-      /^(?:final\s+)?(?:int|long|double|float|char|boolean|byte|short|String|Integer|Long|Double|Float|Character|Boolean|List|ArrayList|Map|HashMap|Set|HashSet|TreeMap|TreeSet|PriorityQueue|Deque|ArrayDeque|Queue|LinkedList|StringBuilder|StringBuffer|int\[\]|long\[\]|double\[\]|String\[\]|char\[\]|boolean\[\])(?:<[^>]*>)?\s+(\w+)\s*=/
-    );
-    if (initMatch) {
-      initializedVars.push({ name: initMatch[1], line: lineNum });
+    // Count braces to track depth (skip braces in strings/comments for simplicity — 
+    // this works for typical competitive programming code)
+    // Remove string literals and char literals to avoid counting braces inside them
+    const codeOnly = trimmed
+      .replace(/"(?:[^"\\]|\\.)*"/g, '""')
+      .replace(/'(?:[^'\\]|\\.)*'/g, "''");
+    
+    const openBraces = (codeOnly.match(/{/g) || []).length;
+    const closeBraces = (codeOnly.match(/}/g) || []).length;
+
+    // Determine if this line is inside a method body BEFORE processing braces
+    // A line with '{' that opens a method counts as entering method body
+    const wasInMethodBody = braceDepth >= 2;
+    
+    // Update brace depth
+    braceDepth += openBraces - closeBraces;
+    
+    // We're in a method body if depth >= 2 (inside class + inside method/block)
+    inMethodBody = braceDepth >= 2 || (wasInMethodBody && closeBraces > 0 && braceDepth >= 1);
+
+    // Only track variables inside method bodies (depth >= 2)
+    if (braceDepth >= 2 || wasInMethodBody) {
+      // Match initialized variable declarations with '=' 
+      // Broad pattern: optional-final Type varName = ...
+      const initMatch = trimmed.match(
+        /^(?:final\s+)?(\w+(?:<[^>]*>)?(?:\[\])*)\s+(\w+)\s*=/
+      );
+      if (initMatch) {
+        const typePart = initMatch[1];
+        const varName = initMatch[2];
+        // Skip if it looks like a method declaration or class keyword
+        if (!["class", "interface", "enum", "return", "throw", "new", "import", "package", "public", "private", "protected", "static", "void"].includes(typePart)) {
+          initializedVars.push({ 
+            name: varName, 
+            line: lineNum, 
+            isArray: ARRAY_TYPE_PATTERN.test(typePart) 
+          });
+        }
+      }
+
+      // Match: var varName = ... (Java 10+)
+      const varMatch = trimmed.match(/^(?:final\s+)?var\s+(\w+)\s*=/);
+      if (varMatch) {
+        initializedVars.push({ name: varMatch[1], line: lineNum, isArray: false });
+      }
+
+      // Match for-loop variables: for (int i = 0; ...) or for (Type x : ...)
+      const forVarMatch = trimmed.match(/^for\s*\(\s*(?:final\s+)?(\w+(?:<[^>]*>)?(?:\[\])*)\s+(\w+)\s*[=:]/);
+      if (forVarMatch) {
+        const typePart = forVarMatch[1];
+        initializedVars.push({ 
+          name: forVarMatch[2], 
+          line: lineNum, 
+          isArray: ARRAY_TYPE_PATTERN.test(typePart) 
+        });
+      }
+
+      // Match multiple declarations: int a = 1, b = 2;
+      const multiDeclMatch = trimmed.match(/^(?:final\s+)?(\w+(?:<[^>]*>)?)\s+\w+\s*=\s*[^,]+(?:,\s*(\w+)\s*=\s*[^,;]+)+/);
+      if (multiDeclMatch) {
+        // Extract all var names from comma-separated declarations
+        const afterType = trimmed.replace(/^(?:final\s+)?\w+(?:<[^>]*>)?\s+/, "");
+        const parts = afterType.split(",");
+        for (const part of parts) {
+          const nameMatch = part.trim().match(/^(\w+)\s*=/);
+          if (nameMatch && !initializedVars.some(v => v.name === nameMatch[1] && v.line === lineNum)) {
+            initializedVars.push({ name: nameMatch[1], line: lineNum, isArray: false });
+          }
+        }
+      }
     }
 
-    // Also match for-loop variables: for (int i = 0; ...) or for (Type x : ...)
-    const forVarMatch = trimmed.match(/^for\s*\(\s*(?:final\s+)?(?:\w+(?:<[^>]*>)?)\s+(\w+)\s*[=:]/);
-    if (forVarMatch) {
-      initializedVars.push({ name: forVarMatch[1], line: lineNum });
-    }
+    // Only inject debug prints if we're inside a method body AND the line has code
+    const canInject = (braceDepth >= 2 || wasInMethodBody) && 
+      !trimmed.startsWith("//") && !trimmed.startsWith("/*") && !trimmed.startsWith("*") && 
+      trimmed.length > 0 && trimmed !== "{" && trimmed !== "}";
 
-    if (breakpointLines.has(lineNum) && !trimmed.startsWith("//") && !trimmed.startsWith("/*") && !trimmed.startsWith("*") && trimmed.length > 0) {
+    if (breakpointLines.has(lineNum) && canInject) {
       const indent = line.match(/^(\s*)/)?.[1] || "";
       
-      // Only include variables that were initialized BEFORE this breakpoint line
+      // Only include variables initialized BEFORE this breakpoint line
       const availableVars = initializedVars
         .filter(v => v.line < lineNum)
         .slice(-8);
       
       let debugExpr: string;
       if (availableVars.length > 0) {
-        const parts = availableVars.map(v => `" ${v.name}=" + ${v.name}`);
+        const parts = availableVars.map(v => {
+          if (v.isArray) {
+            return `" ${v.name}=" + java.util.Arrays.toString(${v.name})`;
+          }
+          return `" ${v.name}=" + ${v.name}`;
+        });
         debugExpr = `"[DEBUG L${lineNum}]" + ${parts.join(" + ")}`;
       } else {
         debugExpr = `"[DEBUG L${lineNum}] (reached)"`;
