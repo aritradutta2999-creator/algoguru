@@ -151,13 +151,16 @@ export default function Playground() {
           .map((c: any) => {
             const name = c.name as string;
             const version = (c.version || "") as string;
-            let label = c["display-name"] || name;
-            if (name.includes("17") || version.includes("17")) label = "OpenJDK 17";
-            else if (name.includes("25") || version.includes("25")) label = "OpenJDK 25";
-            else if (name.includes("15") || version.includes("15")) label = "OpenJDK 15";
-            else if (name.includes("head") || version.includes("head")) label = "OpenJDK (Latest)";
-            else label = `OpenJDK ${version.split(".")[0] || name}`;
-            console.log("Java compiler found:", name, version, "→", label);
+            const combined = `${name} ${version}`;
+            let label: string;
+            if (combined.includes("17")) label = "OpenJDK 17";
+            else if (combined.includes("25")) label = "OpenJDK 25";
+            else if (combined.includes("15")) label = "OpenJDK 15";
+            else if (combined.includes("head")) label = "OpenJDK (Latest)";
+            else {
+              const majorMatch = version.match(/^(\d+)/);
+              label = majorMatch ? `OpenJDK ${majorMatch[1]}` : `OpenJDK (${name})`;
+            }
             return { label, compiler: name };
           });
         if (javaCompilers.length > 0) {
