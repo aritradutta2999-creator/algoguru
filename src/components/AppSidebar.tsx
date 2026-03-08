@@ -12,7 +12,8 @@ import {
 } from "@/components/ui/sidebar";
 import { topics } from "@/data/topics";
 import { javaTopics } from "@/data/javaTopics";
-import { ChevronDown, Home, BookOpen, Layers, Coffee } from "lucide-react";
+import { ChevronDown, Home, BookOpen, Layers, Coffee, ZoomIn, ZoomOut, RotateCcw } from "lucide-react";
+import { useSettings } from "@/contexts/SettingsContext";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMode, APP_MODES } from "@/contexts/ModeContext";
@@ -57,6 +58,7 @@ export function AppSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const { currentMode, setMode, modes } = useMode();
+  const { fontSize, increaseFontSize, decreaseFontSize } = useSettings();
   const currentPath = location.pathname;
   const currentHash = location.hash.replace("#", "");
 
@@ -214,31 +216,25 @@ export function AppSidebar() {
           })}
         </SidebarMenu>
 
-        {/* Footer card */}
-        <div className="mt-8 mx-1 p-4 rounded-2xl" style={{ background: "hsl(var(--primary)/0.05)", border: "1px solid hsl(var(--primary)/0.1)" }}>
-          <div className="flex items-center gap-2 mb-2">
-            <BookOpen size={13} style={{ color: "hsl(var(--primary))" }} />
-            <span className="text-xs font-semibold" style={{ color: "hsl(var(--primary))" }}>
-              {currentMode.id === "ds" ? "DS Coverage" : "Java Coverage"}
-            </span>
-          </div>
-          <div className="text-[10px] space-y-1 font-mono" style={{ color: "hsl(var(--muted-foreground))" }}>
-            {currentMode.id === "ds" ? (
-              <>
-                <div>✦ 6 Major Topics</div>
-                <div>✦ 65+ Sections</div>
-                <div>✦ 120+ Code Examples</div>
-                <div>✦ Beginner → Advanced</div>
-              </>
-            ) : (
-              <>
-                <div>✦ 9 Core Modules</div>
-                <div>✦ 80+ Sections</div>
-                <div>✦ 100+ Code Examples</div>
-                <div>✦ Core → Advanced Java</div>
-              </>
-            )}
-          </div>
+        {/* Zoom Control */}
+        <div className="mt-8 mx-1 p-3 rounded-2xl flex items-center justify-between" style={{ background: "hsl(var(--muted)/0.4)", border: "1px solid hsl(var(--border))" }}>
+          <button
+            onClick={decreaseFontSize}
+            className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-[hsl(var(--muted))]"
+            style={{ color: "hsl(var(--muted-foreground))" }}
+          >
+            <ZoomOut size={14} />
+          </button>
+          <span className="text-xs font-mono font-semibold" style={{ color: "hsl(var(--foreground))" }}>
+            {fontSize === "sm" ? "85%" : fontSize === "md" ? "100%" : fontSize === "lg" ? "115%" : "125%"}
+          </span>
+          <button
+            onClick={increaseFontSize}
+            className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-[hsl(var(--muted))]"
+            style={{ color: "hsl(var(--muted-foreground))" }}
+          >
+            <ZoomIn size={14} />
+          </button>
         </div>
       </SidebarContent>
     </Sidebar>
