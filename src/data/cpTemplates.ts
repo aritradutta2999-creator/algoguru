@@ -246,6 +246,13 @@ class Solution {
         return 0;
     }
 
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        Solution sol = new Solution();
+        System.out.println(sol.solve(new int[]{1, 2, 3}));
+        sc.close();
+    }
+
     // ===== Helpers =====
     long gcd(long a, long b) { return b == 0 ? a : gcd(b, a % b); }
     long lcm(long a, long b) { return a / gcd(a, b) * b; }
@@ -256,13 +263,6 @@ class Solution {
     }
     int lowerBound(int[] a, int key) { int l = 0, r = a.length; while (l < r) { int m = l + (r - l) / 2; if (a[m] < key) l = m + 1; else r = m; } return l; }
     int upperBound(int[] a, int key) { int l = 0, r = a.length; while (l < r) { int m = l + (r - l) / 2; if (a[m] <= key) l = m + 1; else r = m; } return l; }
-
-    public static void main(String[] args) {
-        Scanner sc = new Scanner(System.in);
-        Solution sol = new Solution();
-        System.out.println(sol.solve(new int[]{1, 2, 3}));
-        sc.close();
-    }
 }`,
   },
 ];
