@@ -185,6 +185,18 @@ public class MethodRefDemo {
       "Terminal ops produce a result or side-effect: collect, forEach, reduce, count, findFirst, anyMatch",
       "Streams promote **declarative** code — describe WHAT, not HOW"
     ],
+    diagram: {
+      type: "flow",
+      title: "Stream Pipeline — Data Flow",
+      direction: "horizontal",
+      data: [
+        { label: "Source", color: "muted", children: [{ label: "Collection, Array, Generator" }] },
+        { label: "filter()", color: "info" },
+        { label: "map()", color: "primary" },
+        { label: "sorted()", color: "accent" },
+        { label: "collect()", color: "success", children: [{ label: "Terminal Operation" }] }
+      ]
+    },
     code: [
       {
         title: "Stream Basics — Creating & Using Streams",

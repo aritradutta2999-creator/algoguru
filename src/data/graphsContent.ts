@@ -14,6 +14,52 @@ export const graphsContent: ContentSection[] = [
       "Connected Graph: Every vertex is reachable from every other (undirected). Strongly Connected: Every vertex reachable from every other via directed paths. A tree is a connected acyclic undirected graph with exactly V-1 edges. A forest is a collection of trees.",
       "In competitive programming, 99% of the time you'll use Adjacency List. Use Adjacency Matrix only when V ≤ 1000 and you need O(1) edge lookups. Use Edge List for Kruskal's MST or when you process edges one by one.",
     ],
+    diagram: {
+      type: "table-visual",
+      title: "Graph Representations Comparison",
+      data: [
+        {
+          label: "Adjacency List",
+          color: "success",
+          children: [
+            { label: "Space: O(V + E)" },
+            { label: "Edge lookup: O(degree)" },
+            { label: "Best for: sparse graphs (E << V²)" },
+            { label: "⭐ Most common in CP" }
+          ]
+        },
+        {
+          label: "Adjacency Matrix",
+          color: "info",
+          children: [
+            { label: "Space: O(V²)" },
+            { label: "Edge lookup: O(1)" },
+            { label: "Best for: dense graphs, V ≤ 1000" },
+            { label: "Floyd-Warshall, small graphs" }
+          ]
+        },
+        {
+          label: "Edge List",
+          color: "accent",
+          children: [
+            { label: "Space: O(E)" },
+            { label: "Edge lookup: O(E)" },
+            { label: "Best for: edge-centric algorithms" },
+            { label: "Kruskal's MST, Bellman-Ford" }
+          ]
+        },
+        {
+          label: "Graph Types",
+          color: "warning",
+          children: [
+            { label: "Directed vs Undirected" },
+            { label: "Weighted vs Unweighted" },
+            { label: "Cyclic vs Acyclic (DAG)" },
+            { label: "Connected vs Disconnected" }
+          ]
+        }
+      ]
+    },
     keyPoints: [
       "Always clarify: directed vs undirected, weighted vs unweighted, cyclic vs acyclic",
       "Adjacency List is the default choice — O(V+E) space, efficient iteration",

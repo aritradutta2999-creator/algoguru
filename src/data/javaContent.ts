@@ -30,6 +30,39 @@ export const javaBasicsContent: ContentSection[] = [
       "**Anatomy of a Java Program:** `public class HelloWorld` — Class declaration. `public static void main(String[] args)` — Program entry point. `System.out.println(...)` — Prints to console. Every statement ends with `;`. Code blocks use `{}`.",
       "The file name **must match** the public class name. The compilation flow is: Source (.java) → javac → Bytecode (.class) → JVM → Machine Code."
     ],
+    diagram: {
+      type: "layers",
+      title: "JDK / JRE / JVM Architecture",
+      data: [
+        {
+          label: "JDK (Java Development Kit)",
+          color: "primary",
+          children: [
+            {
+              label: "Development Tools — javac, javadoc, jar, jdb",
+              color: "info"
+            },
+            {
+              label: "JRE (Java Runtime Environment)",
+              color: "accent",
+              children: [
+                {
+                  label: "Core Libraries — java.lang, java.util, java.io, java.net",
+                  color: "success"
+                },
+                {
+                  label: "JVM (Java Virtual Machine)",
+                  color: "warning",
+                  children: [
+                    { label: "Class Loader → Bytecode Verifier → Execution Engine (Interpreter + JIT)", color: "heap" }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
     code: [
       {
         title: "Hello World — Your First Java Program",
@@ -558,6 +591,32 @@ export const javaOOPContent: ContentSection[] = [
       "Every class implicitly extends **Object** — so every object has `toString()`, `equals()`, `hashCode()`, `getClass()`, `clone()`, etc.",
       "The `toString()` method is called automatically when you print an object — always override it for readable output"
     ],
+    diagram: {
+      type: "table-visual",
+      title: "Stack vs Heap Memory",
+      data: [
+        {
+          label: "Stack Memory",
+          color: "primary",
+          children: [
+            { label: "Stores local variables & references" },
+            { label: "One stack per thread" },
+            { label: "LIFO — auto-managed (fast)" },
+            { label: "Small size, method-scoped" }
+          ]
+        },
+        {
+          label: "Heap Memory",
+          color: "accent",
+          children: [
+            { label: "Stores all objects & arrays" },
+            { label: "Shared across all threads" },
+            { label: "Managed by Garbage Collector" },
+            { label: "Large size, application-scoped" }
+          ]
+        }
+      ]
+    },
     keyPoints: [
       "Objects live on the heap; references live on the stack",
       "Always override toString(), equals(), and hashCode() in data classes",
@@ -1855,6 +1914,51 @@ export const javaExceptionsContent: ContentSection[] = [
       "Java's exception hierarchy: **Throwable** → **Error** (unrecoverable: OutOfMemoryError, StackOverflowError) and **Exception** (recoverable).",
       "Exceptions divide into **Checked** (must handle: IOException, SQLException) and **Unchecked** (RuntimeException: NullPointerException, ArrayIndexOutOfBoundsException)."
     ],
+    diagram: {
+      type: "hierarchy",
+      title: "Java Exception Hierarchy",
+      data: [
+        {
+          label: "Throwable",
+          color: "warning",
+          children: [
+            {
+              label: "Error (DON'T catch!)",
+              color: "accent",
+              children: [
+                { label: "OutOfMemoryError", color: "accent" },
+                { label: "StackOverflowError", color: "accent" },
+                { label: "VirtualMachineError", color: "accent" }
+              ]
+            },
+            {
+              label: "Exception",
+              color: "primary",
+              children: [
+                {
+                  label: "Checked (MUST handle)",
+                  color: "info",
+                  children: [
+                    { label: "IOException", color: "info" },
+                    { label: "SQLException", color: "info" },
+                    { label: "FileNotFoundException", color: "info" }
+                  ]
+                },
+                {
+                  label: "RuntimeException (Unchecked)",
+                  color: "success",
+                  children: [
+                    { label: "NullPointerException", color: "success" },
+                    { label: "ArrayIndexOutOfBoundsException", color: "success" },
+                    { label: "IllegalArgumentException", color: "success" }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
     code: [{
       title: "Exception Hierarchy Overview",
       language: "java",

@@ -1,3 +1,16 @@
+export interface DiagramBox {
+  label: string;
+  children?: DiagramBox[];
+  color?: string; // CSS var like "primary", "accent", "success"
+}
+
+export interface Diagram {
+  type: "layers" | "hierarchy" | "flow" | "table-visual";
+  title: string;
+  data: DiagramBox[];
+  direction?: "vertical" | "horizontal";
+}
+
 export interface ContentSection {
   id: string;
   title: string;
@@ -6,6 +19,7 @@ export interface ContentSection {
   spaceComplexity?: string;
   theory: string[];
   keyPoints?: string[];
+  diagram?: Diagram;
   code?: {
     title: string;
     language: string;
@@ -31,6 +45,17 @@ export const recursionContent: ContentSection[] = [
       "The Call Stack is fundamental to understanding recursion. Each function call is pushed onto the stack, and when the base case is reached, stack frames are popped off as values are returned — this is called the 'unwinding' phase.",
       "Recursion depth refers to how many times a function calls itself. Java's default stack size can handle roughly 1000–8000 recursive calls. Exceeding this causes a StackOverflowError.",
     ],
+    diagram: {
+      type: "flow",
+      title: "Recursion Call Stack — factorial(4)",
+      direction: "vertical",
+      data: [
+        { label: "factorial(4)", color: "primary", children: [{ label: "return 4 × factorial(3)" }] },
+        { label: "factorial(3)", color: "info", children: [{ label: "return 3 × factorial(2)" }] },
+        { label: "factorial(2)", color: "accent", children: [{ label: "return 2 × factorial(1)" }] },
+        { label: "factorial(1)", color: "success", children: [{ label: "BASE CASE → return 1" }] }
+      ]
+    },
     keyPoints: [
       "Always define the base case first — it is the most critical part",
       "Each recursive call must move toward the base case",

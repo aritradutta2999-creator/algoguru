@@ -15,6 +15,32 @@ export const dpContent: ContentSection[] = [
       "Common patterns for state definition: dp[i] = answer using first i elements; dp[i][j] = answer for subarray [i..j]; dp[i][w] = answer using first i items with capacity w; dp[mask] = answer when subset of items represented by bitmask 'mask' are used.",
       "How to know a problem is DP: (1) It asks for min/max/count. (2) You need to make choices at each step. (3) Future decisions depend on past decisions. (4) You can break it into smaller, similar subproblems. If it says 'find the number of ways' or 'find the minimum cost', think DP.",
     ],
+    diagram: {
+      type: "table-visual",
+      title: "Top-Down vs Bottom-Up Approaches",
+      data: [
+        {
+          label: "Top-Down (Memoization)",
+          color: "primary",
+          children: [
+            { label: "Start from original problem" },
+            { label: "Recurse into subproblems" },
+            { label: "Cache results in HashMap/array" },
+            { label: "Easier to write, risk stack overflow" }
+          ]
+        },
+        {
+          label: "Bottom-Up (Tabulation)",
+          color: "success",
+          children: [
+            { label: "Start from smallest subproblems" },
+            { label: "Fill table iteratively" },
+            { label: "No recursion overhead" },
+            { label: "Allows space optimization" }
+          ]
+        }
+      ]
+    },
     note: "DP is a skill that improves with practice. Don't try to memorize solutions — understand the thought process. For each problem, practice defining the state and recurrence from scratch.",
     keyPoints: [
       "DP = Recursion + Memoization (or equivalently, smart iteration order)",

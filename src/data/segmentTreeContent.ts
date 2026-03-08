@@ -11,6 +11,34 @@ export const segmentTreeContent: ContentSection[] = [
       "Common uses: range sum, range min/max, range GCD, count of elements in range. It's the go-to data structure for range query problems in competitive programming.",
       "The tree is stored in a flat array of size **4n** (to handle all levels). Node `i` has children at `2*i` and `2*i+1`."
     ],
+    diagram: {
+      type: "hierarchy",
+      title: "Segment Tree — Range Sum for [1, 3, 5, 7]",
+      data: [
+        {
+          label: "[0-3] sum=16",
+          color: "primary",
+          children: [
+            {
+              label: "[0-1] sum=4",
+              color: "info",
+              children: [
+                { label: "[0] val=1", color: "success" },
+                { label: "[1] val=3", color: "success" }
+              ]
+            },
+            {
+              label: "[2-3] sum=12",
+              color: "info",
+              children: [
+                { label: "[2] val=5", color: "accent" },
+                { label: "[3] val=7", color: "accent" }
+              ]
+            }
+          ]
+        }
+      ]
+    },
     code: [
       {
         title: "Segment Tree — Array Structure",

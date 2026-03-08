@@ -10,6 +10,48 @@ export const treesContent: ContentSection[] = [
       "Key terminology: **Root** (top node), **Parent/Child**, **Leaf** (no children), **Depth** (distance from root), **Height** (longest path to leaf), **Subtree**.",
       "A **Binary Tree** has at most 2 children per node. A **BST** maintains left < root < right ordering."
     ],
+    diagram: {
+      type: "table-visual",
+      title: "Tree Types Comparison",
+      data: [
+        {
+          label: "Binary Tree",
+          color: "primary",
+          children: [
+            { label: "At most 2 children per node" },
+            { label: "No ordering constraint" },
+            { label: "Used in: Heaps, Expression Trees" }
+          ]
+        },
+        {
+          label: "Binary Search Tree (BST)",
+          color: "success",
+          children: [
+            { label: "Left < Root < Right" },
+            { label: "O(log n) search/insert (balanced)" },
+            { label: "Used in: TreeSet, TreeMap" }
+          ]
+        },
+        {
+          label: "Complete Binary Tree",
+          color: "info",
+          children: [
+            { label: "All levels filled except last" },
+            { label: "Last level filled left to right" },
+            { label: "Used in: Heaps, array representation" }
+          ]
+        },
+        {
+          label: "Balanced Tree (AVL / Red-Black)",
+          color: "accent",
+          children: [
+            { label: "Height = O(log n)" },
+            { label: "Self-balancing on insert/delete" },
+            { label: "Guarantees O(log n) operations" }
+          ]
+        }
+      ]
+    },
     code: [
       {
         title: "Binary Tree Node",
