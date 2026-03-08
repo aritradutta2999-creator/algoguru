@@ -10,6 +10,7 @@ export interface AppMode {
 export const APP_MODES: AppMode[] = [
   { id: "ds", label: "Data Structures", icon: "⊞", description: "DSA & Competitive Programming" },
   { id: "lang", label: "Core Java", icon: "☕", description: "Java Language A to Z" },
+  { id: "practice", label: "Practice Problems", icon: "🏆", description: "Curated Practice Problems" },
 ];
 
 interface ModeContextType {
