@@ -8,6 +8,7 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import Index from "./pages/Index";
 import TopicPage from "./pages/TopicPage";
+import Playground from "./pages/Playground";
 import NotFound from "./pages/NotFound";
 import { Menu, Sun, Moon, ZoomIn, ZoomOut, Search, X, ChevronRight } from "lucide-react";
 import { SettingsProvider, useSettings } from "@/contexts/SettingsContext";
@@ -226,6 +227,7 @@ const App = () => (
             <AppLayout>
               <Routes>
                 <Route path="/" element={<Index />} />
+                <Route path="/playground" element={<Playground />} />
                 <Route path="/:topicId" element={<TopicPage />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>

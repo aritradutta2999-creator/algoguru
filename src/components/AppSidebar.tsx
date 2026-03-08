@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/sidebar";
 import { topics } from "@/data/topics";
 import { javaTopics } from "@/data/javaTopics";
-import { ChevronDown, Home, BookOpen, Layers, Coffee, Search, X } from "lucide-react";
+import { ChevronDown, Home, BookOpen, Layers, Coffee, Search, X, Code2 } from "lucide-react";
 import { useSettings } from "@/contexts/SettingsContext";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
@@ -146,6 +146,20 @@ export function AppSidebar() {
           >
             <Home size={15} />
             <span>Home</span>
+          </button>
+          <button
+            onClick={() => navigate("/playground")}
+            className={cn(
+              "flex items-center gap-2.5 w-full px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200",
+              currentPath === "/playground" ? "" : "hover:bg-muted/50"
+            )}
+            style={{
+              color: currentPath === "/playground" ? "hsl(var(--success))" : "hsl(var(--sidebar-foreground))",
+              background: currentPath === "/playground" ? "hsl(var(--success)/0.08)" : undefined,
+            }}
+          >
+            <Code2 size={15} />
+            <span>Playground</span>
           </button>
         </div>
 
