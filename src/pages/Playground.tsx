@@ -130,43 +130,47 @@ function instrumentCodeForDebug(source: string, breakpointLines: Set<number>): s
   const lines = source.split("\n");
   const result: string[] = [];
 
-  // Track declared variables by scanning the code
-  const declaredVars: string[] = [];
+  // Track declared AND initialized variables with their declaration line
+  // Only include variables that have been assigned a value (to avoid compile errors with uninitialized vars)
+  const initializedVars: { name: string; line: number }[] = [];
 
   for (let i = 0; i < lines.length; i++) {
     const lineNum = i + 1;
     const line = lines[i];
     const trimmed = line.trim();
 
-    // Track variable declarations (simple pattern matching)
-    // Match: Type varName = ...; or Type varName;
-    const varDeclMatch = trimmed.match(/^(?:final\s+)?(?:int|long|double|float|char|boolean|byte|short|String|Integer|Long|Double|Float|Character|Boolean)\s+(\w+)\s*[=;]/);
-    if (varDeclMatch) {
-      declaredVars.push(varDeclMatch[1]);
+    // Match initialized variable declarations: Type varName = value;
+    // Must have '=' to ensure the variable is initialized (avoids compile-time errors)
+    const initMatch = trimmed.match(
+      /^(?:final\s+)?(?:int|long|double|float|char|boolean|byte|short|String|Integer|Long|Double|Float|Character|Boolean|List|ArrayList|Map|HashMap|Set|HashSet|TreeMap|TreeSet|PriorityQueue|Deque|ArrayDeque|Queue|LinkedList|StringBuilder|StringBuffer|int\[\]|long\[\]|double\[\]|String\[\]|char\[\]|boolean\[\])(?:<[^>]*>)?\s+(\w+)\s*=/
+    );
+    if (initMatch) {
+      initializedVars.push({ name: initMatch[1], line: lineNum });
     }
-    // Match: Type[] varName or Type varName = new ...
-    const arrDeclMatch = trimmed.match(/^(?:final\s+)?(?:\w+(?:<[^>]*>)?(?:\[\])*)\s+(\w+)\s*[=;]/);
-    if (arrDeclMatch && !varDeclMatch) {
-      declaredVars.push(arrDeclMatch[1]);
+
+    // Also match for-loop variables: for (int i = 0; ...) or for (Type x : ...)
+    const forVarMatch = trimmed.match(/^for\s*\(\s*(?:final\s+)?(?:\w+(?:<[^>]*>)?)\s+(\w+)\s*[=:]/);
+    if (forVarMatch) {
+      initializedVars.push({ name: forVarMatch[1], line: lineNum });
     }
 
     if (breakpointLines.has(lineNum) && !trimmed.startsWith("//") && !trimmed.startsWith("/*") && !trimmed.startsWith("*") && trimmed.length > 0) {
-      // Get indentation of the current line
       const indent = line.match(/^(\s*)/)?.[1] || "";
       
-      // Build debug output string
-      let debugParts = [`"[DEBUG L${lineNum}]"`];
+      // Only include variables that were initialized BEFORE this breakpoint line
+      const availableVars = initializedVars
+        .filter(v => v.line < lineNum)
+        .slice(-8);
       
-      // Add variable values if we have tracked variables
-      if (declaredVars.length > 0) {
-        const varPrints = declaredVars.slice(-10).map(v => 
-          `" ${v}=" + ${v}`
-        );
-        debugParts = [...debugParts, ...varPrints];
+      let debugExpr: string;
+      if (availableVars.length > 0) {
+        const parts = availableVars.map(v => `" ${v.name}=" + ${v.name}`);
+        debugExpr = `"[DEBUG L${lineNum}]" + ${parts.join(" + ")}`;
+      } else {
+        debugExpr = `"[DEBUG L${lineNum}] (reached)"`;
       }
 
-      // Wrap in try-catch to handle uninitialized variables
-      result.push(`${indent}try { System.out.println(${debugParts.join(" + ")}); } catch(Exception __dbg) { System.out.println("[DEBUG L${lineNum}] (some vars not yet initialized)"); }`);
+      result.push(`${indent}System.out.println(${debugExpr});`);
     }
 
     result.push(line);
