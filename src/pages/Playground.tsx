@@ -133,23 +133,18 @@ function instrumentCodeForDebug(source: string, breakpointLines: Set<number>): s
   const lines = source.split("\n");
   const result: string[] = [];
 
-  // Track initialized variables: name, line declared, and whether it's an array type
-  const initializedVars: { name: string; line: number; isArray: boolean }[] = [];
+  // Track initialized variables with their scope depth
+  // When brace depth drops below a variable's declared depth, it's out of scope
+  const initializedVars: { name: string; line: number; isArray: boolean; scopeDepth: number }[] = [];
 
-  // Track brace depth to know if we're inside a method body
-  // Depth 0 = outside class, 1 = inside class (fields/methods), 2+ = inside method body
   let braceDepth = 0;
-  // Track if we've entered at least one method (depth >= 2 means inside method body)
-  let inMethodBody = false;
 
   for (let i = 0; i < lines.length; i++) {
     const lineNum = i + 1;
     const line = lines[i];
     const trimmed = line.trim();
 
-    // Count braces to track depth (skip braces in strings/comments for simplicity — 
-    // this works for typical competitive programming code)
-    // Remove string literals and char literals to avoid counting braces inside them
+    // Remove string/char literals to avoid counting braces inside them
     const codeOnly = trimmed
       .replace(/"(?:[^"\\]|\\.)*"/g, '""')
       .replace(/'(?:[^'\\]|\\.)*'/g, "''");
@@ -157,77 +152,91 @@ function instrumentCodeForDebug(source: string, breakpointLines: Set<number>): s
     const openBraces = (codeOnly.match(/{/g) || []).length;
     const closeBraces = (codeOnly.match(/}/g) || []).length;
 
-    // Determine if this line is inside a method body BEFORE processing braces
-    // A line with '{' that opens a method counts as entering method body
-    const wasInMethodBody = braceDepth >= 2;
+    const prevDepth = braceDepth;
     
+    // Process closing braces FIRST — remove out-of-scope variables
+    if (closeBraces > 0) {
+      const newDepthAfterClose = braceDepth - closeBraces;
+      // Remove variables whose scope depth is greater than the new depth
+      // (they were declared in a block we're leaving)
+      for (let v = initializedVars.length - 1; v >= 0; v--) {
+        if (initializedVars[v].scopeDepth > newDepthAfterClose) {
+          initializedVars.splice(v, 1);
+        }
+      }
+    }
+
     // Update brace depth
     braceDepth += openBraces - closeBraces;
-    
-    // We're in a method body if depth >= 2 (inside class + inside method/block)
-    inMethodBody = braceDepth >= 2 || (wasInMethodBody && closeBraces > 0 && braceDepth >= 1);
 
-    // Only track variables inside method bodies (depth >= 2)
-    if (braceDepth >= 2 || wasInMethodBody) {
-      // Match initialized variable declarations with '=' 
-      // Broad pattern: optional-final Type varName = ...
-      const initMatch = trimmed.match(
-        /^(?:final\s+)?(\w+(?:<[^>]*>)?(?:\[\])*)\s+(\w+)\s*=/
-      );
-      if (initMatch) {
-        const typePart = initMatch[1];
-        const varName = initMatch[2];
-        // Skip if it looks like a method declaration or class keyword
-        if (!["class", "interface", "enum", "return", "throw", "new", "import", "package", "public", "private", "protected", "static", "void"].includes(typePart)) {
-          initializedVars.push({ 
-            name: varName, 
-            line: lineNum, 
-            isArray: ARRAY_TYPE_PATTERN.test(typePart) 
-          });
+    const inMethodBody = braceDepth >= 2 || prevDepth >= 2;
+
+    // Only track variables inside method bodies
+    if (inMethodBody) {
+      // The scope depth for a variable is the current brace depth AFTER processing opens
+      // For for-loop vars, they're scoped to the for block (depth after the for's '{')
+      
+      // Match for-loop variables FIRST (they exist at depth+1 since for opens a block)
+      const forVarMatch = trimmed.match(/^for\s*\(\s*(?:final\s+)?(\w+(?:<[^>]*>)?(?:\[\])*)\s+(\w+)\s*[=:]/);
+      if (forVarMatch) {
+        const typePart = forVarMatch[1];
+        // For-loop vars are scoped to the loop body (current depth + the brace that follows)
+        initializedVars.push({ 
+          name: forVarMatch[2], 
+          line: lineNum, 
+          isArray: ARRAY_TYPE_PATTERN.test(typePart),
+          scopeDepth: braceDepth + 1, // Will be inside the for's { }
+        });
+      }
+
+      // Match initialized variable declarations: Type varName = ...
+      if (!forVarMatch) {
+        const initMatch = trimmed.match(
+          /^(?:final\s+)?(\w+(?:<[^>]*>)?(?:\[\])*)\s+(\w+)\s*=/
+        );
+        if (initMatch) {
+          const typePart = initMatch[1];
+          const varName = initMatch[2];
+          if (!["class", "interface", "enum", "return", "throw", "new", "import", "package", "public", "private", "protected", "static", "void"].includes(typePart)) {
+            initializedVars.push({ 
+              name: varName, 
+              line: lineNum, 
+              isArray: ARRAY_TYPE_PATTERN.test(typePart),
+              scopeDepth: braceDepth,
+            });
+          }
         }
       }
 
       // Match: var varName = ... (Java 10+)
       const varMatch = trimmed.match(/^(?:final\s+)?var\s+(\w+)\s*=/);
       if (varMatch) {
-        initializedVars.push({ name: varMatch[1], line: lineNum, isArray: false });
-      }
-
-      // Match for-loop variables: for (int i = 0; ...) or for (Type x : ...)
-      const forVarMatch = trimmed.match(/^for\s*\(\s*(?:final\s+)?(\w+(?:<[^>]*>)?(?:\[\])*)\s+(\w+)\s*[=:]/);
-      if (forVarMatch) {
-        const typePart = forVarMatch[1];
-        initializedVars.push({ 
-          name: forVarMatch[2], 
-          line: lineNum, 
-          isArray: ARRAY_TYPE_PATTERN.test(typePart) 
-        });
+        initializedVars.push({ name: varMatch[1], line: lineNum, isArray: false, scopeDepth: braceDepth });
       }
 
       // Match multiple declarations: int a = 1, b = 2;
       const multiDeclMatch = trimmed.match(/^(?:final\s+)?(\w+(?:<[^>]*>)?)\s+\w+\s*=\s*[^,]+(?:,\s*(\w+)\s*=\s*[^,;]+)+/);
-      if (multiDeclMatch) {
-        // Extract all var names from comma-separated declarations
+      if (multiDeclMatch && !forVarMatch) {
         const afterType = trimmed.replace(/^(?:final\s+)?\w+(?:<[^>]*>)?\s+/, "");
         const parts = afterType.split(",");
         for (const part of parts) {
           const nameMatch = part.trim().match(/^(\w+)\s*=/);
           if (nameMatch && !initializedVars.some(v => v.name === nameMatch[1] && v.line === lineNum)) {
-            initializedVars.push({ name: nameMatch[1], line: lineNum, isArray: false });
+            initializedVars.push({ name: nameMatch[1], line: lineNum, isArray: false, scopeDepth: braceDepth });
           }
         }
       }
     }
 
-    // Only inject debug prints if we're inside a method body AND the line has code
-    const canInject = (braceDepth >= 2 || wasInMethodBody) && 
+    // Only inject debug prints if inside a method body and line has real code
+    const canInject = inMethodBody && 
       !trimmed.startsWith("//") && !trimmed.startsWith("/*") && !trimmed.startsWith("*") && 
       trimmed.length > 0 && trimmed !== "{" && trimmed !== "}";
 
     if (breakpointLines.has(lineNum) && canInject) {
       const indent = line.match(/^(\s*)/)?.[1] || "";
       
-      // Only include variables initialized BEFORE this breakpoint line
+      // Only include variables initialized BEFORE this line AND still in scope
       const availableVars = initializedVars
         .filter(v => v.line < lineNum)
         .slice(-8);
