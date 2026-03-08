@@ -600,95 +600,94 @@ export default function Playground() {
                 />
               </div>
 
-              {/* Stdin sliding panel */}
-              <AnimatePresence>
-                {showStdin && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 120, opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                    className="border-t overflow-hidden"
-                    style={{ borderColor: "hsl(var(--border))" }}
-                  >
-                    <div className="flex items-center justify-between px-3 py-1.5" style={{ background: "hsl(var(--muted)/0.3)" }}>
-                      <div className="flex items-center gap-2">
-                        <Keyboard size={12} style={{ color: "hsl(var(--muted-foreground))" }} />
-                        <span className="text-[10px] font-mono font-medium" style={{ color: "hsl(var(--muted-foreground))" }}>Standard Input (stdin)</span>
-                      </div>
-                      <button
-                        onClick={() => setShowStdin(false)}
-                        className="text-[10px] font-mono px-1.5 py-0.5 rounded hover:bg-muted transition-colors"
-                        style={{ color: "hsl(var(--muted-foreground))" }}
-                      >
-                        ✕
-                      </button>
-                    </div>
-                    <textarea
-                      value={stdin}
-                      onChange={(e) => setStdin(e.target.value)}
-                      placeholder="Enter input for your program..."
-                      className="w-full h-[calc(100%-28px)] px-4 py-2 font-mono text-xs resize-none outline-none"
-                      style={{ background: "hsl(var(--card))", color: "hsl(var(--foreground))", caretColor: "hsl(var(--primary))" }}
-                    />
-                  </motion.div>
-                )}
-              </AnimatePresence>
             </div>
           </ResizablePanel>
 
           {/* Resize Handle */}
           <ResizableHandle withHandle />
 
-          {/* Output Panel */}
+          {/* Right Panel: Input (top) + Output (bottom) */}
           <ResizablePanel defaultSize={45} minSize={20}>
-            <div className="flex flex-col h-full">
-              <div
-                className="flex items-center gap-2 px-4 py-1.5 border-b"
-                style={{ borderColor: "hsl(var(--border))", background: "hsl(var(--muted)/0.3)" }}
-              >
-                <Terminal size={12} style={{ color: "hsl(var(--success))" }} />
-                <span className="text-[10px] font-mono font-medium" style={{ color: "hsl(var(--muted-foreground))" }}>
-                  Output
-                </span>
-                {isRunning && (
-                  <motion.span
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="text-[9px] font-mono px-2 py-0.5 rounded-full"
-                    style={{ background: "hsl(var(--primary)/0.1)", color: "hsl(var(--primary))" }}
+            <ResizablePanelGroup direction="vertical" className="h-full">
+              {/* Input Panel */}
+              <ResizablePanel defaultSize={showStdin ? 35 : 0} minSize={0} collapsible>
+                <div className="flex flex-col h-full">
+                  <div className="flex items-center justify-between px-3 py-1.5 border-b" style={{ borderColor: "hsl(var(--border))", background: "hsl(var(--muted)/0.3)" }}>
+                    <div className="flex items-center gap-2">
+                      <Keyboard size={12} style={{ color: "hsl(var(--muted-foreground))" }} />
+                      <span className="text-[10px] font-mono font-medium" style={{ color: "hsl(var(--muted-foreground))" }}>Standard Input (stdin)</span>
+                    </div>
+                    <button
+                      onClick={() => setShowStdin(false)}
+                      className="text-[10px] font-mono px-1.5 py-0.5 rounded hover:bg-muted transition-colors"
+                      style={{ color: "hsl(var(--muted-foreground))" }}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  <textarea
+                    value={stdin}
+                    onChange={(e) => setStdin(e.target.value)}
+                    placeholder="Enter input for your program..."
+                    className="flex-1 w-full px-4 py-2 font-mono text-xs resize-none outline-none"
+                    style={{ background: "hsl(var(--card))", color: "hsl(var(--foreground))", caretColor: "hsl(var(--primary))" }}
+                  />
+                </div>
+              </ResizablePanel>
+
+              {showStdin && <ResizableHandle withHandle />}
+
+              {/* Output Panel */}
+              <ResizablePanel defaultSize={showStdin ? 65 : 100} minSize={30}>
+                <div className="flex flex-col h-full">
+                  <div
+                    className="flex items-center gap-2 px-4 py-1.5 border-b"
+                    style={{ borderColor: "hsl(var(--border))", background: "hsl(var(--muted)/0.3)" }}
                   >
-                    compiling...
-                  </motion.span>
-                )}
-                {output && !isRunning && (
-                  <button
-                    onClick={() => setOutput("")}
-                    className="ml-auto text-[10px] font-mono px-2 py-0.5 rounded hover:bg-muted"
-                    style={{ color: "hsl(var(--muted-foreground))" }}
-                  >
-                    Clear
-                  </button>
-                )}
-              </div>
-              <div className="flex-1 min-h-0 overflow-auto">
-                <pre
-                  className="p-4 font-mono text-sm leading-relaxed whitespace-pre-wrap h-full"
-                  style={{
-                    background: "hsl(var(--card))",
-                    color: output.includes("Error") || output.includes("⚠")
-                      ? "hsl(var(--accent))"
-                      : "hsl(var(--success))",
-                  }}
-                >
-                  {output || (
-                    <span style={{ color: "hsl(var(--muted-foreground))" }}>
-                      Click <strong>Run</strong> or press <kbd className="px-1.5 py-0.5 rounded text-[11px]" style={{ background: "hsl(var(--muted))", border: "1px solid hsl(var(--border))" }}>Ctrl+Enter</kbd> to compile & run...
+                    <Terminal size={12} style={{ color: "hsl(var(--success))" }} />
+                    <span className="text-[10px] font-mono font-medium" style={{ color: "hsl(var(--muted-foreground))" }}>
+                      Output
                     </span>
-                  )}
-                </pre>
-              </div>
-            </div>
+                    {isRunning && (
+                      <motion.span
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="text-[9px] font-mono px-2 py-0.5 rounded-full"
+                        style={{ background: "hsl(var(--primary)/0.1)", color: "hsl(var(--primary))" }}
+                      >
+                        compiling...
+                      </motion.span>
+                    )}
+                    {output && !isRunning && (
+                      <button
+                        onClick={() => setOutput("")}
+                        className="ml-auto text-[10px] font-mono px-2 py-0.5 rounded hover:bg-muted"
+                        style={{ color: "hsl(var(--muted-foreground))" }}
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </div>
+                  <div className="flex-1 min-h-0 overflow-auto">
+                    <pre
+                      className="p-4 font-mono text-sm leading-relaxed whitespace-pre-wrap h-full"
+                      style={{
+                        background: "hsl(var(--card))",
+                        color: output.includes("Error") || output.includes("⚠")
+                          ? "hsl(var(--accent))"
+                          : "hsl(var(--success))",
+                      }}
+                    >
+                      {output || (
+                        <span style={{ color: "hsl(var(--muted-foreground))" }}>
+                          Click <strong>Run</strong> or press <kbd className="px-1.5 py-0.5 rounded text-[11px]" style={{ background: "hsl(var(--muted))", border: "1px solid hsl(var(--border))" }}>Ctrl+Enter</kbd> to compile & run...
+                        </span>
+                      )}
+                    </pre>
+                  </div>
+                </div>
+              </ResizablePanel>
+            </ResizablePanelGroup>
           </ResizablePanel>
         </ResizablePanelGroup>
       </div>
