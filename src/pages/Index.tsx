@@ -177,7 +177,7 @@ export default function Index() {
 
       {/* Topic cards */}
       <section className="px-6 md:px-10 py-14">
-        <div className="max-w-3xl mx-auto">
+        <div className="max-w-5xl mx-auto">
           <motion.div className="mb-10" initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
             <h2 className="text-2xl md:text-3xl font-bold mb-2 tracking-tight" style={{ color: "hsl(var(--foreground))" }}>
               {isDSMode ? "Topics" : "Java Modules"}
@@ -191,7 +191,7 @@ export default function Index() {
           </motion.div>
 
             <motion.div
-              className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5"
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"
             variants={container}
             initial="hidden"
             whileInView="show"
