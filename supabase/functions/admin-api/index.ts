@@ -1,20 +1,21 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-serve(async (req: Request) => {
+Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
+    console.log("ENV check:", { hasUrl: !!supabaseUrl, hasKey: !!serviceRoleKey });
 
     if (!supabaseUrl || !serviceRoleKey) {
       return new Response(JSON.stringify({ error: "Server misconfigured" }), {
@@ -23,7 +24,6 @@ serve(async (req: Request) => {
       });
     }
 
-    // Verify the caller is authenticated
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -32,10 +32,9 @@ serve(async (req: Request) => {
       });
     }
 
-    // Use service role client for all operations
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
 
-    // Verify caller's identity from their JWT
+    // Verify caller identity
     const token = authHeader.replace("Bearer ", "");
     const { data: { user: caller }, error: userError } = await adminClient.auth.getUser(token);
     if (userError || !caller) {
@@ -69,7 +68,6 @@ serve(async (req: Request) => {
       });
       if (error) throw error;
 
-      // Enrich with profiles and roles
       const userIds = data.users.map((u: any) => u.id);
       const { data: profiles } = await adminClient
         .from("profiles")
@@ -146,6 +144,7 @@ serve(async (req: Request) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
+    console.error("Admin API error:", err);
     return new Response(JSON.stringify({ error: (err as Error).message }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
