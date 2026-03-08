@@ -332,16 +332,15 @@
     @apply mb-8;
   }
   .cr-list {
-    @apply space-y-4 pl-1;
+    @apply space-y-5 pl-6 mb-8;
+    list-style: disc;
   }
   .cr-list li {
-    @apply text-base leading-[1.9] flex items-start gap-3;
+    @apply text-base leading-[1.9];
     color: hsl(var(--foreground)/0.7);
   }
-  .cr-list li::before {
-    content: '•';
-    @apply text-lg font-bold flex-shrink-0 mt-[1px];
-    color: hsl(var(--foreground)/0.35);
+  .cr-list li::marker {
+    color: hsl(var(--foreground)/0.3);
   }
   .cr-table-wrap {
     @apply mb-8 overflow-x-auto rounded-xl;
