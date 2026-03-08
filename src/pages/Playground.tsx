@@ -319,6 +319,7 @@ export default function Playground() {
       // Wandbox saves code as prog.java, so strip 'public' from class declarations
       // and inject common Java imports for CP snippets (Scanner, List, Map, etc.)
       const processedCode = addAutoImports(code).replace(/public\s+class\s+/g, "class ");
+      const res = await fetch(WANDBOX_API, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
