@@ -4,6 +4,7 @@ import { useSettings } from "@/contexts/SettingsContext";
 import { ContentRenderer } from "@/components/ContentRenderer";
 import { recursionContent } from "@/data/recursionContent";
 import { backtrackingContent } from "@/data/backtrackingContent";
+import { stackQueueContent } from "@/data/stackQueueContent";
 import { dpContent } from "@/data/dpContent";
 import { graphsContent } from "@/data/graphsContent";
 import { bitManipulationContent } from "@/data/bitManipulationContent";
@@ -25,6 +26,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useMode } from "@/contexts/ModeContext";
 
 const dsContentMap: Record<string, ContentSection[]> = {
+  "stack-queue": stackQueueContent,
   recursion: recursionContent,
   backtracking: backtrackingContent,
   dp: dpContent,
@@ -40,6 +42,7 @@ const dsContentMap: Record<string, ContentSection[]> = {
 };
 
 const topicColorVars: Record<string, string> = {
+  "stack-queue": "hsl(var(--info))",
   recursion: "hsl(var(--primary))",
   backtracking: "hsl(var(--accent))",
   dp: "hsl(var(--success))",
