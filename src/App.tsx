@@ -14,6 +14,21 @@ import { ModeProvider, useMode } from "@/contexts/ModeContext";
 
 const queryClient = new QueryClient();
 
+const ZOOM_MAP: Record<string, string> = { sm: "85%", md: "100%", lg: "115%", xl: "125%" };
+
+function ZoomDisplay() {
+  const { fontSize } = useSettings();
+  return (
+    <div
+      className="hidden sm:flex items-center gap-1.5 text-[11px] px-3 py-1.5 rounded-full font-mono font-medium"
+      style={{ background: "hsl(var(--muted)/0.5)", color: "hsl(var(--foreground))", border: "1px solid hsl(var(--border))" }}
+    >
+      <ZoomIn size={12} style={{ color: "hsl(var(--muted-foreground))" }} />
+      {ZOOM_MAP[fontSize] || "100%"}
+    </div>
+  );
+}
+
 function HeaderControls() {
   const { theme, toggleTheme, fontSize, increaseFontSize, decreaseFontSize } = useSettings();
   const isDark = theme === "dark";
