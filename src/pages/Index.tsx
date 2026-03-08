@@ -15,6 +15,9 @@ const topicColors: Record<string, { color: string; bg: string; border: string }>
   strings: { color: "hsl(var(--primary))", bg: "hsl(var(--primary)/0.06)", border: "hsl(var(--primary)/0.15)" },
   "number-theory": { color: "hsl(var(--success))", bg: "hsl(var(--success)/0.06)", border: "hsl(var(--success)/0.15)" },
   trees: { color: "hsl(var(--accent))", bg: "hsl(var(--accent)/0.06)", border: "hsl(var(--accent)/0.15)" },
+  "segment-tree": { color: "hsl(var(--info))", bg: "hsl(var(--info)/0.06)", border: "hsl(var(--info)/0.15)" },
+  "advanced-math": { color: "hsl(var(--warning))", bg: "hsl(var(--warning)/0.06)", border: "hsl(var(--warning)/0.15)" },
+  "advanced-topics": { color: "hsl(var(--heap))", bg: "hsl(var(--heap)/0.06)", border: "hsl(var(--heap)/0.15)" },
   "java-basics": { color: "hsl(var(--primary))", bg: "hsl(var(--primary)/0.06)", border: "hsl(var(--primary)/0.15)" },
   "java-oop": { color: "hsl(var(--accent))", bg: "hsl(var(--accent)/0.06)", border: "hsl(var(--accent)/0.15)" },
   "java-exceptions": { color: "hsl(var(--warning))", bg: "hsl(var(--warning)/0.06)", border: "hsl(var(--warning)/0.15)" },
@@ -43,10 +46,10 @@ export default function Index() {
   const activeTopics = isDSMode ? topics : javaTopics;
 
   const dsStats = [
-    { label: "Topics", value: "9", icon: LayoutGrid },
-    { label: "Sections", value: "100+", icon: GitBranch },
-    { label: "Code Examples", value: "200+", icon: Terminal },
-    { label: "Algorithms", value: "120+", icon: Zap },
+    { label: "Topics", value: "12", icon: LayoutGrid },
+    { label: "Sections", value: "140+", icon: GitBranch },
+    { label: "Code Examples", value: "300+", icon: Terminal },
+    { label: "Algorithms", value: "180+", icon: Zap },
   ];
 
   const javaStats = [

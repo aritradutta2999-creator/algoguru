@@ -10,6 +10,9 @@ import { heapContent } from "@/data/heapContent";
 import { stringsContent } from "@/data/stringsContent";
 import { numberTheoryContent } from "@/data/numberTheoryContent";
 import { treesContent } from "@/data/treesContent";
+import { segmentTreeContent } from "@/data/segmentTreeContent";
+import { advancedMathContent } from "@/data/advancedMathContent";
+import { advancedTopicsContent } from "@/data/advancedTopicsContent";
 import { javaContentMap } from "@/data/javaContent";
 import { topics } from "@/data/topics";
 import { javaTopics } from "@/data/javaTopics";
@@ -28,6 +31,9 @@ const dsContentMap: Record<string, ContentSection[]> = {
   strings: stringsContent,
   "number-theory": numberTheoryContent,
   trees: treesContent,
+  "segment-tree": segmentTreeContent,
+  "advanced-math": advancedMathContent,
+  "advanced-topics": advancedTopicsContent,
 };
 
 const topicColorVars: Record<string, string> = {
@@ -40,6 +46,9 @@ const topicColorVars: Record<string, string> = {
   strings: "hsl(var(--primary))",
   "number-theory": "hsl(var(--success))",
   trees: "hsl(var(--accent))",
+  "segment-tree": "hsl(var(--info))",
+  "advanced-math": "hsl(var(--warning))",
+  "advanced-topics": "hsl(var(--heap))",
   "java-basics": "hsl(var(--primary))",
   "java-oop": "hsl(var(--accent))",
   "java-exceptions": "hsl(var(--warning))",
