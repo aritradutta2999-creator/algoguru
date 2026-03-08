@@ -176,6 +176,37 @@ function HeaderControls() {
   );
 }
 
+function UserMenu() {
+  const { user, signOut } = useAuth();
+  if (!user) return null;
+  const name = user.user_metadata?.full_name || user.email?.split("@")[0] || "User";
+  const avatar = user.user_metadata?.avatar_url || user.user_metadata?.picture;
+  return (
+    <button
+      onClick={signOut}
+      title="Sign out"
+      className="flex items-center gap-2 px-2 py-1.5 rounded-lg transition-all duration-200 hover:bg-muted"
+      style={{ color: "hsl(var(--muted-foreground))" }}
+    >
+      {avatar ? (
+        <img src={avatar} alt="" className="w-6 h-6 rounded-full" />
+      ) : (
+        <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold" style={{ background: "hsl(var(--primary)/0.15)", color: "hsl(var(--primary))" }}>
+          {name[0]?.toUpperCase()}
+        </div>
+      )}
+      <LogOut size={13} />
+    </button>
+  );
+}
+
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { session, loading } = useAuth();
+  if (loading) return <div className="min-h-screen flex items-center justify-center" style={{ background: "hsl(var(--background))", color: "hsl(var(--muted-foreground))" }}>Loading...</div>;
+  if (!session) return <Navigate to="/auth" replace />;
+  return <>{children}</>;
+}
+
 function AppLayout({ children }: { children: React.ReactNode }) {
   const { currentMode } = useMode();
 
