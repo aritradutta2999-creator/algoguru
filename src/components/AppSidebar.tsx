@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   Sidebar,
@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/sidebar";
 import { topics } from "@/data/topics";
 import { javaTopics } from "@/data/javaTopics";
-import { ChevronDown, Home, BookOpen, Layers, Coffee, ZoomIn, ZoomOut, RotateCcw } from "lucide-react";
+import { ChevronDown, Home, BookOpen, Layers, Coffee, Search, X } from "lucide-react";
 import { useSettings } from "@/contexts/SettingsContext";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
@@ -61,7 +61,6 @@ export function AppSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const { currentMode, setMode, modes } = useMode();
-  const { fontSize, increaseFontSize, decreaseFontSize } = useSettings();
   const currentPath = location.pathname;
   const currentHash = location.hash.replace("#", "");
 
@@ -74,6 +73,25 @@ export function AppSidebar() {
     });
     return initial;
   });
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  const allSearchItems = useMemo(() => {
+    const allTopicsList = [...topics, ...javaTopics];
+    return allTopicsList.flatMap((t) => [
+      { id: t.id, title: t.title, icon: t.icon, type: "topic" as const, path: `/${t.id}`, parent: null, subtopicCount: t.subtopics.length },
+      ...t.subtopics.map((s) => ({
+        id: s.id, title: s.title, icon: t.icon, type: "subtopic" as const, path: `/${t.id}#${s.id}`, parent: t.title, subtopicCount: 0,
+      })),
+    ]);
+  }, []);
+
+  const searchResults = useMemo(() => {
+    const q = searchQuery.toLowerCase().trim();
+    if (!q) return [];
+    return allSearchItems.filter((i) => i.title.toLowerCase().includes(q));
+  }, [searchQuery, allSearchItems]);
 
   const toggleTopic = (id: string) => {
     setOpenTopics((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -219,25 +237,53 @@ export function AppSidebar() {
           })}
         </SidebarMenu>
 
-        {/* Zoom Control */}
-        <div className="mt-8 mx-1 p-3 rounded-2xl flex items-center justify-between" style={{ background: "hsl(var(--muted)/0.4)", border: "1px solid hsl(var(--border))" }}>
-          <button
-            onClick={decreaseFontSize}
-            className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-[hsl(var(--muted))]"
-            style={{ color: "hsl(var(--muted-foreground))" }}
+        {/* Search Topics */}
+        <div className="mt-8 mx-1">
+          <div
+            className="rounded-2xl overflow-hidden"
+            style={{ background: "hsl(var(--muted)/0.4)", border: "1px solid hsl(var(--border))" }}
           >
-            <ZoomOut size={14} />
-          </button>
-          <span className="text-xs font-mono font-semibold" style={{ color: "hsl(var(--foreground))" }}>
-            {fontSize === "sm" ? "85%" : fontSize === "md" ? "100%" : fontSize === "lg" ? "115%" : "125%"}
-          </span>
-          <button
-            onClick={increaseFontSize}
-            className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-[hsl(var(--muted))]"
-            style={{ color: "hsl(var(--muted-foreground))" }}
-          >
-            <ZoomIn size={14} />
-          </button>
+            <div className="flex items-center gap-2 px-3 py-2.5">
+              <Search size={13} style={{ color: "hsl(var(--muted-foreground))", flexShrink: 0 }} />
+              <input
+                ref={searchInputRef}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search all topics..."
+                className="flex-1 bg-transparent text-xs outline-none"
+                style={{ color: "hsl(var(--foreground))" }}
+              />
+              {searchQuery && (
+                <button onClick={() => setSearchQuery("")} className="p-0.5 rounded hover:bg-muted" style={{ color: "hsl(var(--muted-foreground))" }}>
+                  <X size={12} />
+                </button>
+              )}
+            </div>
+            {searchQuery.trim() && (
+              <div className="max-h-48 overflow-y-auto border-t" style={{ borderColor: "hsl(var(--border))" }}>
+                {searchResults.length === 0 ? (
+                  <div className="px-3 py-3 text-[11px] text-center" style={{ color: "hsl(var(--muted-foreground))" }}>No results found</div>
+                ) : (
+                  searchResults.slice(0, 15).map((item) => (
+                    <button
+                      key={item.path}
+                      onClick={() => { navigate(item.path); setSearchQuery(""); }}
+                      className="w-full flex items-center gap-2 px-3 py-2 text-left text-[11px] transition-colors hover:bg-muted/60"
+                      style={{ color: "hsl(var(--foreground))", borderBottom: "1px solid hsl(var(--border)/0.3)" }}
+                    >
+                      <span className="text-sm">{item.icon}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium truncate">{item.title}</div>
+                        {item.parent && (
+                          <div className="text-[9px]" style={{ color: "hsl(var(--muted-foreground))" }}>{item.parent}</div>
+                        )}
+                      </div>
+                    </button>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </SidebarContent>
     </Sidebar>
