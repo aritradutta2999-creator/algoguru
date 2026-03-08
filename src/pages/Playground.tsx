@@ -12,6 +12,7 @@ import {
 import Editor, { OnMount } from "@monaco-editor/react";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import { ALL_SNIPPETS, PRIORITY_LABELS } from "@/data/javaSnippets";
+import { STATIC_COMPLETIONS_MAP, INSTANCE_COMPLETIONS_MAP, ALL_INSTANCE_METHODS, JAVA_KEYWORDS, JAVA_TYPES } from "@/data/javaAutoComplete";
 import { CP_TEMPLATES } from "@/data/cpTemplates";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -196,7 +197,133 @@ export default function Playground() {
     editorRef.current = editor;
     monaco.editor.defineTheme("solarized-dark", SOLARIZED_DARK_THEME);
 
-    // Register Java snippets & auto-completions
+    // Register comprehensive Java auto-completions
+    // 1. Dot-notation completions (e.g., Integer.bitCount, Math.max, list.add)
+    monaco.languages.registerCompletionItemProvider("java", {
+      triggerCharacters: ["."],
+      provideCompletionItems: (model, position) => {
+        const textUntilPosition = model.getValueInRange({
+          startLineNumber: position.lineNumber,
+          startColumn: 1,
+          endLineNumber: position.lineNumber,
+          endColumn: position.column,
+        });
+
+        // Match ClassName. or variable.
+        const dotMatch = textUntilPosition.match(/(\w+)\.\s*(\w*)$/);
+        if (!dotMatch) return { suggestions: [] };
+
+        const className = dotMatch[1];
+        const partial = dotMatch[2] || "";
+        const range = {
+          startLineNumber: position.lineNumber,
+          endLineNumber: position.lineNumber,
+          startColumn: position.column - partial.length,
+          endColumn: position.column,
+        };
+
+        const suggestions: any[] = [];
+
+        // Check for static methods (e.g., Integer.bitCount, Math.abs)
+        const staticMethods = STATIC_COMPLETIONS_MAP.get(className);
+        if (staticMethods) {
+          for (const m of staticMethods) {
+            suggestions.push({
+              label: m.label,
+              kind: m.kind === "field" ? monaco.languages.CompletionItemKind.Field : monaco.languages.CompletionItemKind.Method,
+              insertText: m.insertText,
+              insertTextRules: m.insertText.includes("$") ? monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet : undefined,
+              detail: m.detail,
+              documentation: m.documentation,
+              sortText: `0_${m.label}`,
+              range,
+            });
+          }
+        }
+
+        // Check for instance methods (e.g., list.add, map.put)
+        // Try to infer type from variable declarations in the current model
+        const fullText = model.getValue();
+        const instanceMethods = INSTANCE_COMPLETIONS_MAP.get(className);
+        
+        if (instanceMethods) {
+          // Direct type name match (e.g., "String." or "List.")
+          for (const m of instanceMethods) {
+            suggestions.push({
+              label: m.label,
+              kind: m.kind === "field" ? monaco.languages.CompletionItemKind.Field : monaco.languages.CompletionItemKind.Method,
+              insertText: m.insertText,
+              insertTextRules: m.insertText.includes("$") ? monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet : undefined,
+              detail: m.detail,
+              documentation: m.documentation,
+              sortText: `0_${m.label}`,
+              range,
+            });
+          }
+        }
+
+        if (suggestions.length === 0) {
+          // Try to resolve the variable type from declarations in the code
+          // Patterns: Type varName, Type<...> varName, List<...> varName = new ArrayList
+          const varName = className;
+          const typePatterns = [
+            new RegExp(`(\\w+(?:<[^>]*>)?)\\s+${varName}\\s*[=;,)]`),
+            new RegExp(`(\\w+(?:<[^>]*>)?)\\s+${varName}\\s*$`, "m"),
+            new RegExp(`(\\w+(?:<[^>]*>)?)\\[\\]\\s+${varName}\\s*[=;,)]`),
+            new RegExp(`for\\s*\\([^)]*?(\\w+(?:<[^>]*>)?)\\s+${varName}\\s*[;:]`),
+          ];
+          
+          let resolvedType: string | null = null;
+          for (const pattern of typePatterns) {
+            const match = fullText.match(pattern);
+            if (match) {
+              // Extract base type (without generics)
+              resolvedType = match[1].replace(/<.*>/, "");
+              break;
+            }
+          }
+
+          if (resolvedType) {
+            const typeMethods = INSTANCE_COMPLETIONS_MAP.get(resolvedType);
+            if (typeMethods) {
+              for (const m of typeMethods) {
+                suggestions.push({
+                  label: m.label,
+                  kind: m.kind === "field" ? monaco.languages.CompletionItemKind.Field : monaco.languages.CompletionItemKind.Method,
+                  insertText: m.insertText,
+                  insertTextRules: m.insertText.includes("$") ? monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet : undefined,
+                  detail: m.detail,
+                  documentation: m.documentation,
+                  sortText: `0_${m.label}`,
+                  range,
+                });
+              }
+            }
+          }
+
+          // If still no suggestions, provide all common instance methods
+          if (suggestions.length === 0 && className[0] === className[0].toLowerCase()) {
+            // Lowercase first letter = likely a variable, show all instance methods
+            for (const m of ALL_INSTANCE_METHODS) {
+              suggestions.push({
+                label: m.label,
+                kind: m.kind === "field" ? monaco.languages.CompletionItemKind.Field : monaco.languages.CompletionItemKind.Method,
+                insertText: m.insertText,
+                insertTextRules: m.insertText.includes("$") ? monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet : undefined,
+                detail: m.detail,
+                documentation: m.documentation,
+                sortText: `1_${m.label}`,
+                range,
+              });
+            }
+          }
+        }
+
+        return { suggestions };
+      },
+    });
+
+    // 2. Snippet & keyword completions (non-dot context)
     monaco.languages.registerCompletionItemProvider("java", {
       provideCompletionItems: (model, position) => {
         const word = model.getWordUntilPosition(position);
@@ -207,8 +334,22 @@ export default function Playground() {
           endColumn: word.endColumn,
         };
 
-        return {
-          suggestions: ALL_SNIPPETS.map((s) => ({
+        // Check if we're in a dot context — if so, skip (handled by dot provider)
+        const textUntilPosition = model.getValueInRange({
+          startLineNumber: position.lineNumber,
+          startColumn: 1,
+          endLineNumber: position.lineNumber,
+          endColumn: position.column,
+        });
+        if (textUntilPosition.match(/\w+\.\s*\w*$/)) {
+          return { suggestions: [] };
+        }
+
+        const suggestions: any[] = [];
+
+        // Snippet completions
+        for (const s of ALL_SNIPPETS) {
+          suggestions.push({
             label: s.label,
             kind: monaco.languages.CompletionItemKind.Snippet,
             insertText: s.insertText,
@@ -218,8 +359,34 @@ export default function Playground() {
             filterText: `${s.label} ${s.detail}`,
             sortText: `${PRIORITY_LABELS.has(s.label) ? "0" : "1"}_${s.label.toLowerCase()}`,
             range,
-          })),
-        };
+          });
+        }
+
+        // Keyword completions
+        for (const kw of JAVA_KEYWORDS) {
+          suggestions.push({
+            label: kw,
+            kind: monaco.languages.CompletionItemKind.Keyword,
+            insertText: kw,
+            detail: "keyword",
+            sortText: `2_${kw}`,
+            range,
+          });
+        }
+
+        // Type completions
+        for (const t of JAVA_TYPES) {
+          suggestions.push({
+            label: t,
+            kind: monaco.languages.CompletionItemKind.Class,
+            insertText: t,
+            detail: "type",
+            sortText: `3_${t}`,
+            range,
+          });
+        }
+
+        return { suggestions };
       },
     });
 
