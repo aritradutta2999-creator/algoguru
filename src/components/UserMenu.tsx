@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { getAvatarUrl } from "@/lib/avatarUrl";
-import { LogOut, Settings } from "lucide-react";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { LogOut, Settings, Shield } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,6 +16,7 @@ import {
 
 export function UserMenu() {
   const { user, signOut } = useAuth();
+  const { isAdmin } = useIsAdmin();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<{ display_name: string | null; avatar_url: string | null }>({ display_name: null, avatar_url: null });
   const [resolvedAvatar, setResolvedAvatar] = useState<string | null>(null);
@@ -72,6 +74,12 @@ export function UserMenu() {
           <Settings size={14} />
           Profile Settings
         </DropdownMenuItem>
+        {isAdmin && (
+          <DropdownMenuItem onClick={() => navigate("/admin")} className="cursor-pointer gap-2">
+            <Shield size={14} />
+            Admin Dashboard
+          </DropdownMenuItem>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={signOut} className="cursor-pointer gap-2 text-destructive focus:text-destructive">
           <LogOut size={14} />

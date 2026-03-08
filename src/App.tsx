@@ -18,6 +18,7 @@ import { ModeProvider, useMode } from "@/contexts/ModeContext";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { UserMenu } from "@/components/UserMenu";
 import Profile from "./pages/Profile";
+import Admin from "./pages/Admin";
 import { topics } from "@/data/topics";
 import { javaTopics } from "@/data/javaTopics";
 
@@ -250,6 +251,7 @@ const App = () => (
                         <Route path="/" element={<Index />} />
                         <Route path="/playground" element={<Playground />} />
                         <Route path="/profile" element={<Profile />} />
+                        <Route path="/admin" element={<Admin />} />
                         <Route path="/:topicId" element={<TopicPage />} />
                         <Route path="*" element={<NotFound />} />
                       </Routes>
