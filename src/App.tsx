@@ -171,7 +171,7 @@ function SearchButton() {
 
       <AnimatePresence>
         {open && (
-          <div className="fixed inset-0 z-[100] flex items-start justify-center pt-[12vh]" onClick={() => setOpen(false)}>
+          <div className="fixed inset-0 z-[100] flex items-center justify-center" onClick={() => setOpen(false)}>
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
