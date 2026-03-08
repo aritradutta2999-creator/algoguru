@@ -7,6 +7,9 @@ import { dpContent } from "@/data/dpContent";
 import { graphsContent } from "@/data/graphsContent";
 import { bitManipulationContent } from "@/data/bitManipulationContent";
 import { heapContent } from "@/data/heapContent";
+import { stringsContent } from "@/data/stringsContent";
+import { numberTheoryContent } from "@/data/numberTheoryContent";
+import { treesContent } from "@/data/treesContent";
 import { javaContentMap } from "@/data/javaContent";
 import { topics } from "@/data/topics";
 import { javaTopics } from "@/data/javaTopics";
@@ -22,6 +25,9 @@ const dsContentMap: Record<string, ContentSection[]> = {
   graphs: graphsContent,
   bits: bitManipulationContent,
   heaps: heapContent,
+  strings: stringsContent,
+  "number-theory": numberTheoryContent,
+  trees: treesContent,
 };
 
 const topicColorVars: Record<string, string> = {
