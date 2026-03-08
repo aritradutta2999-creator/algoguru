@@ -115,7 +115,7 @@ export default function Playground() {
   const [showCompilerMenu, setShowCompilerMenu] = useState(false);
   const [copied, setCopied] = useState(false);
   const [stdin, setStdin] = useState("");
-  const [showStdin, setShowStdin] = useState(false);
+  
   const editorRef = useRef<any>(null);
 
   useEffect(() => {
@@ -515,19 +515,6 @@ export default function Playground() {
             Reset
           </button>
 
-          {/* Input toggle */}
-          <button
-            onClick={() => setShowStdin(!showStdin)}
-            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-all"
-            style={{
-              color: showStdin ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))",
-              border: `1px solid ${showStdin ? "hsl(var(--primary)/0.3)" : "hsl(var(--border))"}`,
-              background: showStdin ? "hsl(var(--primary)/0.1)" : undefined,
-            }}
-          >
-            <Keyboard size={13} />
-            Input
-          </button>
 
           <button
             onClick={runCode}
