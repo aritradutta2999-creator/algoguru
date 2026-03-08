@@ -1397,6 +1397,93 @@ public class LIS {
     }
 }`,
       },
+      {
+        title: "LIS using Segment Tree — O(n log n)",
+        language: "java",
+        content: `// Alternative O(n log n) using Segment Tree for prefix maximum.
+// Define t[v] = LIS length ending at value v.
+// For each a[i]: dp[i] = 1 + query(0, a[i]-1) on segment tree, then update(a[i], dp[i]).
+// Requires coordinate compression if values are large.
+
+public static int lisSegTree(int[] a) {
+    int n = a.length;
+    // Coordinate compression
+    int[] sorted = a.clone();
+    Arrays.sort(sorted);
+    Map<Integer, Integer> compress = new HashMap<>();
+    int idx = 0;
+    for (int v : sorted) if (!compress.containsKey(v)) compress.put(v, idx++);
+    
+    int[] tree = new int[4 * idx]; // Segment tree for max
+    int ans = 0;
+    
+    for (int val : a) {
+        int c = compress.get(val);
+        int best = c > 0 ? query(tree, 1, 0, idx - 1, 0, c - 1) : 0;
+        int lisLen = best + 1;
+        ans = Math.max(ans, lisLen);
+        update(tree, 1, 0, idx - 1, c, lisLen);
+    }
+    return ans;
+}
+
+static void update(int[] t, int v, int tl, int tr, int pos, int val) {
+    if (tl == tr) { t[v] = Math.max(t[v], val); return; }
+    int tm = (tl + tr) / 2;
+    if (pos <= tm) update(t, 2*v, tl, tm, pos, val);
+    else update(t, 2*v+1, tm+1, tr, pos, val);
+    t[v] = Math.max(t[2*v], t[2*v+1]);
+}
+
+static int query(int[] t, int v, int tl, int tr, int l, int r) {
+    if (l > r) return 0;
+    if (l == tl && r == tr) return t[v];
+    int tm = (tl + tr) / 2;
+    return Math.max(
+        query(t, 2*v, tl, tm, l, Math.min(r, tm)),
+        query(t, 2*v+1, tm+1, tr, Math.max(l, tm+1), r)
+    );
+}
+// Advantage: generalizes easily to LCIS, counting, weighted LIS`
+      },
+      {
+        title: "Minimum Non-Increasing Cover (Dilworth's Theorem)",
+        language: "java",
+        content: `// Dilworth's Theorem: min # of non-increasing subsequences
+// to cover the entire array = LIS length.
+// Greedy: assign each element to the subsequence whose
+// last element is the smallest value >= current element.
+
+public static List<List<Integer>> minCover(int[] a) {
+    // Each "pile" is a non-increasing subsequence
+    List<List<Integer>> piles = new ArrayList<>();
+    // Track the last element of each pile (sorted)
+    TreeMap<Integer, Integer> lastElements = new TreeMap<>();
+    
+    for (int val : a) {
+        // Find pile ending with smallest value >= val
+        Integer key = lastElements.ceilingKey(val);
+        
+        if (key != null) {
+            int pileIdx = lastElements.get(key);
+            // Remove old entry, add new
+            if (lastElements.get(key) == pileIdx) {
+                lastElements.remove(key);
+            }
+            piles.get(pileIdx).add(val);
+            lastElements.put(val, pileIdx);
+        } else {
+            // Start a new pile
+            List<Integer> newPile = new ArrayList<>();
+            newPile.add(val);
+            lastElements.put(val, piles.size());
+            piles.add(newPile);
+        }
+    }
+    return piles; // piles.size() == LIS length
+}
+// Example: [3,1,4,1,5,9,2,6] → 4 non-increasing piles (LIS=4)`
+      },
     ],
   },
   {
