@@ -54,6 +54,7 @@ const item = {
 export default function Index() {
   const navigate = useNavigate();
   const { currentMode, setMode, modes } = useMode();
+  const { contentWidth, setContentWidth } = useSettings();
   const isDSMode = currentMode.id === "ds";
   const isPracticeMode = currentMode.id === "practice";
   const activeTopics = isDSMode ? topics : isPracticeMode ? practiceTopics : javaTopics;
