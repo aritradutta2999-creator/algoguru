@@ -49,10 +49,8 @@ const saveBuiltinOverrides = (overrides: Record<string, { code: string; descript
 };
 const FALLBACK_JAVA_COMPILERS = [
   { label: "Java 25", compiler: "openjdk-jdk-25+5" },
-  { label: "Java 22", compiler: "openjdk-jdk-22+36" },
-  { label: "Java 21", compiler: "openjdk-jdk-21+35" },
   { label: "Java 17", compiler: "openjdk-jdk-17+35" },
-  { label: "Java 15", compiler: "openjdk-jdk-15.0.2+7" },
+  { label: "Java 8", compiler: "openjdk-jdk-8u121-b13" },
 ];
 
 const THEMES = [
