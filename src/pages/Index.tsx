@@ -3,8 +3,10 @@ import { topics } from "@/data/topics";
 import { javaTopics } from "@/data/javaTopics";
 import { practiceTopics } from "@/data/practiceTopics";
 import { motion } from "framer-motion";
-import { ChevronRight, Zap, GitBranch, LayoutGrid, Terminal, Sparkles, ArrowRight, Coffee, Layers, Code2, BookOpen, Trophy, Flame, Star, Mail, Send, Bug } from "lucide-react";
+import { ChevronRight, Zap, GitBranch, LayoutGrid, Terminal, Sparkles, ArrowRight, Coffee, Layers, Code2, BookOpen, Trophy, Flame, Star, Mail, Send, Bug, SlidersHorizontal } from "lucide-react";
 import { useMode } from "@/contexts/ModeContext";
+import { useSettings } from "@/contexts/SettingsContext";
+import { Slider } from "@/components/ui/slider";
 
 const topicColors: Record<string, { color: string; bg: string; border: string }> = {
   recursion: { color: "hsl(var(--primary))", bg: "hsl(var(--primary)/0.06)", border: "hsl(var(--primary)/0.15)" },
