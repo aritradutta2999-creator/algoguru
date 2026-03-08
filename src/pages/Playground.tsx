@@ -173,6 +173,33 @@ function instrumentCodeForDebug(source: string, breakpointLines: Set<number>): s
 
     const inMethodBody = braceDepth >= 2 || prevDepth >= 2;
 
+    // Track method parameters when entering a method body
+    // A method signature looks like: ... methodName(Type param1, Type param2) {
+    if (braceDepth >= 2 && prevDepth < 2 || (openBraces > 0 && trimmed.match(/\)\s*\{?\s*$/))) {
+      // Check if the previous non-empty lines form a method signature
+      const fullLine = trimmed;
+      const methodMatch = fullLine.match(/\(([^)]*)\)\s*\{?\s*$/);
+      if (methodMatch && methodMatch[1].trim().length > 0) {
+        const params = methodMatch[1].split(",");
+        for (const param of params) {
+          const paramMatch = param.trim().match(/^(?:final\s+)?(\w+(?:<[^>]*>)?(?:\[\])*)\s+(\w+)$/);
+          if (paramMatch) {
+            const typePart = paramMatch[1];
+            const paramName = paramMatch[2];
+            if (!initializedVars.some(v => v.name === paramName && v.scopeDepth === braceDepth)) {
+              initializedVars.push({
+                name: paramName,
+                line: lineNum,
+                isArray: ARRAY_ANY_PATTERN.test(typePart),
+                is2dArray: ARRAY_2D_PATTERN.test(typePart),
+                scopeDepth: braceDepth,
+              });
+            }
+          }
+        }
+      }
+    }
+
     // Only track variables inside method bodies
     if (inMethodBody) {
       // The scope depth for a variable is the current brace depth AFTER processing opens
