@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import {
   Play, Loader2, Copy, Check, Terminal,
   Code2, RotateCcw, Sun, Moon, Palette,
-  AlignLeft, ChevronDown, Keyboard,
+  AlignLeft, ChevronDown, Keyboard, Settings,
 } from "lucide-react";
 import Editor, { OnMount } from "@monaco-editor/react";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
