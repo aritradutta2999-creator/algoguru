@@ -6,6 +6,23 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Play } from "lucide-react";
 
+function renderSuperscript(text: string): React.ReactNode {
+  // Convert patterns like 2^n, n^2, 2^(n/2) into superscript
+  const parts: React.ReactNode[] = [];
+  const regex = /(\w+)\^(\([\w\/\+\-\*]+\)|\w+)/g;
+  let lastIdx = 0;
+  let m: RegExpExecArray | null;
+  let k = 0;
+  while ((m = regex.exec(text)) !== null) {
+    if (m.index > lastIdx) parts.push(text.slice(lastIdx, m.index));
+    const sup = m[2].startsWith("(") ? m[2].slice(1, -1) : m[2];
+    parts.push(<span key={k++}>{m[1]}<sup>{sup}</sup></span>);
+    lastIdx = m.index + m[0].length;
+  }
+  if (lastIdx < text.length) parts.push(text.slice(lastIdx));
+  return parts.length > 1 ? parts : parts.length === 1 ? parts[0] : text;
+}
+
 function renderMarkdown(text: string) {
   const parts: React.ReactNode[] = [];
   const regex = /(\*\*(.+?)\*\*)|(`(.+?)`)/g;
@@ -15,21 +32,21 @@ function renderMarkdown(text: string) {
 
   while ((match = regex.exec(text)) !== null) {
     if (match.index > lastIndex) {
-      parts.push(text.slice(lastIndex, match.index));
+      parts.push(renderSuperscript(text.slice(lastIndex, match.index)));
     }
     if (match[2]) {
       parts.push(
-        <strong key={key++} className="cr-bold">{match[2]}</strong>
+        <strong key={key++} className="cr-bold">{renderSuperscript(match[2])}</strong>
       );
     } else if (match[4]) {
       parts.push(
-        <code key={key++} className="cr-code">{match[4]}</code>
+        <code key={key++} className="cr-code">{renderSuperscript(match[4])}</code>
       );
     }
     lastIndex = match.index + match[0].length;
   }
   if (lastIndex < text.length) {
-    parts.push(text.slice(lastIndex));
+    parts.push(renderSuperscript(text.slice(lastIndex)));
   }
   return parts.length > 0 ? parts : text;
 }
