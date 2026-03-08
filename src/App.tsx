@@ -10,6 +10,7 @@ import TopicPage from "./pages/TopicPage";
 import NotFound from "./pages/NotFound";
 import { Menu, Sun, Moon, AArrowUp, AArrowDown } from "lucide-react";
 import { SettingsProvider, useSettings } from "@/contexts/SettingsContext";
+import { ModeProvider, useMode } from "@/contexts/ModeContext";
 
 const queryClient = new QueryClient();
 
@@ -55,6 +56,8 @@ function HeaderControls() {
 }
 
 function AppLayout({ children }: { children: React.ReactNode }) {
+  const { currentMode } = useMode();
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full" style={{ background: "hsl(var(--background))" }}>
@@ -89,7 +92,7 @@ function AppLayout({ children }: { children: React.ReactNode }) {
               style={{ background: "hsl(var(--primary)/0.08)", color: "hsl(var(--primary))", border: "1px solid hsl(var(--primary)/0.12)" }}
             >
               <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "hsl(var(--primary))" }} />
-              Java · CP Guide
+              {currentMode.id === "ds" ? "Java · CP Guide" : "Java · Language Guide"}
             </div>
           </header>
 
@@ -106,17 +109,19 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <SettingsProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AppLayout>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/:topicId" element={<TopicPage />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </AppLayout>
-        </BrowserRouter>
+        <ModeProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <AppLayout>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/:topicId" element={<TopicPage />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </AppLayout>
+          </BrowserRouter>
+        </ModeProvider>
       </SettingsProvider>
     </TooltipProvider>
   </QueryClientProvider>
