@@ -290,179 +290,78 @@
     background: linear-gradient(90deg, transparent, hsl(var(--border)), transparent);
   }
 
-  /* ═══ Section Title ═══ */
-  .section-title-bar {
-    @apply w-1 h-7 rounded-full;
-    background: var(--gradient-primary);
+  /* ═══ Content Renderer — Clean Document Style ═══ */
+  .cr-section {
+    @apply mb-16 scroll-mt-24;
   }
-  .section-title {
-    @apply text-2xl md:text-[28px] font-extrabold tracking-tight leading-tight;
+  .cr-title {
+    @apply text-[26px] md:text-[32px] font-bold tracking-tight mb-4;
     color: hsl(var(--foreground));
+    line-height: 1.25;
   }
-  .section-title-underline {
-    @apply h-[2px] rounded-full mb-8;
-    width: 60px;
-    margin-left: 18px;
-    background: var(--gradient-primary);
-    opacity: 0.5;
+  .cr-difficulty {
+    @apply inline-block text-sm font-semibold mb-6;
   }
-
-  /* ═══ Inline Code Styles ═══ */
-  .inline-code-keyword {
-    @apply font-semibold px-2 py-0.5 rounded-lg mx-0.5 inline-block;
-    color: hsl(var(--foreground));
-    background: hsl(var(--primary)/0.08);
-    border: 1px solid hsl(var(--primary)/0.12);
-    line-height: 1.6;
-    font-size: inherit;
-  }
-  .inline-code-snippet {
-    @apply font-mono font-medium px-2 py-[3px] rounded-lg mx-0.5;
-    font-size: 0.82em;
-    background: hsl(var(--muted));
-    color: hsl(var(--primary));
-    border: 1px solid hsl(var(--border));
-  }
-
-  /* ═══ Complexity Chips ═══ */
-  .complexity-chip {
-    @apply flex items-center gap-2.5 text-xs px-4 py-2.5 rounded-xl font-mono;
-  }
-  .complexity-chip--time {
-    background: hsl(var(--primary)/0.07);
-    color: hsl(var(--primary));
-    border: 1px solid hsl(var(--primary)/0.14);
-    box-shadow: 0 2px 10px hsl(var(--primary)/0.06);
-  }
-  .complexity-chip--space {
-    background: hsl(var(--accent)/0.07);
-    color: hsl(var(--accent));
-    border: 1px solid hsl(var(--accent)/0.14);
-    box-shadow: 0 2px 10px hsl(var(--accent)/0.06);
-  }
-  .complexity-chip-label {
-    @apply font-medium;
+  .cr-complexity {
+    @apply text-sm mb-6;
     color: hsl(var(--muted-foreground));
   }
-  .complexity-chip-value {
+  .cr-sep {
+    @apply mx-3;
+    color: hsl(var(--border));
+  }
+  .cr-subtitle {
+    @apply text-[20px] md:text-[22px] font-bold mb-4 mt-10;
+    color: hsl(var(--foreground)/0.9);
+  }
+  .cr-para {
+    @apply text-base leading-[1.9] mb-5;
+    color: hsl(var(--foreground)/0.7);
+  }
+  .cr-bold {
     @apply font-bold;
+    color: hsl(var(--foreground)/0.92);
   }
-
-  /* ═══ Theory Section — Clean Open Text ═══ */
-  .theory-section {
-    @apply mb-10;
+  .cr-code {
+    @apply font-mono text-[0.85em] px-1.5 py-[2px] rounded-md mx-0.5;
+    background: hsl(var(--muted));
+    color: hsl(var(--foreground)/0.8);
+    border: 1px solid hsl(var(--border));
   }
-  .theory-paragraph {
-    @apply text-[15.5px] leading-[2] mb-6;
-    color: hsl(var(--foreground)/0.75);
+  .cr-keypoints {
+    @apply mb-8;
   }
-  .theory-paragraph:last-child {
-    @apply mb-0;
+  .cr-list {
+    @apply space-y-4 pl-1;
   }
-
-  /* ═══ Key Points ═══ */
-  .keypoints-section {
-    @apply rounded-2xl overflow-hidden mb-8;
-    background: hsl(var(--primary)/0.025);
-    border: 1px solid hsl(var(--primary)/0.08);
+  .cr-list li {
+    @apply text-base leading-[1.9] flex items-start gap-3;
+    color: hsl(var(--foreground)/0.7);
   }
-  .keypoints-section-header {
-    @apply flex items-center gap-2.5 px-6 py-3.5 text-[11px] font-bold uppercase tracking-[0.12em] font-mono;
-    color: hsl(var(--primary));
-    background: hsl(var(--primary)/0.04);
-    border-bottom: 1px solid hsl(var(--primary)/0.06);
+  .cr-list li::before {
+    content: '•';
+    @apply text-lg font-bold flex-shrink-0 mt-[1px];
+    color: hsl(var(--foreground)/0.35);
   }
-  .keypoints-section-line {
-    @apply flex-1 h-px ml-3;
-    background: linear-gradient(90deg, hsl(var(--primary)/0.15), transparent);
+  .cr-table-wrap {
+    @apply mb-8 overflow-x-auto rounded-xl;
+    border: 1px solid hsl(var(--border));
   }
-  .keypoints-list {
-    @apply py-2;
-  }
-  .keypoints-list-item {
-    @apply flex items-start gap-3.5 text-[15px] leading-[1.9] px-6 py-3;
-    color: hsl(var(--foreground)/0.85);
-  }
-  .keypoints-list-item:nth-child(odd) {
-    background: hsl(var(--primary)/0.02);
-  }
-
-  /* ═══ Callout Blocks (Note / Tip / Warning) ═══ */
-  .callout-block {
-    @apply rounded-2xl my-7 overflow-hidden relative;
-  }
-  .callout-block-bar {
-    @apply absolute top-0 left-0 right-0 h-[2px];
-  }
-  .callout-block-inner {
-    @apply p-6 pt-5;
-  }
-  .callout-block--note {
-    background: hsl(var(--primary)/0.03);
-    border: 1px solid hsl(var(--primary)/0.08);
-    border-left: 3px solid hsl(var(--primary)/0.5);
-  }
-  .callout-block-bar--note {
-    background: var(--gradient-primary);
-    opacity: 0.5;
-  }
-  .callout-block--tip {
-    background: hsl(var(--success)/0.03);
-    border: 1px solid hsl(var(--success)/0.08);
-    border-left: 3px solid hsl(var(--success)/0.5);
-  }
-  .callout-block-bar--tip {
-    background: linear-gradient(90deg, hsl(var(--success)), hsl(var(--success)/0.2));
-    opacity: 0.5;
-  }
-  .callout-block--warning {
-    background: hsl(var(--accent)/0.03);
-    border: 1px solid hsl(var(--accent)/0.08);
-    border-left: 3px solid hsl(var(--accent)/0.5);
-  }
-  .callout-block-bar--warning {
-    background: var(--gradient-accent);
-    opacity: 0.5;
-  }
-  .callout-block-head {
-    @apply flex items-center gap-2.5 mb-3;
-  }
-  .callout-block-icon {
-    @apply w-7 h-7 rounded-lg flex items-center justify-center;
-  }
-  .callout-block-icon--note {
-    background: hsl(var(--primary)/0.1);
-    color: hsl(var(--primary));
-  }
-  .callout-block-icon--tip {
-    background: hsl(var(--success)/0.1);
-    color: hsl(var(--success));
-  }
-  .callout-block-icon--warning {
-    background: hsl(var(--accent)/0.1);
-    color: hsl(var(--accent));
-  }
-  .callout-block-title {
-    @apply text-[11px] font-bold uppercase tracking-[0.12em] font-mono;
-  }
-  .callout-block-body {
-    @apply text-[15px] leading-[2];
-    color: hsl(var(--foreground)/0.85);
-  }
-
-  /* ═══ Playground Button ═══ */
-  .playground-btn {
-    @apply flex items-center gap-2 mt-6 px-5 py-3 rounded-xl text-sm font-bold transition-all duration-200;
+  .cr-playground-btn {
+    @apply flex items-center gap-2 mt-8 px-5 py-3 rounded-lg text-sm font-semibold transition-all duration-200;
     background: hsl(var(--success)/0.08);
     color: hsl(var(--success));
     border: 1px solid hsl(var(--success)/0.15);
   }
-  .playground-btn:hover {
+  .cr-playground-btn:hover {
     background: hsl(var(--success)/0.14);
-    box-shadow: 0 4px 16px hsl(var(--success)/0.1);
+  }
+  .cr-divider {
+    @apply border-none h-px mt-14;
+    background: linear-gradient(90deg, transparent, hsl(var(--border)), transparent);
   }
 
-  /* Legacy boxes (keep for backward compat) */
+  /* Legacy compat */
   .highlight-box {
     background: hsl(var(--primary) / 0.04);
     border: 1px solid hsl(var(--primary) / 0.1);
