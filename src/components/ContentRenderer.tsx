@@ -1,28 +1,28 @@
 import { ContentSection } from "@/data/recursionContent";
 import { CodeBlock } from "@/components/CodeBlock";
 import { DiagramRenderer } from "@/components/DiagramRenderer";
-import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Play } from "lucide-react";
+import { Play, Lightbulb, FlaskConical, BookOpen } from "lucide-react";
 
+/* ── Superscript rendering (2^n → 2<sup>n</sup>) ── */
 function renderSuperscript(text: string): React.ReactNode {
-  // Convert patterns like 2^n, n^2, 2^(n/2) into superscript
   const parts: React.ReactNode[] = [];
-  const regex = /(\w+)\^(\([\w\/\+\-\*]+\)|\w+)/g;
+  const regex = /([A-Za-z0-9]+)\^(\([^)]+\)|[A-Za-z0-9]+)/g;
   let lastIdx = 0;
   let m: RegExpExecArray | null;
   let k = 0;
   while ((m = regex.exec(text)) !== null) {
     if (m.index > lastIdx) parts.push(text.slice(lastIdx, m.index));
     const sup = m[2].startsWith("(") ? m[2].slice(1, -1) : m[2];
-    parts.push(<span key={k++}>{m[1]}<sup>{sup}</sup></span>);
+    parts.push(<span key={k++}>{m[1]}<sup className="text-[0.75em] ml-[1px]">{sup}</sup></span>);
     lastIdx = m.index + m[0].length;
   }
   if (lastIdx < text.length) parts.push(text.slice(lastIdx));
   return parts.length > 1 ? parts : parts.length === 1 ? parts[0] : text;
 }
 
+/* ── Markdown (bold + code) with superscript ── */
 function renderMarkdown(text: string) {
   const parts: React.ReactNode[] = [];
   const regex = /(\*\*(.+?)\*\*)|(`(.+?)`)/g;
@@ -51,11 +51,75 @@ function renderMarkdown(text: string) {
   return parts.length > 0 ? parts : text;
 }
 
-const difficultyColor: Record<string, string> = {
-  Easy: "hsl(var(--difficulty-easy))",
-  Medium: "hsl(var(--difficulty-medium))",
-  Hard: "hsl(var(--difficulty-hard))",
-  Expert: "hsl(var(--difficulty-expert))",
+/* ── Classify theory lines into groups ── */
+type LineType = "theory" | "example" | "approach";
+
+interface ClassifiedLines {
+  theory: string[];
+  examples: string[];
+  approach: string[];
+}
+
+function classifyTheoryLines(lines: string[]): ClassifiedLines {
+  const result: ClassifiedLines = { theory: [], examples: [], approach: [] };
+
+  for (const line of lines) {
+    const stripped = line.replace(/\*\*/g, "").trim().toLowerCase();
+
+    if (
+      stripped.startsWith("example:") ||
+      stripped.startsWith("example ") ||
+      stripped.match(/^input\s*:/) ||
+      stripped.match(/^output\s*:/) ||
+      stripped.match(/^explanation\s*:/)
+    ) {
+      result.examples.push(line);
+    } else if (
+      stripped.startsWith("approach:") ||
+      stripped.startsWith("approach ") ||
+      stripped.startsWith("algorithm:") ||
+      stripped.startsWith("strategy:")
+    ) {
+      result.approach.push(line);
+    } else {
+      result.theory.push(line);
+    }
+  }
+
+  return result;
+}
+
+/* ── Render an I/O line with label highlighting ── */
+function renderIOLine(line: string, idx: number) {
+  // Detect Input:/Output:/Explanation: labels
+  const labelMatch = line.match(/^(\*\*)?(\s*)(Input|Output|Explanation)\s*:\s*/i);
+  if (labelMatch) {
+    const label = labelMatch[3];
+    const rest = line.slice(labelMatch[0].length);
+    return (
+      <div key={idx} className="cr-io-line">
+        <span className="cr-io-label">{label}:</span>
+        <span className="cr-io-value">{renderMarkdown(rest)}</span>
+      </div>
+    );
+  }
+  // Example: header line
+  const exampleHeader = line.replace(/\*\*/g, "").trim();
+  if (exampleHeader.toLowerCase().startsWith("example")) {
+    return null; // We already have a label on the box
+  }
+  return (
+    <div key={idx} className="cr-io-line">
+      <span className="cr-io-value">{renderMarkdown(line)}</span>
+    </div>
+  );
+}
+
+const difficultyClass: Record<string, string> = {
+  Easy: "cr-diff-easy",
+  Medium: "cr-diff-medium",
+  Hard: "cr-diff-hard",
+  Expert: "cr-diff-expert",
 };
 
 interface ContentRendererProps {
@@ -65,6 +129,7 @@ interface ContentRendererProps {
 
 export function ContentRenderer({ section, isPractice }: ContentRendererProps) {
   const navigate = useNavigate();
+  const classified = classifyTheoryLines(section.theory);
 
   const openInPlayground = () => {
     const problemData = {
@@ -84,49 +149,92 @@ export function ContentRenderer({ section, isPractice }: ContentRendererProps) {
   return (
     <motion.div
       id={section.id}
-      className="cr-section"
+      className="cr-problem-card"
       initial={{ opacity: 0, y: 16 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-50px" }}
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
     >
-      {/* Title */}
-      <h2 className="cr-title">{section.title}</h2>
+      {/* ═══ Header: Title + Difficulty + Complexity ═══ */}
+      <div className="cr-header">
+        <div className="cr-header-top">
+          <h2 className="cr-title">{section.title}</h2>
+          {section.difficulty && (
+            <span className={`cr-diff-badge ${difficultyClass[section.difficulty] || ""}`}>
+              {section.difficulty}
+            </span>
+          )}
+        </div>
+        {(section.timeComplexity || section.spaceComplexity) && (
+          <div className="cr-complexity-row">
+            {section.timeComplexity && (
+              <span className="cr-complexity-pill">
+                Time: {renderSuperscript(section.timeComplexity)}
+              </span>
+            )}
+            {section.spaceComplexity && (
+              <span className="cr-complexity-pill">
+                Space: {renderSuperscript(section.spaceComplexity)}
+              </span>
+            )}
+          </div>
+        )}
+      </div>
 
-      {/* Difficulty */}
-      {section.difficulty && (
-        <span
-          className="cr-difficulty"
-          style={{ color: difficultyColor[section.difficulty] }}
-        >
-          {section.difficulty}
-        </span>
+      {/* ═══ Theory / Problem Description ═══ */}
+      {classified.theory.length > 0 && (
+        <div className="cr-block">
+          <div className="cr-block-label">
+            <BookOpen size={13} />
+            Description
+          </div>
+          <ul className="cr-theory-list">
+            {classified.theory.map((para, i) => (
+              <li key={i}>{renderMarkdown(para)}</li>
+            ))}
+          </ul>
+        </div>
       )}
 
-      {/* Complexity */}
-      {(section.timeComplexity || section.spaceComplexity) && (
-        <p className="cr-complexity">
-          {section.timeComplexity && <>Time: {renderSuperscript(section.timeComplexity)}</>}
-          {section.timeComplexity && section.spaceComplexity && <span className="cr-sep">·</span>}
-          {section.spaceComplexity && <>Space: {renderSuperscript(section.spaceComplexity)}</>}
-        </p>
+      {/* ═══ Example ═══ */}
+      {classified.examples.length > 0 && (
+        <div className="cr-example-box">
+          <div className="cr-example-label">
+            <FlaskConical size={13} />
+            Example
+          </div>
+          <div className="cr-example-content">
+            {classified.examples.map((line, i) => renderIOLine(line, i))}
+          </div>
+        </div>
       )}
 
-      {/* Theory — bullet points */}
-      <ul className="cr-list">
-        {section.theory.map((para, i) => (
-          <li key={i}>{renderMarkdown(para)}</li>
-        ))}
-      </ul>
+      {/* ═══ Approach ═══ */}
+      {classified.approach.length > 0 && (
+        <div className="cr-approach-box">
+          <div className="cr-approach-label">
+            <Lightbulb size={13} />
+            Approach
+          </div>
+          <div className="cr-approach-content">
+            {classified.approach.map((line, i) => (
+              <p key={i} className="cr-approach-text">{renderMarkdown(line)}</p>
+            ))}
+          </div>
+        </div>
+      )}
 
-      {/* Diagram */}
+      {/* ═══ Diagram ═══ */}
       {section.diagram && <DiagramRenderer diagram={section.diagram} />}
 
-      {/* Key Points — simple bullet list */}
+      {/* ═══ Key Points ═══ */}
       {section.keyPoints && (
-        <div className="cr-keypoints">
-          <h3 className="cr-subtitle">Key Points:</h3>
-          <ul className="cr-list">
+        <div className="cr-block">
+          <div className="cr-block-label cr-block-label--accent">
+            <Lightbulb size={13} />
+            Key Points
+          </div>
+          <ul className="cr-theory-list cr-keypoint-list">
             {section.keyPoints.map((point, i) => (
               <li key={i}>{renderMarkdown(point)}</li>
             ))}
@@ -134,31 +242,27 @@ export function ContentRenderer({ section, isPractice }: ContentRendererProps) {
         </div>
       )}
 
-      {/* Note */}
+      {/* ═══ Note / Tip / Warning ═══ */}
       {section.note && (
-        <div className="cr-keypoints">
+        <div className="cr-block">
           <h3 className="cr-subtitle">Note:</h3>
           <p className="cr-para">{renderMarkdown(section.note)}</p>
         </div>
       )}
-
-      {/* Tip */}
       {section.tip && (
-        <div className="cr-keypoints">
-          <h3 className="cr-subtitle">Pro Tip:</h3>
+        <div className="cr-block">
+          <h3 className="cr-subtitle">💡 Pro Tip:</h3>
           <p className="cr-para">{renderMarkdown(section.tip)}</p>
         </div>
       )}
-
-      {/* Warning */}
       {section.warning && (
-        <div className="cr-keypoints">
+        <div className="cr-block">
           <h3 className="cr-subtitle">⚠ Warning:</h3>
           <p className="cr-para">{renderMarkdown(section.warning)}</p>
         </div>
       )}
 
-      {/* Table */}
+      {/* ═══ Table ═══ */}
       {section.table && (
         <div className="cr-table-wrap">
           <table className="table-premium">
@@ -182,12 +286,12 @@ export function ContentRenderer({ section, isPractice }: ContentRendererProps) {
         </div>
       )}
 
-      {/* Code Blocks */}
+      {/* ═══ Code Blocks ═══ */}
       {section.code?.map((block, i) => (
         <CodeBlock key={i} title={block.title} language={block.language} code={block.content} />
       ))}
 
-      {/* Practice in Playground */}
+      {/* ═══ Practice in Playground ═══ */}
       {isPractice && section.code && section.code.length > 0 && (
         <motion.button
           whileHover={{ scale: 1.02 }}
@@ -199,8 +303,6 @@ export function ContentRenderer({ section, isPractice }: ContentRendererProps) {
           Practice in Playground
         </motion.button>
       )}
-
-      <hr className="cr-divider" />
     </motion.div>
   );
 }
