@@ -84,6 +84,7 @@ Deno.serve(async (req: Request) => {
         email: u.email,
         created_at: u.created_at,
         last_sign_in_at: u.last_sign_in_at,
+        banned_until: u.banned_until || null,
         profile: profiles?.find((p: any) => p.user_id === u.id) || null,
         roles: roles?.filter((r: any) => r.user_id === u.id).map((r: any) => r.role) || [],
       }));
