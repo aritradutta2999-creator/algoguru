@@ -93,6 +93,30 @@ Deno.serve(async (req: Request) => {
       });
     }
 
+    if (action === "ban_user") {
+      if (!params.userId) throw new Error("userId required");
+      if (params.userId === caller.id) throw new Error("Cannot ban yourself");
+      const banDuration = params.permanent ? "876000h" : "8760h"; // permanent = 100 years, else 1 year
+      const { error } = await adminClient.auth.admin.updateUserById(params.userId, {
+        ban_duration: banDuration,
+      });
+      if (error) throw error;
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (action === "unban_user") {
+      if (!params.userId) throw new Error("userId required");
+      const { error } = await adminClient.auth.admin.updateUserById(params.userId, {
+        ban_duration: "none",
+      });
+      if (error) throw error;
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     if (action === "delete_user") {
       if (!params.userId) throw new Error("userId required");
       if (params.userId === caller.id) throw new Error("Cannot delete yourself");
