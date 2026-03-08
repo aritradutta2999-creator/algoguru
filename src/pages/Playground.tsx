@@ -1,16 +1,16 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
-  Play, Loader2, Trash2, Copy, Check, Terminal,
-  Code2, ExternalLink, RotateCcw, Sun, Moon, Palette,
-  AlignLeft, ChevronDown, Keyboard, GripVertical,
+  Play, Loader2, Copy, Check, Terminal,
+  Code2, RotateCcw, Sun, Moon, Palette,
+  AlignLeft, ChevronDown, Keyboard,
 } from "lucide-react";
 import Editor, { OnMount } from "@monaco-editor/react";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 
-const JAVA_COMPILERS = [
-  { label: "Java (Latest)", compiler: "openjdk-head" },
+const FALLBACK_JAVA_COMPILERS = [
   { label: "Java 15", compiler: "openjdk-jdk-15.0.2+7" },
+  { label: "Java 14", compiler: "openjdk-jdk-14.0.2+12" },
 ];
 
 const THEMES = [
@@ -76,13 +76,56 @@ export default function Playground() {
   const [output, setOutput] = useState("");
   const [isRunning, setIsRunning] = useState(false);
   const [currentTheme, setCurrentTheme] = useState(THEMES[0]);
-  const [selectedCompiler, setSelectedCompiler] = useState(JAVA_COMPILERS[0]);
+  const [availableCompilers, setAvailableCompilers] = useState(FALLBACK_JAVA_COMPILERS);
+  const [selectedCompiler, setSelectedCompiler] = useState(FALLBACK_JAVA_COMPILERS[0]);
   const [showThemeMenu, setShowThemeMenu] = useState(false);
   const [showCompilerMenu, setShowCompilerMenu] = useState(false);
   const [copied, setCopied] = useState(false);
   const [stdin, setStdin] = useState("");
   const [showStdin, setShowStdin] = useState(false);
   const editorRef = useRef<any>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadCompilers = async () => {
+      try {
+        const res = await fetch("https://wandbox.org/api/list.json");
+        if (!res.ok) return;
+
+        const list = await res.json() as Array<{ language?: string; name?: string }>;
+        const javaItems = list
+          .filter((item) => item.language === "Java" && item.name?.startsWith("openjdk-jdk-"))
+          .map((item) => item.name as string);
+
+        const unique = Array.from(new Set(javaItems));
+        if (!unique.length || !isMounted) return;
+
+        const parsed = unique
+          .map((compiler) => {
+            const match = compiler.match(/openjdk-jdk-(\d+)/);
+            const major = match ? Number(match[1]) : 0;
+            return {
+              label: major ? `Java ${major}` : compiler,
+              compiler,
+              major,
+            };
+          })
+          .sort((a, b) => b.major - a.major)
+          .map(({ label, compiler }) => ({ label, compiler }));
+
+        setAvailableCompilers(parsed);
+        setSelectedCompiler(parsed[0]);
+      } catch {
+        // keep fallback compilers
+      }
+    };
+
+    loadCompilers();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const handleEditorMount: OnMount = (editor, monaco) => {
     editorRef.current = editor;
@@ -117,7 +160,8 @@ export default function Playground() {
       });
 
       if (!res.ok) {
-        setOutput(`⚠ Server error (${res.status}). Please try again.`);
+        const errorText = await res.text();
+        setOutput(`⚠ Compile service error (${res.status}): ${errorText || "Unknown error"}`);
         return;
       }
 
@@ -193,7 +237,7 @@ export default function Playground() {
                   className="absolute left-0 top-full mt-1 w-48 rounded-xl overflow-hidden z-50 shadow-lg"
                   style={{ backgroundColor: "hsl(var(--popover))", color: "hsl(var(--popover-foreground))", border: "1px solid hsl(var(--border))" }}
                 >
-                  {JAVA_COMPILERS.map((c) => (
+                  {availableCompilers.map((c) => (
                     <button
                       key={c.compiler}
                       onClick={() => { setSelectedCompiler(c); setShowCompilerMenu(false); }}
