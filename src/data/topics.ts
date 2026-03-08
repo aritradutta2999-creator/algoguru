@@ -165,6 +165,7 @@ export const topics: Topic[] = [
       { id: "nt-primes", title: "Prime Numbers & Primality Testing" },
       { id: "nt-sieve", title: "Sieve of Eratosthenes" },
       { id: "nt-gcd", title: "GCD, LCM & Extended Euclidean" },
+      { id: "nt-binexp", title: "Binary Exponentiation" },
       { id: "nt-modular", title: "Modular Arithmetic" },
       { id: "nt-nCr", title: "Combinatorics — nCr mod p" },
       { id: "nt-euler", title: "Euler's Totient Function" },
