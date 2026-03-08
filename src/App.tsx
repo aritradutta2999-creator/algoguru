@@ -208,6 +208,8 @@ function AppLayout({ children }: { children: React.ReactNode }) {
             <SearchButton />
             <div className="h-4 w-px mx-1" style={{ background: "hsl(var(--border))" }} />
             <HeaderControls />
+            <div className="h-4 w-px mx-1" style={{ background: "hsl(var(--border))" }} />
+            <UserMenu />
           </header>
 
           <main className="flex-1 overflow-y-auto">
