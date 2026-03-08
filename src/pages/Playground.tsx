@@ -767,55 +767,172 @@ export default function Playground() {
           {/* Code Editor Panel */}
           <ResizablePanel defaultSize={55} minSize={30}>
             <div className="flex flex-col h-full">
-              {/* File tab */}
-              <div className="flex items-center gap-2 px-4 py-1.5 border-b" style={{ borderColor: "hsl(var(--border))", background: "hsl(var(--muted)/0.3)" }}>
-                <div className="flex gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: "hsl(var(--accent))" }} />
-                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: "hsl(var(--warning))" }} />
-                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: "hsl(var(--success))" }} />
-                </div>
-                <span className="text-[11px] font-mono" style={{ color: "hsl(var(--muted-foreground))" }}>Main.java</span>
+              {/* Tab bar */}
+              <div className="flex items-center gap-0 px-2 py-1 border-b" style={{ borderColor: "hsl(var(--border))", background: "hsl(var(--muted)/0.3)" }}>
+                {practiceData && (
+                  <button
+                    onClick={() => setPracticeTab("problem")}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all mr-1"
+                    style={{
+                      background: practiceTab === "problem" ? "hsl(var(--card))" : "transparent",
+                      color: practiceTab === "problem" ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))",
+                      boxShadow: practiceTab === "problem" ? "var(--shadow-card)" : "none",
+                    }}
+                  >
+                    <BookOpen size={12} />
+                    Problem
+                  </button>
+                )}
+                <button
+                  onClick={() => setPracticeTab("editor")}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all"
+                  style={{
+                    background: (!practiceData || practiceTab === "editor") ? "hsl(var(--card))" : "transparent",
+                    color: (!practiceData || practiceTab === "editor") ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
+                    boxShadow: (!practiceData || practiceTab === "editor") ? "var(--shadow-card)" : "none",
+                  }}
+                >
+                  <Code2 size={12} />
+                  Editor
+                </button>
                 <span className="text-[9px] font-mono ml-auto px-2 py-0.5 rounded" style={{ background: "hsl(var(--success)/0.1)", color: "hsl(var(--success))" }}>
                   {selectedCompiler.label}
                 </span>
+                {practiceData && (
+                  <button
+                    onClick={() => navigate("/playground")}
+                    title="Exit practice mode"
+                    className="ml-1.5 p-1 rounded hover:bg-muted transition-colors"
+                    style={{ color: "hsl(var(--muted-foreground))" }}
+                  >
+                    <X size={12} />
+                  </button>
+                )}
               </div>
 
-              {/* Monaco Editor */}
-              <div className="flex-1 min-h-0">
-                <Editor
-                  height="100%"
-                  language="java"
-                  theme={currentTheme.id}
-                  value={code}
-                  onChange={(val) => setCode(val || "")}
-                  onMount={handleEditorMount}
-                  options={{
-                    fontSize: 14,
-                    fontFamily: "'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace",
-                    fontLigatures: true,
-                    minimap: { enabled: false },
-                    scrollBeyondLastLine: false,
-                    padding: { top: 16, bottom: 16 },
-                    lineNumbers: "on",
-                    renderLineHighlight: "line",
-                    bracketPairColorization: { enabled: true },
-                    autoClosingBrackets: "always",
-                    autoClosingQuotes: "always",
-                    formatOnPaste: true,
-                    suggest: { showKeywords: true, showSnippets: true },
-                    quickSuggestions: { other: true, comments: false, strings: true },
-                    quickSuggestionsDelay: 0,
-                    suggestOnTriggerCharacters: true,
-                    snippetSuggestions: "top",
-                    tabSize: 4,
-                    wordWrap: "on",
-                    smoothScrolling: true,
-                    cursorBlinking: "smooth",
-                    cursorSmoothCaretAnimation: "on",
-                  }}
-                />
-              </div>
+              {/* Problem panel */}
+              {practiceData && practiceTab === "problem" ? (
+                <div className="flex-1 min-h-0 overflow-y-auto px-6 py-6" style={{ background: "hsl(var(--card))" }}>
+                  <div className="max-w-2xl">
+                    {/* Problem header */}
+                    <div className="flex items-center gap-3 mb-4">
+                      <h2 className="text-xl font-extrabold tracking-tight" style={{ color: "hsl(var(--foreground))" }}>
+                        {practiceData.title}
+                      </h2>
+                      {practiceData.difficulty && (
+                        <span
+                          className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full"
+                          style={{
+                            background: practiceData.difficulty === "Easy" ? "hsl(var(--success)/0.1)" : practiceData.difficulty === "Medium" ? "hsl(var(--warning)/0.1)" : "hsl(var(--accent)/0.1)",
+                            color: practiceData.difficulty === "Easy" ? "hsl(var(--success))" : practiceData.difficulty === "Medium" ? "hsl(var(--warning))" : "hsl(var(--accent))",
+                          }}
+                        >
+                          {practiceData.difficulty}
+                        </span>
+                      )}
+                    </div>
 
+                    {/* Complexity */}
+                    {(practiceData.timeComplexity || practiceData.spaceComplexity) && (
+                      <div className="flex gap-2.5 mb-6">
+                        {practiceData.timeComplexity && (
+                          <span className="text-xs font-mono px-3 py-1.5 rounded-lg" style={{ background: "hsl(var(--primary)/0.06)", color: "hsl(var(--primary))", border: "1px solid hsl(var(--primary)/0.12)" }}>
+                            Time: {practiceData.timeComplexity}
+                          </span>
+                        )}
+                        {practiceData.spaceComplexity && (
+                          <span className="text-xs font-mono px-3 py-1.5 rounded-lg" style={{ background: "hsl(var(--accent)/0.06)", color: "hsl(var(--accent))", border: "1px solid hsl(var(--accent)/0.12)" }}>
+                            Space: {practiceData.spaceComplexity}
+                          </span>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Theory */}
+                    <div className="rounded-xl p-5 mb-6" style={{ background: "hsl(var(--muted)/0.3)", border: "1px solid hsl(var(--border))" }}>
+                      <ul className="space-y-3">
+                        {practiceData.theory?.map((para: string, i: number) => (
+                          <li key={i} className="flex items-start gap-3">
+                            <span className="mt-[8px] w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: "hsl(var(--primary)/0.6)" }} />
+                            <span className="text-sm leading-relaxed" style={{ color: "hsl(var(--foreground)/0.8)" }}>
+                              {para.replace(/\*\*/g, "")}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    {/* Key Points */}
+                    {practiceData.keyPoints && practiceData.keyPoints.length > 0 && (
+                      <div className="rounded-xl p-5 mb-6" style={{ background: "hsl(var(--primary)/0.04)", border: "1px solid hsl(var(--primary)/0.1)" }}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider mb-3 font-mono" style={{ color: "hsl(var(--primary))" }}>
+                          ★ Key Points
+                        </div>
+                        <ul className="space-y-2">
+                          {practiceData.keyPoints.map((point: string, i: number) => (
+                            <li key={i} className="flex items-start gap-2 text-sm" style={{ color: "hsl(var(--foreground)/0.85)" }}>
+                              <span className="mt-[7px] w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: "hsl(var(--primary))" }} />
+                              {point}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {/* Start coding CTA */}
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => setPracticeTab("editor")}
+                      className="flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-bold transition-all"
+                      style={{
+                        background: "var(--gradient-primary)",
+                        color: "hsl(var(--primary-foreground))",
+                        boxShadow: "0 4px 20px hsl(var(--primary)/0.3)",
+                      }}
+                    >
+                      <Code2 size={15} />
+                      Start Coding →
+                    </motion.button>
+                  </div>
+                </div>
+              ) : (
+                /* Monaco Editor */
+                <div className="flex-1 min-h-0">
+                  <Editor
+                    height="100%"
+                    language="java"
+                    theme={currentTheme.id}
+                    value={code}
+                    onChange={(val) => setCode(val || "")}
+                    onMount={handleEditorMount}
+                    options={{
+                      fontSize: 14,
+                      fontFamily: "'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace",
+                      fontLigatures: true,
+                      minimap: { enabled: false },
+                      scrollBeyondLastLine: false,
+                      padding: { top: 16, bottom: 16 },
+                      lineNumbers: "on",
+                      renderLineHighlight: "line",
+                      bracketPairColorization: { enabled: true },
+                      autoClosingBrackets: "always",
+                      autoClosingQuotes: "always",
+                      formatOnPaste: true,
+                      suggest: { showKeywords: true, showSnippets: true },
+                      quickSuggestions: { other: true, comments: false, strings: true },
+                      quickSuggestionsDelay: 0,
+                      suggestOnTriggerCharacters: true,
+                      snippetSuggestions: "top",
+                      tabSize: 4,
+                      wordWrap: "on",
+                      smoothScrolling: true,
+                      cursorBlinking: "smooth",
+                      cursorSmoothCaretAnimation: "on",
+                    }}
+                  />
+                </div>
+              )}
             </div>
           </ResizablePanel>
 
