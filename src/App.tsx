@@ -3,16 +3,19 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useNavigate, Navigate } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import Index from "./pages/Index";
 import TopicPage from "./pages/TopicPage";
 import Playground from "./pages/Playground";
+import Auth from "./pages/Auth";
+import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
-import { Menu, Sun, Moon, ZoomIn, ZoomOut, Search, X, ChevronRight } from "lucide-react";
+import { Menu, Sun, Moon, ZoomIn, ZoomOut, Search, X, ChevronRight, LogOut } from "lucide-react";
 import { SettingsProvider, useSettings } from "@/contexts/SettingsContext";
 import { ModeProvider, useMode } from "@/contexts/ModeContext";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { topics } from "@/data/topics";
 import { javaTopics } from "@/data/javaTopics";
 
@@ -173,6 +176,37 @@ function HeaderControls() {
   );
 }
 
+function UserMenu() {
+  const { user, signOut } = useAuth();
+  if (!user) return null;
+  const name = user.user_metadata?.full_name || user.email?.split("@")[0] || "User";
+  const avatar = user.user_metadata?.avatar_url || user.user_metadata?.picture;
+  return (
+    <button
+      onClick={signOut}
+      title="Sign out"
+      className="flex items-center gap-2 px-2 py-1.5 rounded-lg transition-all duration-200 hover:bg-muted"
+      style={{ color: "hsl(var(--muted-foreground))" }}
+    >
+      {avatar ? (
+        <img src={avatar} alt="" className="w-6 h-6 rounded-full" />
+      ) : (
+        <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold" style={{ background: "hsl(var(--primary)/0.15)", color: "hsl(var(--primary))" }}>
+          {name[0]?.toUpperCase()}
+        </div>
+      )}
+      <LogOut size={13} />
+    </button>
+  );
+}
+
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { session, loading } = useAuth();
+  if (loading) return <div className="min-h-screen flex items-center justify-center" style={{ background: "hsl(var(--background))", color: "hsl(var(--muted-foreground))" }}>Loading...</div>;
+  if (!session) return <Navigate to="/auth" replace />;
+  return <>{children}</>;
+}
+
 function AppLayout({ children }: { children: React.ReactNode }) {
   const { currentMode } = useMode();
 
@@ -205,6 +239,8 @@ function AppLayout({ children }: { children: React.ReactNode }) {
             <SearchButton />
             <div className="h-4 w-px mx-1" style={{ background: "hsl(var(--border))" }} />
             <HeaderControls />
+            <div className="h-4 w-px mx-1" style={{ background: "hsl(var(--border))" }} />
+            <UserMenu />
           </header>
 
           <main className="flex-1 overflow-y-auto">
@@ -224,14 +260,24 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
-            <AppLayout>
+            <AuthProvider>
               <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/playground" element={<Playground />} />
-                <Route path="/:topicId" element={<TopicPage />} />
-                <Route path="*" element={<NotFound />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/*" element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <Routes>
+                        <Route path="/" element={<Index />} />
+                        <Route path="/playground" element={<Playground />} />
+                        <Route path="/:topicId" element={<TopicPage />} />
+                        <Route path="*" element={<NotFound />} />
+                      </Routes>
+                    </AppLayout>
+                  </ProtectedRoute>
+                } />
               </Routes>
-            </AppLayout>
+            </AuthProvider>
           </BrowserRouter>
         </ModeProvider>
       </SettingsProvider>
