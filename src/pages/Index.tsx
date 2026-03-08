@@ -1,9 +1,8 @@
-import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { topics } from "@/data/topics";
 import { javaTopics } from "@/data/javaTopics";
 import { motion } from "framer-motion";
-import { ChevronRight, Zap, GitBranch, LayoutGrid, Terminal, Sparkles, ArrowRight, BookOpen, Coffee, Layers, Search } from "lucide-react";
+import { ChevronRight, Zap, GitBranch, LayoutGrid, Terminal, Sparkles, ArrowRight, BookOpen, Coffee, Layers } from "lucide-react";
 import { useMode } from "@/contexts/ModeContext";
 
 const topicColors: Record<string, { color: string; bg: string; border: string }> = {
@@ -42,17 +41,6 @@ export default function Index() {
   const { currentMode, setMode, modes } = useMode();
   const isDSMode = currentMode.id === "ds";
   const activeTopics = isDSMode ? topics : javaTopics;
-  const [search, setSearch] = useState("");
-
-  const allTopics = useMemo(() => [...topics, ...javaTopics], []);
-  const searchResults = useMemo(() => {
-    if (!search.trim()) return [];
-    const q = search.toLowerCase();
-    return allTopics.filter(t =>
-      t.title.toLowerCase().includes(q) ||
-      t.subtopics.some(s => s.title.toLowerCase().includes(q))
-    );
-  }, [search, allTopics]);
 
   const dsStats = [
     { label: "Topics", value: "9", icon: LayoutGrid },
@@ -72,46 +60,11 @@ export default function Index() {
 
   return (
     <div className="min-h-screen">
-      {/* Search Bar */}
-      <div className="sticky top-0 z-30 px-6 md:px-10 py-3" style={{ background: "hsl(var(--background)/0.85)", backdropFilter: "blur(12px)", borderBottom: "1px solid hsl(var(--border))" }}>
-        <div className="max-w-xl mx-auto relative">
-          <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: "hsl(var(--muted-foreground))" }} />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search topics..."
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm font-medium outline-none transition-all"
-            style={{
-              background: "hsl(var(--muted)/0.5)",
-              color: "hsl(var(--foreground))",
-              border: "1px solid hsl(var(--border))",
-            }}
-          />
-          {search.trim() && (
-            <div className="absolute top-full left-0 right-0 mt-2 rounded-xl overflow-hidden z-50" style={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", boxShadow: "0 8px 30px hsl(var(--foreground)/0.1)" }}>
-              {searchResults.length === 0 ? (
-                <div className="px-4 py-3 text-sm" style={{ color: "hsl(var(--muted-foreground))" }}>No topics found</div>
-              ) : (
-                searchResults.map((t) => (
-                  <button
-                    key={t.id}
-                    onClick={() => { navigate(`/${t.id}`); setSearch(""); }}
-                    className="w-full flex items-center gap-3 px-4 py-3 text-left text-sm font-medium transition-colors hover:bg-[hsl(var(--muted)/0.5)]"
-                    style={{ color: "hsl(var(--foreground))", borderBottom: "1px solid hsl(var(--border))" }}
-                  >
-                    <span className="text-lg">{t.icon}</span>
-                    <div>
-                      <div className="font-semibold text-sm">{t.title}</div>
-                      <div className="text-xs font-light" style={{ color: "hsl(var(--muted-foreground))" }}>{t.subtopics.length} sections</div>
-                    </div>
-                    <ChevronRight size={14} className="ml-auto" style={{ color: "hsl(var(--muted-foreground))" }} />
-                  </button>
-                ))
-              )}
-            </div>
-          )}
-        </div>
+      {/* Top Bar */}
+      <div className="sticky top-0 z-30 px-6 md:px-10 py-3 flex items-center justify-center" style={{ background: "hsl(var(--background)/0.85)", backdropFilter: "blur(12px)", borderBottom: "1px solid hsl(var(--border))" }}>
+        <span className="text-sm font-bold tracking-wide font-mono" style={{ color: "hsl(var(--foreground))" }}>
+          Java <span style={{ color: "hsl(var(--muted-foreground))" }}>·</span> <span style={{ color: "hsl(var(--primary))" }}>CP Guide</span>
+        </span>
       </div>
 
       {/* Hero */}
