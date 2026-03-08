@@ -119,7 +119,26 @@ const SOLARIZED_DARK_THEME = {
 };
 
 export default function Playground() {
-  const [code, setCode] = useState(DEFAULT_CODE);
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const practiceId = searchParams.get("practice");
+
+  const practiceData = useMemo(() => {
+    if (!practiceId) return null;
+    try {
+      const raw = localStorage.getItem("playground-practice-problem");
+      if (raw) {
+        const data = JSON.parse(raw);
+        if (data.id === practiceId) return data;
+      }
+    } catch {}
+    return null;
+  }, [practiceId]);
+
+  const [code, setCode] = useState(() => {
+    if (practiceData?.code?.[0]?.content) return practiceData.code[0].content;
+    return DEFAULT_CODE;
+  });
   const [output, setOutput] = useState("");
   const [isRunning, setIsRunning] = useState(false);
   const [currentTheme, setCurrentTheme] = useState(THEMES[0]);
@@ -140,6 +159,7 @@ export default function Playground() {
   const [templateName, setTemplateName] = useState("");
   const [templateDesc, setTemplateDesc] = useState("");
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [practiceTab, setPracticeTab] = useState<"problem" | "editor">("editor");
   
   const editorRef = useRef<any>(null);
 
