@@ -342,6 +342,17 @@ export default function Playground() {
             {isRunning ? "Running..." : "Run ⌘↵"}
           </button>
 
+          {/* Fullscreen */}
+          <button
+            onClick={() => setIsFullscreen(true)}
+            title="Fullscreen Mode"
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-all hover:bg-muted"
+            style={{ color: "hsl(var(--muted-foreground))", border: "1px solid hsl(var(--border))" }}
+          >
+            <Maximize size={13} />
+            Fullscreen
+          </button>
+
           {/* Settings */}
           <div className="relative">
             <button
