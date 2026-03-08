@@ -171,7 +171,7 @@ function SearchButton() {
 
       <AnimatePresence>
         {open && (
-          <div className="fixed inset-0 z-[100] flex items-start justify-center pt-[12vh]" onClick={() => setOpen(false)}>
+          <div className="fixed inset-0 z-[100] flex items-center justify-center" onClick={() => setOpen(false)}>
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -185,7 +185,7 @@ function SearchButton() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: -10 }}
               transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
-              className="relative w-full max-w-lg mx-4 rounded-2xl overflow-hidden"
+              className="relative w-full max-w-md mx-4 rounded-2xl overflow-hidden max-h-[70vh]"
               style={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", boxShadow: "0 25px 80px hsl(var(--foreground)/0.2)" }}
               onClick={(e) => e.stopPropagation()}
             >
