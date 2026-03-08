@@ -1,4 +1,5 @@
-import { useState, useCallback, useRef, useEffect, useMemo } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
+import { AnimatePresence } from "framer-motion";
 import { motion } from "framer-motion";
 import {
   Play, Loader2, Copy, Check, Terminal,
@@ -9,8 +10,9 @@ import Editor, { OnMount } from "@monaco-editor/react";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 
 const FALLBACK_JAVA_COMPILERS = [
+  { label: "Java 21", compiler: "openjdk-jdk-21+35" },
+  { label: "Java 17", compiler: "openjdk-jdk-17+35" },
   { label: "Java 15", compiler: "openjdk-jdk-15.0.2+7" },
-  { label: "Java 14", compiler: "openjdk-jdk-14.0.2+12" },
 ];
 
 const THEMES = [
@@ -113,10 +115,7 @@ export default function Playground() {
   const [showCompilerMenu, setShowCompilerMenu] = useState(false);
   const [copied, setCopied] = useState(false);
   const [stdin, setStdin] = useState("");
-  const showStdin = useMemo(() => {
-    const inputPatterns = /Scanner|BufferedReader|System\.in|InputStreamReader|readLine|nextInt|nextLong|nextDouble|next\(\)|nextLine/;
-    return inputPatterns.test(code);
-  }, [code]);
+  const [showStdin, setShowStdin] = useState(false);
   const editorRef = useRef<any>(null);
 
   useEffect(() => {
@@ -516,8 +515,20 @@ export default function Playground() {
             Reset
           </button>
 
+          {/* Input toggle */}
+          <button
+            onClick={() => setShowStdin(!showStdin)}
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-all"
+            style={{
+              color: showStdin ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))",
+              border: `1px solid ${showStdin ? "hsl(var(--primary)/0.3)" : "hsl(var(--border))"}`,
+              background: showStdin ? "hsl(var(--primary)/0.1)" : undefined,
+            }}
+          >
+            <Keyboard size={13} />
+            Input
+          </button>
 
-          {/* Run */}
           <button
             onClick={runCode}
             disabled={isRunning || !code.trim()}
@@ -589,29 +600,40 @@ export default function Playground() {
                 />
               </div>
 
-              {/* Stdin input */}
-              {showStdin && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  className="border-t"
-                  style={{ borderColor: "hsl(var(--border))" }}
-                >
-                  <div className="flex items-center gap-2 px-3 py-1.5" style={{ background: "hsl(var(--muted)/0.3)" }}>
-                    <Keyboard size={12} style={{ color: "hsl(var(--muted-foreground))" }} />
-                    <span className="text-[10px] font-mono font-medium" style={{ color: "hsl(var(--muted-foreground))" }}>Standard Input (stdin)</span>
-                  </div>
-                  <textarea
-                    value={stdin}
-                    onChange={(e) => setStdin(e.target.value)}
-                    placeholder="Enter input for your program..."
-                    rows={3}
-                    className="w-full px-4 py-2 font-mono text-xs resize-none outline-none"
-                    style={{ background: "hsl(var(--card))", color: "hsl(var(--foreground))", caretColor: "hsl(var(--primary))" }}
-                  />
-                </motion.div>
-              )}
+              {/* Stdin sliding panel */}
+              <AnimatePresence>
+                {showStdin && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 120, opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    className="border-t overflow-hidden"
+                    style={{ borderColor: "hsl(var(--border))" }}
+                  >
+                    <div className="flex items-center justify-between px-3 py-1.5" style={{ background: "hsl(var(--muted)/0.3)" }}>
+                      <div className="flex items-center gap-2">
+                        <Keyboard size={12} style={{ color: "hsl(var(--muted-foreground))" }} />
+                        <span className="text-[10px] font-mono font-medium" style={{ color: "hsl(var(--muted-foreground))" }}>Standard Input (stdin)</span>
+                      </div>
+                      <button
+                        onClick={() => setShowStdin(false)}
+                        className="text-[10px] font-mono px-1.5 py-0.5 rounded hover:bg-muted transition-colors"
+                        style={{ color: "hsl(var(--muted-foreground))" }}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                    <textarea
+                      value={stdin}
+                      onChange={(e) => setStdin(e.target.value)}
+                      placeholder="Enter input for your program..."
+                      className="w-full h-[calc(100%-28px)] px-4 py-2 font-mono text-xs resize-none outline-none"
+                      style={{ background: "hsl(var(--card))", color: "hsl(var(--foreground))", caretColor: "hsl(var(--primary))" }}
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </ResizablePanel>
 
