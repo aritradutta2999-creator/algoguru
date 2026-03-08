@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback } from "react";
+import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
 
 export interface AppMode {
   id: string;
@@ -20,7 +20,7 @@ interface ModeContextType {
 
 const ModeContext = createContext<ModeContextType | null>(null);
 
-export function ModeProvider({ children }: { children: React.ReactNode }) {
+export function ModeProvider({ children }: { children: ReactNode }) {
   const [modeId, setModeId] = useState<string>(() => {
     return localStorage.getItem("ag-mode") || "ds";
   });
