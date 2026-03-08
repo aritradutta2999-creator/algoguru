@@ -5,12 +5,36 @@ import {
   Play, Loader2, Copy, Check, Terminal,
   Code2, RotateCcw, Sun, Moon, Palette,
   AlignLeft, ChevronDown, Keyboard, Settings, Maximize, Minimize,
-  FileCode,
+  FileCode, Plus, Pencil, Trash2, Save, X,
 } from "lucide-react";
 import Editor, { OnMount } from "@monaco-editor/react";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import { ALL_SNIPPETS, PRIORITY_LABELS } from "@/data/javaSnippets";
 import { CP_TEMPLATES } from "@/data/cpTemplates";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+
+interface UserTemplate {
+  id: string;
+  name: string;
+  description: string;
+  code: string;
+}
+
+const USER_TEMPLATES_KEY = "playground-user-templates";
+
+const loadUserTemplates = (): UserTemplate[] => {
+  try {
+    const raw = localStorage.getItem(USER_TEMPLATES_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch { return []; }
+};
+
+const saveUserTemplates = (templates: UserTemplate[]) => {
+  localStorage.setItem(USER_TEMPLATES_KEY, JSON.stringify(templates));
+};
 const FALLBACK_JAVA_COMPILERS = [
   { label: "Java 21", compiler: "openjdk-jdk-21+35" },
   { label: "Java 17", compiler: "openjdk-jdk-17+35" },
@@ -95,6 +119,12 @@ export default function Playground() {
   const [stdin, setStdin] = useState("");
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showTemplateMenu, setShowTemplateMenu] = useState(false);
+  const [userTemplates, setUserTemplates] = useState<UserTemplate[]>(loadUserTemplates);
+  const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
+  const [editingTemplate, setEditingTemplate] = useState<UserTemplate | null>(null);
+  const [templateName, setTemplateName] = useState("");
+  const [templateDesc, setTemplateDesc] = useState("");
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   
   const editorRef = useRef<any>(null);
 
@@ -283,6 +313,52 @@ export default function Playground() {
     setTimeout(() => setCopied(false), 2000);
   }, [code]);
 
+  const openCreateTemplate = () => {
+    setEditingTemplate(null);
+    setTemplateName("");
+    setTemplateDesc("");
+    setShowTemplateMenu(false);
+    setTemplateDialogOpen(true);
+  };
+
+  const openEditTemplate = (tmpl: UserTemplate) => {
+    setEditingTemplate(tmpl);
+    setTemplateName(tmpl.name);
+    setTemplateDesc(tmpl.description);
+    setShowTemplateMenu(false);
+    setTemplateDialogOpen(true);
+  };
+
+  const handleSaveTemplate = () => {
+    if (!templateName.trim()) return;
+    let updated: UserTemplate[];
+    if (editingTemplate) {
+      updated = userTemplates.map((t) =>
+        t.id === editingTemplate.id
+          ? { ...t, name: templateName.trim(), description: templateDesc.trim(), code }
+          : t
+      );
+    } else {
+      const newTmpl: UserTemplate = {
+        id: crypto.randomUUID(),
+        name: templateName.trim(),
+        description: templateDesc.trim(),
+        code,
+      };
+      updated = [...userTemplates, newTmpl];
+    }
+    setUserTemplates(updated);
+    saveUserTemplates(updated);
+    setTemplateDialogOpen(false);
+  };
+
+  const handleDeleteTemplate = (id: string) => {
+    const updated = userTemplates.filter((t) => t.id !== id);
+    setUserTemplates(updated);
+    saveUserTemplates(updated);
+    setDeleteConfirmId(null);
+  };
+
   return (
     <div className={`${isFullscreen ? 'fixed inset-0 z-50 h-screen' : 'h-[calc(100vh-3.5rem)]'} flex flex-col`} style={{ background: "hsl(var(--background))" }}>
       {/* Header */}
@@ -324,7 +400,7 @@ export default function Playground() {
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setShowTemplateMenu(false)} />
                 <div
-                  className="absolute left-0 top-full mt-1 w-72 rounded-xl overflow-hidden z-50 shadow-xl"
+                  className="absolute left-0 top-full mt-1 w-80 rounded-xl overflow-hidden z-50 shadow-xl max-h-[70vh] overflow-y-auto"
                   style={{ backgroundColor: "hsl(var(--popover))", color: "hsl(var(--popover-foreground))", border: "1px solid hsl(var(--border))" }}
                 >
                   <div className="px-3 pt-3 pb-1">
@@ -350,6 +426,77 @@ export default function Playground() {
                       </span>
                     </button>
                   ))}
+
+                  {userTemplates.length > 0 && (
+                    <>
+                      <div className="mx-3 my-1 border-t" style={{ borderColor: "hsl(var(--border))" }} />
+                      <div className="px-3 pt-2 pb-1">
+                        <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "hsl(var(--muted-foreground))" }}>
+                          My Templates
+                        </span>
+                      </div>
+                      {userTemplates.map((tmpl) => (
+                        <div key={tmpl.id} className="group flex items-center hover:bg-muted transition-colors">
+                          <button
+                            onClick={() => {
+                              setCode(tmpl.code);
+                              setOutput("");
+                              setShowTemplateMenu(false);
+                            }}
+                            className="flex-1 flex flex-col gap-0.5 px-3 py-2 text-left"
+                          >
+                            <span className="text-[11px] font-semibold" style={{ color: "hsl(var(--foreground))" }}>
+                              {tmpl.name}
+                            </span>
+                            {tmpl.description && (
+                              <span className="text-[9px]" style={{ color: "hsl(var(--muted-foreground))" }}>
+                                {tmpl.description}
+                              </span>
+                            )}
+                          </button>
+                          <div className="flex items-center gap-0.5 pr-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button
+                              onClick={(e) => { e.stopPropagation(); openEditTemplate(tmpl); }}
+                              className="p-1 rounded hover:bg-accent/50 transition-colors"
+                              style={{ color: "hsl(var(--muted-foreground))" }}
+                              title="Edit template"
+                            >
+                              <Pencil size={11} />
+                            </button>
+                            {deleteConfirmId === tmpl.id ? (
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleDeleteTemplate(tmpl.id); }}
+                                className="p-1 rounded text-[9px] font-bold"
+                                style={{ color: "hsl(var(--destructive))" }}
+                                title="Confirm delete"
+                              >
+                                <Check size={11} />
+                              </button>
+                            ) : (
+                              <button
+                                onClick={(e) => { e.stopPropagation(); setDeleteConfirmId(tmpl.id); }}
+                                className="p-1 rounded hover:bg-accent/50 transition-colors"
+                                style={{ color: "hsl(var(--muted-foreground))" }}
+                                title="Delete template"
+                              >
+                                <Trash2 size={11} />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </>
+                  )}
+
+                  <div className="mx-3 my-1 border-t" style={{ borderColor: "hsl(var(--border))" }} />
+                  <button
+                    onClick={openCreateTemplate}
+                    className="w-full flex items-center gap-2 px-3 py-2.5 text-left text-[11px] font-medium transition-colors hover:bg-muted"
+                    style={{ color: "hsl(var(--primary))" }}
+                  >
+                    <Plus size={13} />
+                    Save Current Code as Template
+                  </button>
                 </div>
               </>
             )}
@@ -680,6 +827,59 @@ export default function Playground() {
           </ResizablePanel>
         </ResizablePanelGroup>
       </div>
+
+      {/* Create / Edit Template Dialog */}
+      <Dialog open={templateDialogOpen} onOpenChange={setTemplateDialogOpen}>
+        <DialogContent className="sm:max-w-md" style={{ backgroundColor: "hsl(var(--background))", border: "1px solid hsl(var(--border))" }}>
+          <DialogHeader>
+            <DialogTitle className="text-base font-bold" style={{ color: "hsl(var(--foreground))" }}>
+              {editingTemplate ? "Edit Template" : "Save as Template"}
+            </DialogTitle>
+            <DialogDescription className="text-xs" style={{ color: "hsl(var(--muted-foreground))" }}>
+              {editingTemplate
+                ? "Update template name, description, and code (current editor code will be saved)."
+                : "Save your current editor code as a reusable template."}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-3 py-2">
+            <div>
+              <label className="text-[11px] font-medium mb-1 block" style={{ color: "hsl(var(--muted-foreground))" }}>
+                Template Name *
+              </label>
+              <Input
+                value={templateName}
+                onChange={(e) => setTemplateName(e.target.value)}
+                placeholder="e.g. My Graph Template"
+                className="text-sm"
+              />
+            </div>
+            <div>
+              <label className="text-[11px] font-medium mb-1 block" style={{ color: "hsl(var(--muted-foreground))" }}>
+                Description (optional)
+              </label>
+              <Textarea
+                value={templateDesc}
+                onChange={(e) => setTemplateDesc(e.target.value)}
+                placeholder="e.g. BFS/DFS with adjacency list"
+                className="text-sm min-h-[60px]"
+                rows={2}
+              />
+            </div>
+            <div className="text-[10px] px-2 py-1.5 rounded" style={{ background: "hsl(var(--muted))", color: "hsl(var(--muted-foreground))" }}>
+              💡 The current editor code will be saved with this template.
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" size="sm" onClick={() => setTemplateDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button size="sm" onClick={handleSaveTemplate} disabled={!templateName.trim()}>
+              <Save size={13} className="mr-1" />
+              {editingTemplate ? "Update" : "Save"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
