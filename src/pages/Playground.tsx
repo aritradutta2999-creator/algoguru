@@ -5,10 +5,12 @@ import {
   Play, Loader2, Copy, Check, Terminal,
   Code2, RotateCcw, Sun, Moon, Palette,
   AlignLeft, ChevronDown, Keyboard, Settings, Maximize, Minimize,
+  FileCode,
 } from "lucide-react";
 import Editor, { OnMount } from "@monaco-editor/react";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import { ALL_SNIPPETS, PRIORITY_LABELS } from "@/data/javaSnippets";
+import { CP_TEMPLATES } from "@/data/cpTemplates";
 const FALLBACK_JAVA_COMPILERS = [
   { label: "Java 21", compiler: "openjdk-jdk-21+35" },
   { label: "Java 17", compiler: "openjdk-jdk-17+35" },
