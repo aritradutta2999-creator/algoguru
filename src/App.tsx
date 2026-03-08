@@ -176,11 +176,23 @@ function HeaderControls() {
   );
 }
 
+function isValidHttpsUrl(url: unknown): url is string {
+  if (typeof url !== "string") return false;
+  try { const u = new URL(url); return u.protocol === "https:"; } catch { return false; }
+}
+
+function sanitizeDisplayName(raw: unknown): string {
+  if (typeof raw !== "string") return "User";
+  return raw.replace(/[<>&"'/]/g, "").slice(0, 50) || "User";
+}
+
 function UserMenu() {
   const { user, signOut } = useAuth();
   if (!user) return null;
-  const name = user.user_metadata?.full_name || user.email?.split("@")[0] || "User";
-  const avatar = user.user_metadata?.avatar_url || user.user_metadata?.picture;
+  const rawName = user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split("@")[0];
+  const name = sanitizeDisplayName(rawName);
+  const rawAvatar = user.user_metadata?.avatar_url || user.user_metadata?.picture;
+  const avatar = isValidHttpsUrl(rawAvatar) ? rawAvatar : null;
   return (
     <button
       onClick={signOut}
@@ -189,7 +201,7 @@ function UserMenu() {
       style={{ color: "hsl(var(--muted-foreground))" }}
     >
       {avatar ? (
-        <img src={avatar} alt="" className="w-6 h-6 rounded-full" />
+        <img src={avatar} alt="" className="w-6 h-6 rounded-full" referrerPolicy="no-referrer" />
       ) : (
         <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold" style={{ background: "hsl(var(--primary)/0.15)", color: "hsl(var(--primary))" }}>
           {name[0]?.toUpperCase()}

@@ -1,11 +1,28 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { motion } from "framer-motion";
-import { Mail, Lock, User, Sparkles, ArrowRight, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, User, ArrowRight, Eye, EyeOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect } from "react";
+import { z } from "zod";
+
+const loginSchema = z.object({
+  email: z.string().trim().email("Please enter a valid email address").max(255),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+});
+
+const signupSchema = z.object({
+  name: z.string().trim().min(1, "Name is required").max(100, "Name must be under 100 characters"),
+  email: z.string().trim().email("Please enter a valid email address").max(255),
+  password: z
+    .string()
+    .min(8, "Password must be at least 8 characters")
+    .regex(/[A-Z]/, "Must include an uppercase letter")
+    .regex(/[a-z]/, "Must include a lowercase letter")
+    .regex(/[0-9]/, "Must include a number"),
+});
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
@@ -16,6 +33,9 @@ export default function Auth() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [cooldown, setCooldown] = useState(false);
+  const cooldownRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const navigate = useNavigate();
   const { session } = useAuth();
 
@@ -23,26 +43,56 @@ export default function Auth() {
     if (session) navigate("/", { replace: true });
   }, [session, navigate]);
 
+  useEffect(() => {
+    return () => { if (cooldownRef.current) clearTimeout(cooldownRef.current); };
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setFieldErrors({});
     setError("");
     setMessage("");
 
+    // Validate
+    const schema = isLogin ? loginSchema : signupSchema;
+    const data = isLogin ? { email, password } : { name, email, password };
+    const result = schema.safeParse(data);
+    if (!result.success) {
+      const errs: Record<string, string> = {};
+      result.error.errors.forEach((err) => {
+        const key = err.path[0] as string;
+        if (!errs[key]) errs[key] = err.message;
+      });
+      setFieldErrors(errs);
+      return;
+    }
+
+    setLoading(true);
+
     if (isLogin) {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) setError(error.message);
+      const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+      if (error) {
+        setError(error.message);
+        // Cooldown after failed login
+        setCooldown(true);
+        cooldownRef.current = setTimeout(() => setCooldown(false), 3000);
+      }
     } else {
       const { error } = await supabase.auth.signUp({
-        email,
+        email: email.trim(),
         password,
         options: {
-          data: { full_name: name },
+          data: { full_name: name.trim() },
           emailRedirectTo: window.location.origin,
         },
       });
-      if (error) setError(error.message);
-      else setMessage("Check your email for a confirmation link!");
+      if (error) {
+        setError(error.message);
+        setCooldown(true);
+        cooldownRef.current = setTimeout(() => setCooldown(false), 3000);
+      } else {
+        setMessage("Check your email for a confirmation link!");
+      }
     }
     setLoading(false);
   };
@@ -56,6 +106,8 @@ export default function Auth() {
     if (error) setError(error.message);
     setLoading(false);
   };
+
+  const isDisabled = loading || cooldown;
 
   return (
     <div
@@ -105,7 +157,7 @@ export default function Auth() {
           {/* Google Sign In */}
           <button
             onClick={handleGoogleSignIn}
-            disabled={loading}
+            disabled={isDisabled}
             className="w-full flex items-center justify-center gap-2.5 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 hover:brightness-110 disabled:opacity-50 mb-5"
             style={{
               background: "hsl(var(--muted)/0.5)",
@@ -131,64 +183,68 @@ export default function Auth() {
 
           <form onSubmit={handleSubmit} className="space-y-3.5">
             {!isLogin && (
+              <div>
+                <div className="relative">
+                  <User size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: "hsl(var(--muted-foreground))" }} />
+                  <input
+                    type="text"
+                    placeholder="Full name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="w-full pl-10 pr-4 py-3 rounded-xl text-sm outline-none transition-all focus:ring-2"
+                    style={{
+                      background: "hsl(var(--muted)/0.4)",
+                      border: fieldErrors.name ? "1px solid hsl(var(--destructive))" : "1px solid hsl(var(--border))",
+                      color: "hsl(var(--foreground))",
+                    }}
+                  />
+                </div>
+                {fieldErrors.name && <p className="text-[11px] mt-1 ml-1" style={{ color: "hsl(var(--destructive))" }}>{fieldErrors.name}</p>}
+              </div>
+            )}
+            <div>
               <div className="relative">
-                <User size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: "hsl(var(--muted-foreground))" }} />
+                <Mail size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: "hsl(var(--muted-foreground))" }} />
                 <input
-                  type="text"
-                  placeholder="Full name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required={!isLogin}
+                  type="email"
+                  placeholder="Email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 rounded-xl text-sm outline-none transition-all focus:ring-2"
                   style={{
                     background: "hsl(var(--muted)/0.4)",
-                    border: "1px solid hsl(var(--border))",
+                    border: fieldErrors.email ? "1px solid hsl(var(--destructive))" : "1px solid hsl(var(--border))",
                     color: "hsl(var(--foreground))",
                   }}
                 />
               </div>
-            )}
-            <div className="relative">
-              <Mail size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: "hsl(var(--muted-foreground))" }} />
-              <input
-                type="email"
-                placeholder="Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="w-full pl-10 pr-4 py-3 rounded-xl text-sm outline-none transition-all focus:ring-2"
-                style={{
-                  background: "hsl(var(--muted)/0.4)",
-                  border: "1px solid hsl(var(--border))",
-                  color: "hsl(var(--foreground))",
-                }}
-              />
+              {fieldErrors.email && <p className="text-[11px] mt-1 ml-1" style={{ color: "hsl(var(--destructive))" }}>{fieldErrors.email}</p>}
             </div>
-            <div className="relative">
-              <Lock size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: "hsl(var(--muted-foreground))" }} />
-              <input
-                type={showPassword ? "text" : "password"}
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={6}
-                className="w-full pl-10 pr-10 py-3 rounded-xl text-sm outline-none transition-all focus:ring-2"
-                style={{
-                  background: "hsl(var(--muted)/0.4)",
-                  border: "1px solid hsl(var(--border))",
-                  color: "hsl(var(--foreground))",
-                  
-                }}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3.5 top-1/2 -translate-y-1/2"
-                style={{ color: "hsl(var(--muted-foreground))" }}
-              >
-                {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
-              </button>
+            <div>
+              <div className="relative">
+                <Lock size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: "hsl(var(--muted-foreground))" }} />
+                <input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full pl-10 pr-10 py-3 rounded-xl text-sm outline-none transition-all focus:ring-2"
+                  style={{
+                    background: "hsl(var(--muted)/0.4)",
+                    border: fieldErrors.password ? "1px solid hsl(var(--destructive))" : "1px solid hsl(var(--border))",
+                    color: "hsl(var(--foreground))",
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2"
+                  style={{ color: "hsl(var(--muted-foreground))" }}
+                >
+                  {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                </button>
+              </div>
+              {fieldErrors.password && <p className="text-[11px] mt-1 ml-1" style={{ color: "hsl(var(--destructive))" }}>{fieldErrors.password}</p>}
             </div>
 
             {error && (
@@ -204,7 +260,7 @@ export default function Auth() {
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={isDisabled}
               className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all duration-200 disabled:opacity-50 hover:brightness-110"
               style={{
                 background: "var(--gradient-primary)",
@@ -212,14 +268,14 @@ export default function Auth() {
                 boxShadow: "0 4px 16px hsl(var(--primary)/0.3)",
               }}
             >
-              {loading ? "Please wait..." : isLogin ? "Sign In" : "Create Account"}
-              {!loading && <ArrowRight size={14} />}
+              {loading ? "Please wait..." : cooldown ? "Try again shortly..." : isLogin ? "Sign In" : "Create Account"}
+              {!isDisabled && <ArrowRight size={14} />}
             </button>
           </form>
 
           <div className="mt-5 text-center">
             <button
-              onClick={() => { setIsLogin(!isLogin); setError(""); setMessage(""); }}
+              onClick={() => { setIsLogin(!isLogin); setError(""); setMessage(""); setFieldErrors({}); }}
               className="text-xs font-medium transition-colors"
               style={{ color: "hsl(var(--muted-foreground))" }}
             >
