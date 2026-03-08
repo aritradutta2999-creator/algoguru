@@ -95,10 +95,12 @@ export function ContentRenderer({ section, isPractice }: ContentRendererProps) {
         </p>
       )}
 
-      {/* Theory — plain paragraphs */}
-      {section.theory.map((para, i) => (
-        <p key={i} className="cr-para">{renderMarkdown(para)}</p>
-      ))}
+      {/* Theory — bullet points */}
+      <ul className="cr-list">
+        {section.theory.map((para, i) => (
+          <li key={i}>{renderMarkdown(para)}</li>
+        ))}
+      </ul>
 
       {/* Diagram */}
       {section.diagram && <DiagramRenderer diagram={section.diagram} />}
