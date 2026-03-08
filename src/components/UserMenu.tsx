@@ -13,11 +13,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-function isValidHttpsUrl(url: unknown): url is string {
-  if (typeof url !== "string") return false;
-  try { const u = new URL(url); return u.protocol === "https:"; } catch { return false; }
-}
-
 export function UserMenu() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
