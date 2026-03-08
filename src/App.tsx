@@ -1,16 +1,19 @@
+import { useState, useMemo, useRef, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import Index from "./pages/Index";
 import TopicPage from "./pages/TopicPage";
 import NotFound from "./pages/NotFound";
-import { Menu, Sun, Moon, ZoomIn, ZoomOut } from "lucide-react";
+import { Menu, Sun, Moon, ZoomIn, ZoomOut, Search, X, ChevronRight } from "lucide-react";
 import { SettingsProvider, useSettings } from "@/contexts/SettingsContext";
 import { ModeProvider, useMode } from "@/contexts/ModeContext";
+import { topics } from "@/data/topics";
+import { javaTopics } from "@/data/javaTopics";
 
 const queryClient = new QueryClient();
 
@@ -90,6 +93,8 @@ function AppLayout({ children }: { children: React.ReactNode }) {
             </span>
             <div className="flex-1" />
 
+            <SearchButton />
+            <div className="h-4 w-px mx-1" style={{ background: "hsl(var(--border))" }} />
             <HeaderControls />
           </header>
 
