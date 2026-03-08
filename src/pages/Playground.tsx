@@ -7,6 +7,11 @@ import {
 } from "lucide-react";
 import Editor, { OnMount } from "@monaco-editor/react";
 
+const JAVA_COMPILERS = [
+  { label: "Java 17", compiler: "openjdk-jdk-17.0.1+12" },
+  { label: "Java 15", compiler: "openjdk-jdk-15.0.2+7" },
+];
+
 const THEMES = [
   { id: "vs-dark", label: "Dark", icon: <Moon size={13} /> },
   { id: "light", label: "Light", icon: <Sun size={13} /> },
@@ -70,7 +75,9 @@ export default function Playground() {
   const [output, setOutput] = useState("");
   const [isRunning, setIsRunning] = useState(false);
   const [currentTheme, setCurrentTheme] = useState(THEMES[0]);
+  const [selectedCompiler, setSelectedCompiler] = useState(JAVA_COMPILERS[0]);
   const [showThemeMenu, setShowThemeMenu] = useState(false);
+  const [showCompilerMenu, setShowCompilerMenu] = useState(false);
   const [copied, setCopied] = useState(false);
   const [stdin, setStdin] = useState("");
   const [showStdin, setShowStdin] = useState(false);
@@ -100,7 +107,7 @@ export default function Playground() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           code,
-          compiler: "openjdk-jdk-15.0.2+7",
+          compiler: selectedCompiler.compiler,
           stdin,
           "compiler-option-raw": "",
           "runtime-option-raw": "",
@@ -135,7 +142,7 @@ export default function Playground() {
     } finally {
       setIsRunning(false);
     }
-  }, [code, stdin]);
+  }, [code, stdin, selectedCompiler]);
 
   const copyCode = useCallback(() => {
     navigator.clipboard.writeText(code);
@@ -168,6 +175,41 @@ export default function Playground() {
         </div>
 
         <div className="flex items-center gap-1.5 flex-wrap">
+          {/* Java version selector */}
+          <div className="relative">
+            <button
+              onClick={() => setShowCompilerMenu(!showCompilerMenu)}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-all"
+              style={{ background: "hsl(var(--success)/0.1)", color: "hsl(var(--success))", border: "1px solid hsl(var(--success)/0.25)" }}
+            >
+              ☕ {selectedCompiler.label}
+              <ChevronDown size={11} />
+            </button>
+            {showCompilerMenu && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setShowCompilerMenu(false)} />
+                <div
+                  className="absolute right-0 top-full mt-1 w-44 rounded-xl overflow-hidden z-50"
+                  style={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", boxShadow: "0 8px 30px hsl(var(--foreground)/0.1)" }}
+                >
+                  {JAVA_COMPILERS.map((c) => (
+                    <button
+                      key={c.compiler}
+                      onClick={() => { setSelectedCompiler(c); setShowCompilerMenu(false); }}
+                      className="w-full flex items-center gap-2 px-3 py-2.5 text-left text-[11px] transition-colors hover:bg-muted"
+                      style={{
+                        color: selectedCompiler.compiler === c.compiler ? "hsl(var(--primary))" : "hsl(var(--foreground))",
+                        fontWeight: selectedCompiler.compiler === c.compiler ? 600 : 400,
+                      }}
+                    >
+                      ☕ {c.label}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+
           {/* Theme selector */}
           <div className="relative">
             <button
@@ -279,8 +321,8 @@ export default function Playground() {
               <span className="w-2.5 h-2.5 rounded-full" style={{ background: "hsl(var(--success))" }} />
             </div>
             <span className="text-[11px] font-mono" style={{ color: "hsl(var(--muted-foreground))" }}>Main.java</span>
-            <span className="text-[9px] font-mono ml-auto px-2 py-0.5 rounded" style={{ background: "hsl(var(--muted))", color: "hsl(var(--muted-foreground))" }}>
-              Java 15
+            <span className="text-[9px] font-mono ml-auto px-2 py-0.5 rounded" style={{ background: "hsl(var(--success)/0.1)", color: "hsl(var(--success))" }}>
+              {selectedCompiler.label}
             </span>
           </div>
 
