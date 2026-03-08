@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import {
   Play, Loader2, Copy, Check, Terminal,
   Code2, RotateCcw, Sun, Moon, Palette,
-  AlignLeft, ChevronDown, Keyboard, Settings,
+  AlignLeft, ChevronDown, Keyboard, Settings, Maximize, Minimize,
 } from "lucide-react";
 import Editor, { OnMount } from "@monaco-editor/react";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
@@ -116,6 +116,7 @@ export default function Playground() {
   const [showSettingsMenu, setShowSettingsMenu] = useState(false);
   const [copied, setCopied] = useState(false);
   const [stdin, setStdin] = useState("");
+  const [isFullscreen, setIsFullscreen] = useState(false);
   
   const editorRef = useRef<any>(null);
 
@@ -279,8 +280,9 @@ export default function Playground() {
   }, [code]);
 
   return (
-    <div className="h-[calc(100vh-3.5rem)] flex flex-col" style={{ background: "hsl(var(--background))" }}>
+    <div className={`${isFullscreen ? 'fixed inset-0 z-50 h-screen' : 'h-[calc(100vh-3.5rem)]'} flex flex-col`} style={{ background: "hsl(var(--background))" }}>
       {/* Header */}
+      {!isFullscreen && (
       <div
         className="flex items-center justify-between px-4 py-2.5 border-b flex-shrink-0 gap-2 flex-wrap"
         style={{ borderColor: "hsl(var(--border))" }}
