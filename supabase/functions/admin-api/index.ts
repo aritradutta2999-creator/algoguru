@@ -16,6 +16,13 @@ serve(async (req: Request) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
+    if (!supabaseUrl || !serviceRoleKey) {
+      return new Response(JSON.stringify({ error: "Server misconfigured" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // Verify the caller is authenticated
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
@@ -25,21 +32,20 @@ serve(async (req: Request) => {
       });
     }
 
-    // Create client with caller's token to check admin role
-    const userClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
-      global: { headers: { Authorization: authHeader } },
-    });
+    // Use service role client for all operations
+    const adminClient = createClient(supabaseUrl, serviceRoleKey);
 
-    const { data: { user: caller } } = await userClient.auth.getUser();
-    if (!caller) {
+    // Verify caller's identity from their JWT
+    const token = authHeader.replace("Bearer ", "");
+    const { data: { user: caller }, error: userError } = await adminClient.auth.getUser(token);
+    if (userError || !caller) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Check admin role using service role client (bypasses RLS)
-    const adminClient = createClient(supabaseUrl, serviceRoleKey);
+    // Check admin role
     const { data: roleData } = await adminClient
       .from("user_roles")
       .select("role")
