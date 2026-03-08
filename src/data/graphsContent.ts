@@ -558,6 +558,79 @@ public class DFS {
     }
 }`,
       },
+      {
+        title: "DFS with Entry/Exit Times & Edge Classification",
+        language: "java",
+        content: `// Entry/exit times are fundamental to many advanced graph algorithms
+// tin[v] = when DFS enters v, tout[v] = when DFS exits v
+// Ancestor check: u is ancestor of v iff tin[u] < tin[v] AND tout[u] > tout[v]
+
+static int timer = 0;
+static int[] tin, tout, color;
+// color: 0=WHITE(unvisited), 1=GRAY(in stack), 2=BLACK(done)
+
+static void dfsWithTimes(List<List<Integer>> adj, int v) {
+    tin[v] = timer++;
+    color[v] = 1; // GRAY — currently in recursion stack
+    
+    for (int u : adj.get(v)) {
+        if (color[u] == 0) {
+            // Tree edge: v → u (u is unvisited)
+            dfsWithTimes(adj, u);
+        } else if (color[u] == 1) {
+            // Back edge: v → u (u is GRAY = ancestor, means CYCLE)
+        } else {
+            // u is BLACK (fully processed)
+            if (tin[v] < tin[u]) {
+                // Forward edge: v → u (u is descendant)
+            } else {
+                // Cross edge: v → u (u is in different subtree)
+            }
+        }
+    }
+    
+    color[v] = 2; // BLACK — fully processed
+    tout[v] = timer++;
+}
+
+static boolean isAncestor(int u, int v) {
+    return tin[u] < tin[v] && tout[u] > tout[v]; // O(1) check!
+}
+
+// Usage:
+// timer = 0;
+// tin = new int[V]; tout = new int[V]; color = new int[V];
+// for (int i = 0; i < V; i++) if (color[i] == 0) dfsWithTimes(adj, i);`
+      },
+      {
+        title: "Iterative DFS — Avoids Stack Overflow",
+        language: "java",
+        content: `// For large graphs (V > 10000), recursive DFS may cause StackOverflow
+// Use explicit stack instead
+
+public static void dfsIterative(List<List<Integer>> adj, int start, int V) {
+    boolean[] visited = new boolean[V];
+    Deque<Integer> stack = new ArrayDeque<>();
+    
+    stack.push(start);
+    while (!stack.isEmpty()) {
+        int v = stack.pop();
+        if (visited[v]) continue;
+        visited[v] = true;
+        
+        // Process vertex v here
+        
+        // Push neighbors in reverse order for same traversal order as recursive
+        List<Integer> neighbors = adj.get(v);
+        for (int i = neighbors.size() - 1; i >= 0; i--) {
+            if (!visited[neighbors.get(i)]) {
+                stack.push(neighbors.get(i));
+            }
+        }
+    }
+}
+// Safe for graphs with millions of vertices`
+      },
     ],
   },
   {
