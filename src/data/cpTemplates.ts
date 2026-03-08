@@ -27,6 +27,11 @@ public class Main {
     static final int MOD2 = 998244353;
     static final long INF = (long) 1e18;
 
+    static void solve() throws IOException {
+        int n = nextInt();
+        // Write your solution here
+    }
+
     public static void main(String[] args) throws IOException {
         br = new BufferedReader(new InputStreamReader(System.in));
         out = new PrintWriter(new BufferedOutputStream(System.out));
@@ -36,11 +41,6 @@ public class Main {
 
         out.flush();
         out.close();
-    }
-
-    static void solve() throws IOException {
-        int n = nextInt();
-        // Write your solution here
     }
 
     // ========== FAST I/O ==========
@@ -99,15 +99,15 @@ public class Main {
     static FastReader fr = new FastReader(System.in);
     static PrintWriter out = new PrintWriter(new BufferedOutputStream(System.out));
 
+    static void solve() {
+        int n = fr.nextInt();
+        // Write your solution here
+    }
+
     public static void main(String[] args) {
         int t = fr.nextInt();
         while (t-- > 0) solve();
         out.flush();
-    }
-
-    static void solve() {
-        int n = fr.nextInt();
-        // Write your solution here
     }
 
     // ===== Fast Reader (byte-level, TLE-safe) =====
@@ -187,6 +187,19 @@ class Codechef {
     static StringTokenizer st;
     static StringBuilder sb = new StringBuilder();
 
+    static void solve() throws IOException {
+        int n = nextInt();
+        // Write your solution here
+        // sb.append(ans).append('\\n');
+    }
+
+    public static void main(String[] args) throws Exception {
+        int t = nextInt();
+        while (t-- > 0) solve();
+        System.out.print(sb);
+    }
+
+    // ===== Fast I/O =====
     static String next() throws IOException { while (st == null || !st.hasMoreElements()) st = new StringTokenizer(br.readLine()); return st.nextToken(); }
     static int nextInt() throws IOException { return Integer.parseInt(next()); }
     static long nextLong() throws IOException { return Long.parseLong(next()); }
@@ -201,18 +214,6 @@ class Codechef {
     // ===== Array Output =====
     static void printArray(int[] a) { for (int i = 0; i < a.length; i++) { if (i > 0) sb.append(' '); sb.append(a[i]); } sb.append('\\n'); }
     static void printArray(long[] a) { for (int i = 0; i < a.length; i++) { if (i > 0) sb.append(' '); sb.append(a[i]); } sb.append('\\n'); }
-
-    public static void main(String[] args) throws Exception {
-        int t = nextInt();
-        while (t-- > 0) solve();
-        System.out.print(sb);
-    }
-
-    static void solve() throws IOException {
-        int n = nextInt();
-        // Write your solution here
-        // sb.append(ans).append('\\n');
-    }
 
     // ===== Utilities =====
     static void yes() { sb.append("YES\\n"); }
