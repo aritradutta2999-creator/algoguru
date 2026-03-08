@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   Play, Loader2, Copy, Check, Terminal,
@@ -113,7 +113,10 @@ export default function Playground() {
   const [showCompilerMenu, setShowCompilerMenu] = useState(false);
   const [copied, setCopied] = useState(false);
   const [stdin, setStdin] = useState("");
-  const [showStdin, setShowStdin] = useState(false);
+  const showStdin = useMemo(() => {
+    const inputPatterns = /Scanner|BufferedReader|System\.in|InputStreamReader|readLine|nextInt|nextLong|nextDouble|next\(\)|nextLine/;
+    return inputPatterns.test(code);
+  }, [code]);
   const editorRef = useRef<any>(null);
 
   useEffect(() => {
@@ -513,19 +516,6 @@ export default function Playground() {
             Reset
           </button>
 
-          {/* Stdin toggle */}
-          <button
-            onClick={() => setShowStdin(!showStdin)}
-            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-all"
-            style={{
-              color: showStdin ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))",
-              border: `1px solid ${showStdin ? "hsl(var(--primary)/0.3)" : "hsl(var(--border))"}`,
-              background: showStdin ? "hsl(var(--primary)/0.1)" : undefined,
-            }}
-          >
-            <Keyboard size={13} />
-            Input
-          </button>
 
           {/* Run */}
           <button
