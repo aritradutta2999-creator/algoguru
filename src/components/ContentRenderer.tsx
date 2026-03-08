@@ -71,7 +71,10 @@ function classifyTheoryLines(lines: string[]): ClassifiedLines {
       stripped.startsWith("example ") ||
       stripped.match(/^input\s*:/) ||
       stripped.match(/^output\s*:/) ||
-      stripped.match(/^explanation\s*:/)
+      stripped.match(/^explanation\s*:/) ||
+      // Also catch inline examples like "**Example:** `Input: ...` → `Output: ...`"
+      (stripped.includes("input:") && stripped.includes("output:")) ||
+      (stripped.includes("example") && (stripped.includes("input") || stripped.includes("output")))
     ) {
       result.examples.push(line);
     } else if (
@@ -87,6 +90,69 @@ function classifyTheoryLines(lines: string[]): ClassifiedLines {
   }
 
   return result;
+}
+
+/* ── Parse an inline example line into structured parts ── */
+function parseExampleLine(line: string): { input?: string; output?: string; explanation?: string; raw?: string } {
+  // Try to extract Input/Output/Explanation from inline format
+  const inputMatch = line.match(/Input:\s*([^`→]+|`[^`]+`)/i);
+  const outputMatch = line.match(/Output:\s*([^`→—]+|`[^`]+`)/i);
+  const explanationMatch = line.match(/(?:Explanation|because)\s*:?\s*(.+?)(?:\.|$)/i);
+  
+  if (inputMatch || outputMatch) {
+    return {
+      input: inputMatch ? inputMatch[1].replace(/`/g, "").replace(/→.*/, "").trim() : undefined,
+      output: outputMatch ? outputMatch[1].replace(/`/g, "").replace(/[—→].*/,"").trim() : undefined,
+      explanation: explanationMatch ? explanationMatch[1].replace(/`/g, "").trim() : undefined,
+    };
+  }
+  return { raw: line };
+}
+
+/* ── Render example box content ── */
+function renderExampleContent(lines: string[]) {
+  const parts: { input?: string; output?: string; explanation?: string; raw?: string }[] = [];
+  
+  for (const line of lines) {
+    parts.push(parseExampleLine(line));
+  }
+
+  // Merge all parsed parts
+  const merged = { input: "", output: "", explanation: "", raws: [] as string[] };
+  for (const p of parts) {
+    if (p.input) merged.input = p.input;
+    if (p.output) merged.output = p.output;
+    if (p.explanation) merged.explanation = p.explanation;
+    if (p.raw) merged.raws.push(p.raw);
+  }
+
+  return (
+    <div className="cr-example-content">
+      {merged.input && (
+        <div className="cr-io-line">
+          <span className="cr-io-label">Input:</span>
+          <span className="cr-io-value font-mono">{merged.input}</span>
+        </div>
+      )}
+      {merged.output && (
+        <div className="cr-io-line">
+          <span className="cr-io-label">Output:</span>
+          <span className="cr-io-value font-mono">{merged.output}</span>
+        </div>
+      )}
+      {merged.explanation && (
+        <div className="cr-io-line mt-1">
+          <span className="cr-io-label">Explanation:</span>
+          <span className="cr-io-value">{merged.explanation}</span>
+        </div>
+      )}
+      {merged.raws.map((r, i) => (
+        <div key={i} className="cr-io-line">
+          <span className="cr-io-value">{renderMarkdown(r)}</span>
+        </div>
+      ))}
+    </div>
+  );
 }
 
 /* ── Render an I/O line with label highlighting ── */
