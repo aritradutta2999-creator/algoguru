@@ -150,10 +150,14 @@ export default function Playground() {
           .filter((c: any) => c.language === "Java")
           .map((c: any) => {
             const name = c.name as string;
+            const version = (c.version || "") as string;
             let label = c["display-name"] || name;
-            if (name.includes("17")) label = "OpenJDK 17";
-            else if (name.includes("25")) label = "OpenJDK 25";
-            else if (name.includes("15")) label = "OpenJDK 15";
+            if (name.includes("17") || version.includes("17")) label = "OpenJDK 17";
+            else if (name.includes("25") || version.includes("25")) label = "OpenJDK 25";
+            else if (name.includes("15") || version.includes("15")) label = "OpenJDK 15";
+            else if (name.includes("head") || version.includes("head")) label = "OpenJDK (Latest)";
+            else label = `OpenJDK ${version.split(".")[0] || name}`;
+            console.log("Java compiler found:", name, version, "→", label);
             return { label, compiler: name };
           });
         if (javaCompilers.length > 0) {
