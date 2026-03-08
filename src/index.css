@@ -319,8 +319,10 @@
     color: hsl(var(--foreground)/0.7);
   }
   .cr-bold {
-    @apply font-bold;
-    color: hsl(var(--foreground)/0.92);
+    @apply font-semibold px-1.5 py-0.5 rounded-md mx-0.5 inline-block;
+    color: hsl(var(--foreground));
+    border: 1px solid hsl(var(--border));
+    line-height: 1.6;
   }
   .cr-code {
     @apply font-mono text-[0.85em] px-1.5 py-[2px] rounded-md mx-0.5;
