@@ -33,6 +33,9 @@ const topicColorVars: Record<string, string> = {
   graphs: "hsl(var(--warning))",
   bits: "hsl(var(--info))",
   heaps: "hsl(var(--heap))",
+  strings: "hsl(var(--primary))",
+  "number-theory": "hsl(var(--success))",
+  trees: "hsl(var(--accent))",
   // Java topic colors
   "java-basics": "hsl(var(--primary))",
   "java-oop": "hsl(var(--accent))",
