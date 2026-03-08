@@ -1,9 +1,8 @@
-import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { topics } from "@/data/topics";
 import { javaTopics } from "@/data/javaTopics";
 import { motion } from "framer-motion";
-import { ChevronRight, Zap, GitBranch, LayoutGrid, Terminal, Sparkles, ArrowRight, BookOpen, Coffee, Layers, Search } from "lucide-react";
+import { ChevronRight, Zap, GitBranch, LayoutGrid, Terminal, Sparkles, ArrowRight, BookOpen, Coffee, Layers } from "lucide-react";
 import { useMode } from "@/contexts/ModeContext";
 
 const topicColors: Record<string, { color: string; bg: string; border: string }> = {
@@ -42,17 +41,6 @@ export default function Index() {
   const { currentMode, setMode, modes } = useMode();
   const isDSMode = currentMode.id === "ds";
   const activeTopics = isDSMode ? topics : javaTopics;
-  const [search, setSearch] = useState("");
-
-  const allTopics = useMemo(() => [...topics, ...javaTopics], []);
-  const searchResults = useMemo(() => {
-    if (!search.trim()) return [];
-    const q = search.toLowerCase();
-    return allTopics.filter(t =>
-      t.title.toLowerCase().includes(q) ||
-      t.subtopics.some(s => s.title.toLowerCase().includes(q))
-    );
-  }, [search, allTopics]);
 
   const dsStats = [
     { label: "Topics", value: "9", icon: LayoutGrid },
