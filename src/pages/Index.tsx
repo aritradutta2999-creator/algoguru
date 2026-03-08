@@ -298,9 +298,21 @@ export default function Index() {
         </section>
       )}
 
-      <footer className="px-6 md:px-10 py-10 border-t text-center" style={{ borderColor: "hsl(var(--border))" }}>
+      <footer className="px-6 md:px-10 py-10 border-t text-center space-y-2" style={{ borderColor: "hsl(var(--border))" }}>
         <div className="text-xs font-mono font-medium" style={{ color: "hsl(var(--muted-foreground))" }}>
           AlgoGuru · {isDSMode ? "Competitive Programming" : "Core & Advanced Java"} · Java Edition
+        </div>
+        <div className="text-xs font-medium" style={{ color: "hsl(var(--muted-foreground))" }}>
+          by{" "}
+          <a
+            href="https://portfolio-aritra-pearl.vercel.app/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold underline underline-offset-2 transition-colors hover:text-[hsl(var(--primary))]"
+            style={{ color: "hsl(var(--foreground))" }}
+          >
+            Aritra Dutta
+          </a>
         </div>
       </footer>
     </div>
