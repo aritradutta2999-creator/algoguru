@@ -1,4 +1,10 @@
 import { ContentSection } from "./recursionContent";
+import { javaCollectionsContent } from "./javaCollectionsContent";
+import { javaGenericsContent } from "./javaGenericsContent";
+import { javaStreamsContent } from "./javaStreamsContent";
+import { javaMultithreadingContent } from "./javaMultithreadingContent";
+import { javaIOContent } from "./javaIOContent";
+import { javaAdvancedContent } from "./javaAdvancedContent";
 
 // Java Fundamentals content
 export const javaBasicsContent: ContentSection[] = [
@@ -1139,10 +1145,10 @@ export const javaContentMap: Record<string, ContentSection[]> = {
   "java-basics": javaBasicsContent,
   "java-oop": javaOOPContent,
   "java-exceptions": javaExceptionsContent,
-  "java-collections": [{ id: "col-intro", title: "Collections Overview & Hierarchy", theory: ["🚧 **Coming Soon** — Full Collections Framework content with ArrayList, LinkedList, HashMap, TreeMap, HashSet, PriorityQueue, Comparable, Comparator, and concurrent collections with detailed Java examples."] }],
-  "java-generics": [{ id: "gen-intro", title: "Why Generics?", theory: ["🚧 **Coming Soon** — Complete Generics content with type parameters, bounded types, wildcards, type erasure, and practical patterns."] }],
-  "java-streams": [{ id: "stream-lambda", title: "Lambda Expressions", theory: ["🚧 **Coming Soon** — Full Streams & Lambdas content with functional interfaces, method references, Stream API operations, collectors, parallel streams, and Optional."] }],
-  "java-multithreading": [{ id: "mt-intro", title: "Threads & Runnable", theory: ["🚧 **Coming Soon** — Complete Multithreading content with Thread lifecycle, synchronization, locks, executors, CompletableFuture, and concurrency patterns."] }],
-  "java-io": [{ id: "io-streams", title: "Byte & Character Streams", theory: ["🚧 **Coming Soon** — Full I/O content with byte/character streams, NIO, serialization, and file operations."] }],
-  "java-advanced": [{ id: "adv-reflection", title: "Reflection API", theory: ["🚧 **Coming Soon** — Advanced Java content with Reflection, JVM internals, Garbage Collection, Design Patterns, Records, Sealed Classes, and Modules."] }],
+  "java-collections": javaCollectionsContent,
+  "java-generics": javaGenericsContent,
+  "java-streams": javaStreamsContent,
+  "java-multithreading": javaMultithreadingContent,
+  "java-io": javaIOContent,
+  "java-advanced": javaAdvancedContent,
 };
