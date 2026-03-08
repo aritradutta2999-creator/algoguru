@@ -17,6 +17,14 @@ import { javaTopics } from "@/data/javaTopics";
 
 const allTopics = [...topics, ...javaTopics];
 
+// Flatten all subtopics for search
+const allSearchItems = allTopics.flatMap((t) => [
+  { id: t.id, title: t.title, icon: t.icon, type: "topic" as const, path: `/${t.id}`, parent: null, subtopicCount: t.subtopics.length },
+  ...t.subtopics.map((s) => ({
+    id: s.id, title: s.title, icon: t.icon, type: "subtopic" as const, path: `/${t.id}#${s.id}`, parent: t.title, subtopicCount: 0,
+  })),
+]);
+
 function SearchButton() {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -24,13 +32,9 @@ function SearchButton() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const results = useMemo(() => {
-    if (!query.trim()) return allTopics;
-    const q = query.toLowerCase();
-    return allTopics.filter(
-      (t) =>
-        t.title.toLowerCase().includes(q) ||
-        t.subtopics.some((s) => s.title.toLowerCase().includes(q))
-    );
+    const q = query.toLowerCase().trim();
+    if (!q) return allSearchItems.filter((i) => i.type === "topic");
+    return allSearchItems.filter((i) => i.title.toLowerCase().includes(q));
   }, [query]);
 
   useEffect(() => {
