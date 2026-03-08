@@ -189,7 +189,7 @@ export default function TopicPage() {
 
         <div className="max-w-[740px] mx-auto px-6 md:px-10 py-14">
           {content.map((section) => (
-            <ContentRenderer key={section.id} section={section} />
+            <ContentRenderer key={section.id} section={section} isPractice={isPracticeMode} />
           ))}
 
           <div className="flex items-center justify-between mt-10 pt-8" style={{ borderTop: "1px solid hsl(var(--border))" }}>
