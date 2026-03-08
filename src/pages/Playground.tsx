@@ -321,8 +321,8 @@ export default function Playground() {
               <span className="w-2.5 h-2.5 rounded-full" style={{ background: "hsl(var(--success))" }} />
             </div>
             <span className="text-[11px] font-mono" style={{ color: "hsl(var(--muted-foreground))" }}>Main.java</span>
-            <span className="text-[9px] font-mono ml-auto px-2 py-0.5 rounded" style={{ background: "hsl(var(--muted))", color: "hsl(var(--muted-foreground))" }}>
-              Java 15
+            <span className="text-[9px] font-mono ml-auto px-2 py-0.5 rounded" style={{ background: "hsl(var(--success)/0.1)", color: "hsl(var(--success))" }}>
+              {selectedCompiler.label}
             </span>
           </div>
 
