@@ -157,12 +157,16 @@ public class GraphRepresentation {
     timeComplexity: "O(V + E)",
     spaceComplexity: "O(V) for queue and visited array",
     theory: [
-      "BFS explores vertices level by level using a queue (FIFO). It visits all neighbors of a vertex before moving to the next level. Imagine dropping a stone in water — ripples expand outward in circles. BFS works the same way: it explores all nodes at distance 1 first, then distance 2, then distance 3, and so on.",
-      "BFS guarantees the shortest path (in terms of number of edges) in an unweighted graph. This is because it processes vertices in order of their distance from the source. The first time you reach a vertex, it's guaranteed to be via the shortest path.",
+      "BFS explores vertices **level by level** using a queue (FIFO). Think of it as a **fire spreading on a graph**: at step 0 only the source is on fire; at each step, the fire at each vertex spreads to all unvisited neighbors. The 'ring of fire' expands by one unit at each iteration.",
+      "BFS guarantees the **shortest path** (in terms of number of edges) in an unweighted graph. This is because it processes vertices in order of their distance from the source. The first time you reach a vertex, it's via the shortest path.",
+      "**Path reconstruction**: Maintain a parent array `p[]` where `p[v]` = the vertex from which v was discovered. To reconstruct the shortest path to vertex u, backtrack: `u → p[u] → p[p[u]] → ... → source`, then reverse.",
       "When to use BFS vs DFS: Use BFS when you need shortest path in unweighted graphs, level-by-level processing, or when the solution is close to the root. Use DFS when you need to explore all paths, detect cycles, find connected components, or do topological sorting.",
-      "Multi-source BFS: Start BFS from multiple sources simultaneously by putting all sources in the queue initially. The key insight is that this gives shortest distance from ANY source. Used in problems like 'minimum distance from any 0', 'rotting oranges', or 'walls and gates'.",
-      "BFS on implicit graphs: Sometimes the graph isn't given explicitly. Instead, you generate neighbors on the fly. For example, in Word Ladder, each word is a node, and two words are connected if they differ by one character. BFS finds the shortest transformation sequence.",
-      "Time complexity is O(V + E) because each vertex is enqueued and dequeued exactly once, and each edge is examined exactly once (twice for undirected graphs). Space is O(V) for the visited array and queue.",
+      "**Multi-source BFS**: Start BFS from multiple sources simultaneously by putting all sources in the queue initially. This gives shortest distance from ANY source. Used in problems like 'minimum distance from any 0', 'rotting oranges', or 'walls and gates'.",
+      "**0-1 BFS**: For graphs with edge weights 0 or 1, use a deque instead of a queue. Add 0-weight edges to the front and 1-weight edges to the back. This gives shortest paths in O(V+E) without needing Dijkstra.",
+      "**Shortest cycle**: Start BFS from each vertex; as soon as we try to go back to the source, we've found the shortest cycle through that vertex. Take the minimum over all sources.",
+      "**Edges on shortest path**: Run BFS from both a and b. Edge (u,v) lies on some shortest a→b path iff `d_a[u] + 1 + d_b[v] = d_a[b]`.",
+      "BFS on implicit graphs: Sometimes the graph isn't given explicitly. You generate neighbors on the fly. For example, in Word Ladder, each word is a node, and two words are connected if they differ by one character. BFS finds the shortest transformation sequence.",
+      "Time complexity is O(V + E) because each vertex is enqueued and dequeued exactly once, and each edge is examined exactly once (twice for undirected graphs).",
     ],
     keyPoints: [
       "BFS uses a Queue (FIFO) — always process the oldest discovered node first",
@@ -170,10 +174,12 @@ public class GraphRepresentation {
       "BFS gives shortest path only in unweighted graphs — use Dijkstra for weighted",
       "Multi-source BFS: add ALL sources to queue initially with distance 0",
       "Level-by-level processing: use queue.size() to process one level at a time",
+      "0-1 BFS: use deque, push 0-weight to front, 1-weight to back — O(V+E)",
+      "Path reconstruction: maintain parent array p[], backtrack from target to source",
       "BFS on grids: use direction arrays dr[] = {0,0,1,-1}, dc[] = {1,-1,0,0}",
     ],
     tip: "A common mistake is marking a node as visited when you PROCESS it (poll from queue) instead of when you ADD it to the queue. This causes the same node to be added multiple times, wasting time and potentially giving wrong answers.",
-    warning: "BFS does NOT work for shortest paths in weighted graphs. If edges have different weights, BFS may find a path with fewer edges but higher total weight. Use Dijkstra's algorithm instead.",
+    warning: "BFS does NOT work for shortest paths in weighted graphs. If edges have different weights, BFS may find a path with fewer edges but higher total weight. Use Dijkstra's algorithm instead. For 0/1 weights, use 0-1 BFS with a deque.",
     code: [
       {
         title: "BFS — Complete with Applications",
@@ -330,6 +336,72 @@ public class BFS {
     }
 }`,
       },
+      {
+        title: "BFS — Path Reconstruction",
+        language: "java",
+        content: `// Reconstruct shortest path from source to target using parent array
+public static List<Integer> reconstructPath(List<List<Integer>> adj, int source, int target, int V) {
+    int[] dist = new int[V];
+    int[] parent = new int[V];
+    Arrays.fill(dist, -1);
+    Arrays.fill(parent, -1);
+    Queue<Integer> queue = new LinkedList<>();
+    
+    dist[source] = 0;
+    queue.offer(source);
+    
+    while (!queue.isEmpty()) {
+        int v = queue.poll();
+        for (int u : adj.get(v)) {
+            if (dist[u] == -1) {
+                dist[u] = dist[v] + 1;
+                parent[u] = v;
+                queue.offer(u);
+            }
+        }
+    }
+    
+    if (dist[target] == -1) return Collections.emptyList(); // No path
+    
+    // Backtrack from target to source
+    List<Integer> path = new ArrayList<>();
+    for (int v = target; v != -1; v = parent[v])
+        path.add(v);
+    Collections.reverse(path);
+    return path;
+}`
+      },
+      {
+        title: "0-1 BFS — Shortest Path with 0/1 Weights",
+        language: "java",
+        content: `// For graphs where edge weights are 0 or 1
+// Use Deque: push 0-weight edges to FRONT, 1-weight edges to BACK
+// Gives shortest path in O(V + E) — no need for Dijkstra!
+
+public static int[] bfs01(List<List<int[]>> adj, int source, int V) {
+    // adj.get(u) = list of {neighbor, weight} where weight is 0 or 1
+    int[] dist = new int[V];
+    Arrays.fill(dist, Integer.MAX_VALUE);
+    dist[source] = 0;
+    
+    Deque<Integer> deque = new ArrayDeque<>();
+    deque.offerFirst(source);
+    
+    while (!deque.isEmpty()) {
+        int v = deque.pollFirst();
+        for (int[] edge : adj.get(v)) {
+            int u = edge[0], w = edge[1];
+            if (dist[v] + w < dist[u]) {
+                dist[u] = dist[v] + w;
+                if (w == 0) deque.offerFirst(u);  // 0-weight → front
+                else deque.offerLast(u);           // 1-weight → back
+            }
+        }
+    }
+    return dist;
+}
+// Common use: grid where some moves are free and others cost 1`
+      },
     ],
   },
   {
@@ -339,18 +411,23 @@ public class BFS {
     timeComplexity: "O(V + E)",
     spaceComplexity: "O(V) for recursion stack",
     theory: [
-      "DFS explores as deep as possible along each branch before backtracking. Uses a stack (implicit via recursion or explicit). Think of navigating a maze: go straight as far as you can, hit a dead end, backtrack to the last junction, try the next path.",
-      "DFS creates a DFS tree with four types of edges: (1) Tree edges — edges in the DFS tree. (2) Back edges — point to an ancestor, indicate a CYCLE. (3) Forward edges — point to a descendant (only in directed graphs). (4) Cross edges — point to a visited non-ancestor (only in directed graphs).",
-      "DFS on a graph tracks: visited (to avoid cycles), discovery time (disc[v] = when v was first visited), finish time (fin[v] = when all descendants of v are processed). These are crucial for topological sort and SCC algorithms.",
-      "Cycle detection differs for directed vs undirected graphs. In undirected: a cycle exists if we visit an already-visited node that's NOT the parent (back edge). In directed: use 3-color approach — WHITE (unvisited), GRAY (in recursion stack), BLACK (done). A back edge to a GRAY node means cycle.",
-      "Applications: Cycle detection, topological sort, connected/strongly connected components, bridges, articulation points, path finding, flood fill, counting islands, checking bipartiteness.",
-      "DFS vs BFS: DFS uses O(h) stack space where h = max depth (could be O(V) in worst case). DFS is preferred for: detecting cycles, topological sort, finding all paths, solving puzzles with backtracking. BFS is preferred for: shortest path (unweighted), level-order processing.",
+      "DFS explores as **deep as possible** along each branch before backtracking. Uses a stack (implicit via recursion or explicit). Think of navigating a maze: go straight as far as you can, hit a dead end, backtrack to the last junction, try the next path.",
+      "DFS finds the **lexicographically first path** from source to each vertex (if adjacency lists are sorted). It finds shortest paths in **trees** (where only one simple path exists), but NOT in general graphs.",
+      "**Edge classification**: DFS creates a DFS tree with four edge types: (1) **Tree edges** — edges in the DFS tree. (2) **Back edges** — point to an ancestor, indicate a **CYCLE**. (3) **Forward edges** — point to a descendant (directed graphs only). (4) **Cross edges** — point to a visited non-ancestor (directed graphs only).",
+      "**Theorem**: In an undirected graph, DFS classifies every edge as either a tree edge or a back edge. Forward and cross edges **only exist in directed graphs**. This is because in an undirected graph, if u is visited before v, either (u,v) is a tree edge or v is an ancestor of u (back edge).",
+      "**Entry/exit times**: Track `tin[v]` (when DFS enters v) and `tout[v]` (when DFS exits v). Vertex u is an ancestor of v iff `tin[u] < tin[v]` AND `tout[u] > tout[v]`. This ancestor check runs in O(1) and is used in LCA, bridges, and many other algorithms.",
+      "**3-color DFS**: Color vertices WHITE(0) = unvisited, GRAY(1) = in recursion stack (entered but not exited), BLACK(2) = fully processed. A back edge to a GRAY vertex means cycle in directed graphs. This is the standard cycle detection approach.",
+      "Cycle detection differs for directed vs undirected. In **undirected**: cycle exists if we visit an already-visited node that's NOT the parent. In **directed**: use 3-color — back edge to GRAY node means cycle.",
+      "**Applications**: Cycle detection, topological sort (vertices in descending order of exit time), connected/strongly connected components (Tarjan's, Kosaraju's), bridges & articulation points, path finding, flood fill, counting islands.",
+      "DFS vs BFS: DFS uses O(h) stack space where h = max depth (could be O(V)). DFS is preferred for: detecting cycles, topological sort, finding all paths, solving puzzles with backtracking.",
     ],
     keyPoints: [
       "DFS uses Stack (LIFO) — recursion is an implicit stack",
       "Back edge to an ancestor = cycle detected (undirected: back edge to non-parent)",
       "For directed cycle detection, use 3-color: WHITE/GRAY/BLACK",
-      "DFS tree classifies edges: tree, back, forward, cross",
+      "Entry/exit times: u is ancestor of v iff tin[u] < tin[v] AND tout[u] > tout[v]",
+      "DFS tree classifies edges: tree, back (both graphs), forward, cross (directed only)",
+      "Topological sort = vertices in descending order of DFS exit time",
       "Time: O(V+E) — each vertex and edge visited once",
       "Grid DFS: mark cell as visited by changing its value (e.g., '1' → '0')",
     ],
@@ -480,6 +557,79 @@ public class DFS {
         sinkIsland(grid, r, c+1); sinkIsland(grid, r, c-1);
     }
 }`,
+      },
+      {
+        title: "DFS with Entry/Exit Times & Edge Classification",
+        language: "java",
+        content: `// Entry/exit times are fundamental to many advanced graph algorithms
+// tin[v] = when DFS enters v, tout[v] = when DFS exits v
+// Ancestor check: u is ancestor of v iff tin[u] < tin[v] AND tout[u] > tout[v]
+
+static int timer = 0;
+static int[] tin, tout, color;
+// color: 0=WHITE(unvisited), 1=GRAY(in stack), 2=BLACK(done)
+
+static void dfsWithTimes(List<List<Integer>> adj, int v) {
+    tin[v] = timer++;
+    color[v] = 1; // GRAY — currently in recursion stack
+    
+    for (int u : adj.get(v)) {
+        if (color[u] == 0) {
+            // Tree edge: v → u (u is unvisited)
+            dfsWithTimes(adj, u);
+        } else if (color[u] == 1) {
+            // Back edge: v → u (u is GRAY = ancestor, means CYCLE)
+        } else {
+            // u is BLACK (fully processed)
+            if (tin[v] < tin[u]) {
+                // Forward edge: v → u (u is descendant)
+            } else {
+                // Cross edge: v → u (u is in different subtree)
+            }
+        }
+    }
+    
+    color[v] = 2; // BLACK — fully processed
+    tout[v] = timer++;
+}
+
+static boolean isAncestor(int u, int v) {
+    return tin[u] < tin[v] && tout[u] > tout[v]; // O(1) check!
+}
+
+// Usage:
+// timer = 0;
+// tin = new int[V]; tout = new int[V]; color = new int[V];
+// for (int i = 0; i < V; i++) if (color[i] == 0) dfsWithTimes(adj, i);`
+      },
+      {
+        title: "Iterative DFS — Avoids Stack Overflow",
+        language: "java",
+        content: `// For large graphs (V > 10000), recursive DFS may cause StackOverflow
+// Use explicit stack instead
+
+public static void dfsIterative(List<List<Integer>> adj, int start, int V) {
+    boolean[] visited = new boolean[V];
+    Deque<Integer> stack = new ArrayDeque<>();
+    
+    stack.push(start);
+    while (!stack.isEmpty()) {
+        int v = stack.pop();
+        if (visited[v]) continue;
+        visited[v] = true;
+        
+        // Process vertex v here
+        
+        // Push neighbors in reverse order for same traversal order as recursive
+        List<Integer> neighbors = adj.get(v);
+        for (int i = neighbors.size() - 1; i >= 0; i--) {
+            if (!visited[neighbors.get(i)]) {
+                stack.push(neighbors.get(i));
+            }
+        }
+    }
+}
+// Safe for graphs with millions of vertices`
       },
     ],
   },
