@@ -235,7 +235,7 @@ class Codechef {
   {
     name: "LeetCode",
     prefix: "leetcode",
-    description: "Solution class with local test harness, grid helpers, contest utilities",
+    description: "Solution class with Scanner, local test harness & contest helpers",
     code: `import java.util.*;
 import java.util.stream.*;
 
@@ -245,11 +245,6 @@ class Solution {
         // Write your solution here
         return 0;
     }
-
-    // ===== Direction Arrays (Grid / BFS / DFS) =====
-    int[] dx = {0, 0, 1, -1};
-    int[] dy = {1, -1, 0, 0};
-    // 8-directional: int[] dx8 = {0,0,1,-1,1,1,-1,-1}, dy8 = {1,-1,0,0,1,-1,1,-1};
 
     // ===== Helpers =====
     long gcd(long a, long b) { return b == 0 ? a : gcd(b, a % b); }
@@ -263,8 +258,10 @@ class Solution {
     int upperBound(int[] a, int key) { int l = 0, r = a.length; while (l < r) { int m = l + (r - l) / 2; if (a[m] <= key) l = m + 1; else r = m; } return l; }
 
     public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
         Solution sol = new Solution();
         System.out.println(sol.solve(new int[]{1, 2, 3}));
+        sc.close();
     }
 }`,
   },
