@@ -138,7 +138,7 @@ export function ContentRenderer({ section }: ContentRendererProps) {
             {section.keyPoints.map((point, i) => (
               <li key={i} className="flex items-start gap-2.5 text-[15px] leading-7" style={{ color: "hsl(var(--foreground)/0.85)" }}>
                 <span className="mt-1.5 w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: "hsl(var(--primary))" }} />
-                {point}
+                {renderMarkdown(point)}
               </li>
             ))}
           </ul>
@@ -153,7 +153,7 @@ export function ContentRenderer({ section }: ContentRendererProps) {
             <span className="w-5 h-5 rounded-md flex items-center justify-center text-[10px]" style={{ background: "hsl(var(--primary)/0.1)" }}>💡</span>
             Note
           </div>
-          <p className="text-[15px] leading-7" style={{ color: "hsl(var(--foreground)/0.85)" }}>{section.note}</p>
+          <p className="text-[15px] leading-7" style={{ color: "hsl(var(--foreground)/0.85)" }}>{renderMarkdown(section.note)}</p>
         </div>
       )}
 
@@ -165,7 +165,7 @@ export function ContentRenderer({ section }: ContentRendererProps) {
             <span className="w-5 h-5 rounded-md flex items-center justify-center text-[10px]" style={{ background: "hsl(var(--success)/0.1)" }}>✓</span>
             Pro Tip
           </div>
-          <p className="text-[15px] leading-7" style={{ color: "hsl(var(--foreground)/0.85)" }}>{section.tip}</p>
+          <p className="text-[15px] leading-7" style={{ color: "hsl(var(--foreground)/0.85)" }}>{renderMarkdown(section.tip)}</p>
         </div>
       )}
 
@@ -177,7 +177,7 @@ export function ContentRenderer({ section }: ContentRendererProps) {
             <span className="w-5 h-5 rounded-md flex items-center justify-center text-[10px]" style={{ background: "hsl(var(--accent)/0.1)" }}>⚠</span>
             Warning
           </div>
-          <p className="text-[15px] leading-7" style={{ color: "hsl(var(--foreground)/0.85)" }}>{section.warning}</p>
+          <p className="text-[15px] leading-7" style={{ color: "hsl(var(--foreground)/0.85)" }}>{renderMarkdown(section.warning)}</p>
         </div>
       )}
 
