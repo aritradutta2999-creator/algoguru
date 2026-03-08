@@ -18,6 +18,7 @@ import { topics } from "@/data/topics";
 import { javaTopics } from "@/data/javaTopics";
 import { practiceTopics } from "@/data/practiceTopics";
 import { practiceContentMap } from "@/data/practiceContent";
+import { ContentSection } from "@/data/recursionContent";
 import { ChevronRight, ChevronLeft, List, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMode } from "@/contexts/ModeContext";
