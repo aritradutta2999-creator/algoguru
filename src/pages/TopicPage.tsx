@@ -146,7 +146,7 @@ export default function TopicPage() {
           <div className="hero-glow w-80 h-80 -top-20 -right-20 opacity-[0.08]" style={{ background: color }} />
           <div className="absolute inset-0" style={{ background: "var(--gradient-hero)" }} />
 
-          <div className="relative z-10 max-w-3xl">
+          <div className="relative z-10 max-w-4xl">
             <div className="flex items-center gap-2 mb-4 text-xs font-medium" style={{ color: "hsl(var(--muted-foreground))" }}>
               <span className="cursor-pointer hover:underline transition-colors" onClick={() => navigate("/")} style={{ color: "hsl(var(--primary))" }}>
                 Home
@@ -187,7 +187,7 @@ export default function TopicPage() {
           </div>
         </motion.div>
 
-        <div className="max-w-[740px] mx-auto px-6 md:px-10 py-14">
+        <div className="max-w-[920px] mx-auto px-6 md:px-10 py-14">
           {content.map((section) => (
             <ContentRenderer key={section.id} section={section} isPractice={isPracticeMode} />
           ))}

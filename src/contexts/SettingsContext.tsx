@@ -9,6 +9,8 @@ interface SettingsContextType {
   fontSize: FontSize;
   increaseFontSize: () => void;
   decreaseFontSize: () => void;
+  contentWidth: number;
+  setContentWidth: (w: number) => void;
 }
 
 const SettingsContext = createContext<SettingsContextType | null>(null);
@@ -31,7 +33,16 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     return (localStorage.getItem("cp-fontsize") as FontSize) || "md";
   });
 
-  // Apply theme class to <html>
+  const [contentWidth, setContentWidthState] = useState<number>(() => {
+    const saved = localStorage.getItem("cp-content-width");
+    return saved ? Number(saved) : 920;
+  });
+
+  const setContentWidth = (w: number) => {
+    setContentWidthState(w);
+    localStorage.setItem("cp-content-width", String(w));
+  };
+
   useEffect(() => {
     const root = document.documentElement;
     root.classList.remove("light", "dark");
@@ -39,7 +50,6 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem("cp-theme", theme);
   }, [theme]);
 
-  // Apply font size to <html>
   useEffect(() => {
     document.documentElement.style.fontSize = FONT_SIZE_CSS[fontSize];
     localStorage.setItem("cp-fontsize", fontSize);
@@ -62,7 +72,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <SettingsContext.Provider value={{ theme, toggleTheme, fontSize, increaseFontSize, decreaseFontSize }}>
+    <SettingsContext.Provider value={{ theme, toggleTheme, fontSize, increaseFontSize, decreaseFontSize, contentWidth, setContentWidth }}>
       {children}
     </SettingsContext.Provider>
   );
