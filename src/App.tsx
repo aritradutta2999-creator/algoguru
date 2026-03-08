@@ -21,8 +21,9 @@ import Profile from "./pages/Profile";
 import Admin from "./pages/Admin";
 import { topics } from "@/data/topics";
 import { javaTopics } from "@/data/javaTopics";
+import { practiceTopics } from "@/data/practiceTopics";
 
-const allTopics = [...topics, ...javaTopics];
+const allTopics = [...topics, ...javaTopics, ...practiceTopics];
 
 // Flatten all subtopics for search
 const allSearchItems = allTopics.flatMap((t) => [
