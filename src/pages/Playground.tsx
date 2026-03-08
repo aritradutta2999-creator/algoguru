@@ -175,6 +175,41 @@ export default function Playground() {
         </div>
 
         <div className="flex items-center gap-1.5 flex-wrap">
+          {/* Java version selector */}
+          <div className="relative">
+            <button
+              onClick={() => setShowCompilerMenu(!showCompilerMenu)}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-all"
+              style={{ background: "hsl(var(--success)/0.1)", color: "hsl(var(--success))", border: "1px solid hsl(var(--success)/0.25)" }}
+            >
+              ☕ {selectedCompiler.label}
+              <ChevronDown size={11} />
+            </button>
+            {showCompilerMenu && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setShowCompilerMenu(false)} />
+                <div
+                  className="absolute right-0 top-full mt-1 w-44 rounded-xl overflow-hidden z-50"
+                  style={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", boxShadow: "0 8px 30px hsl(var(--foreground)/0.1)" }}
+                >
+                  {JAVA_COMPILERS.map((c) => (
+                    <button
+                      key={c.compiler}
+                      onClick={() => { setSelectedCompiler(c); setShowCompilerMenu(false); }}
+                      className="w-full flex items-center gap-2 px-3 py-2.5 text-left text-[11px] transition-colors hover:bg-muted"
+                      style={{
+                        color: selectedCompiler.compiler === c.compiler ? "hsl(var(--primary))" : "hsl(var(--foreground))",
+                        fontWeight: selectedCompiler.compiler === c.compiler ? 600 : 400,
+                      }}
+                    >
+                      ☕ {c.label}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+
           {/* Theme selector */}
           <div className="relative">
             <button
