@@ -14,6 +14,34 @@ export const heapContent: ContentSection[] = [
       "Heaps are stored as arrays for efficiency. For a node at index i (0-indexed): Left child = 2*i + 1, Right child = 2*i + 2, Parent = (i - 1) / 2. This eliminates the need for pointers and leverages cache locality.",
       "Key complexities: Insert → O(log n), Extract-Min/Max → O(log n), Peek → O(1), Build Heap → O(n). The O(n) build heap is a non-obvious but crucial result.",
     ],
+    diagram: {
+      type: "hierarchy",
+      title: "Min-Heap Structure — Array: [10, 20, 30, 25, 35, 40, 50]",
+      data: [
+        {
+          label: "10 (root, index 0)",
+          color: "primary",
+          children: [
+            {
+              label: "20 (index 1)",
+              color: "info",
+              children: [
+                { label: "25 (index 3)", color: "success" },
+                { label: "35 (index 4)", color: "success" }
+              ]
+            },
+            {
+              label: "30 (index 2)",
+              color: "info",
+              children: [
+                { label: "40 (index 5)", color: "accent" },
+                { label: "50 (index 6)", color: "accent" }
+              ]
+            }
+          ]
+        }
+      ]
+    },
     keyPoints: [
       "Complete Binary Tree stored as an array — no pointers needed",
       "Min-Heap: root is minimum; Max-Heap: root is maximum",
