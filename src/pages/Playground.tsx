@@ -7,6 +7,11 @@ import {
 } from "lucide-react";
 import Editor, { OnMount } from "@monaco-editor/react";
 
+const JAVA_COMPILERS = [
+  { label: "Java 17", compiler: "openjdk-jdk-17.0.1+12" },
+  { label: "Java 15", compiler: "openjdk-jdk-15.0.2+7" },
+];
+
 const THEMES = [
   { id: "vs-dark", label: "Dark", icon: <Moon size={13} /> },
   { id: "light", label: "Light", icon: <Sun size={13} /> },
@@ -70,7 +75,9 @@ export default function Playground() {
   const [output, setOutput] = useState("");
   const [isRunning, setIsRunning] = useState(false);
   const [currentTheme, setCurrentTheme] = useState(THEMES[0]);
+  const [selectedCompiler, setSelectedCompiler] = useState(JAVA_COMPILERS[0]);
   const [showThemeMenu, setShowThemeMenu] = useState(false);
+  const [showCompilerMenu, setShowCompilerMenu] = useState(false);
   const [copied, setCopied] = useState(false);
   const [stdin, setStdin] = useState("");
   const [showStdin, setShowStdin] = useState(false);
@@ -100,7 +107,7 @@ export default function Playground() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           code,
-          compiler: "openjdk-jdk-15.0.2+7",
+          compiler: selectedCompiler.compiler,
           stdin,
           "compiler-option-raw": "",
           "runtime-option-raw": "",
@@ -135,7 +142,7 @@ export default function Playground() {
     } finally {
       setIsRunning(false);
     }
-  }, [code, stdin]);
+  }, [code, stdin, selectedCompiler]);
 
   const copyCode = useCallback(() => {
     navigator.clipboard.writeText(code);
