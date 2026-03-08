@@ -53,6 +53,25 @@ public class Main {
 
 const WANDBOX_API = "https://wandbox.org/api/compile.json";
 
+const JAVA_AUTO_IMPORTS = [
+  "import java.util.*;",
+  "import java.util.stream.*;",
+  "import java.io.*;",
+  "import java.math.*;",
+];
+
+const addAutoImports = (source: string) => {
+  const missingImports = JAVA_AUTO_IMPORTS.filter((statement) => !source.includes(statement));
+  if (!missingImports.length) return source;
+
+  const packageMatch = source.match(/^\s*package\s+[\w.]+\s*;\s*/);
+  if (packageMatch?.[0]) {
+    return `${packageMatch[0]}\n${missingImports.join("\n")}\n${source.slice(packageMatch[0].length)}`;
+  }
+
+  return `${missingImports.join("\n")}\n\n${source}`;
+};
+
 // Solarized Dark theme definition
 const SOLARIZED_DARK_THEME = {
   base: "vs-dark" as const,
@@ -298,7 +317,8 @@ export default function Playground() {
     setOutput("");
     try {
       // Wandbox saves code as prog.java, so strip 'public' from class declarations
-      const processedCode = code.replace(/public\s+class\s+/g, "class ");
+      // and inject common Java imports for CP snippets (Scanner, List, Map, etc.)
+      const processedCode = addAutoImports(code).replace(/public\s+class\s+/g, "class ");
       const res = await fetch(WANDBOX_API, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
