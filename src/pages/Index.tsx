@@ -35,7 +35,7 @@ const item = {
 
 export default function Index() {
   const navigate = useNavigate();
-  const { currentMode } = useMode();
+  const { currentMode, setMode, modes } = useMode();
   const isDSMode = currentMode.id === "ds";
   const activeTopics = isDSMode ? topics : javaTopics;
 
@@ -136,6 +136,32 @@ export default function Index() {
             </motion.button>
           </div>
         </motion.div>
+      </section>
+
+      {/* Mode Tabs */}
+      <section className="px-6 md:px-10 pt-8 pb-2">
+        <div className="max-w-3xl mx-auto">
+          <div className="flex gap-2 p-1 rounded-2xl w-fit mx-auto" style={{ background: "hsl(var(--muted)/0.5)", border: "1px solid hsl(var(--border))" }}>
+            {modes.map((mode) => {
+              const isActive = currentMode.id === mode.id;
+              return (
+                <button
+                  key={mode.id}
+                  onClick={() => setMode(mode.id)}
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200"
+                  style={{
+                    background: isActive ? "hsl(var(--primary)/0.12)" : "transparent",
+                    color: isActive ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))",
+                    boxShadow: isActive ? "0 2px 8px hsl(var(--primary)/0.15)" : "none",
+                  }}
+                >
+                  {mode.id === "ds" ? <Layers size={15} /> : <Coffee size={15} />}
+                  {mode.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
       </section>
 
       {/* Stats */}
