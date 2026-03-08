@@ -472,6 +472,41 @@ export default function Index() {
         </motion.div>
       </section>
 
+      {/* Reading Width Slider */}
+      <section className="px-6 md:px-10 py-10 border-t" style={{ borderColor: "hsl(var(--border))" }}>
+        <div className="max-w-md mx-auto">
+          <motion.div
+            className="p-6 rounded-2xl"
+            style={{ background: "var(--gradient-card)", border: "1px solid hsl(var(--border))" }}
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+          >
+            <div className="flex items-center gap-2 mb-4">
+              <SlidersHorizontal size={14} style={{ color: "hsl(var(--primary))" }} />
+              <span className="text-sm font-semibold" style={{ color: "hsl(var(--foreground))" }}>
+                Content Width
+              </span>
+              <span className="ml-auto text-[11px] font-mono px-2 py-0.5 rounded-md" style={{ background: "hsl(var(--muted))", color: "hsl(var(--muted-foreground))" }}>
+                {contentWidth}px
+              </span>
+            </div>
+            <Slider
+              value={[contentWidth]}
+              onValueChange={(v) => setContentWidth(v[0])}
+              min={640}
+              max={1200}
+              step={20}
+              className="w-full"
+            />
+            <div className="flex justify-between mt-2 text-[10px] font-mono" style={{ color: "hsl(var(--muted-foreground))" }}>
+              <span>Narrow</span>
+              <span>Wide</span>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
       <footer className="px-6 md:px-10 py-8 border-t" style={{ borderColor: "hsl(var(--border))" }}>
         <div className="max-w-md mx-auto flex flex-col items-center gap-4">
           <div className="flex items-center justify-center gap-1.5 text-[11px] font-medium" style={{ color: "hsl(var(--muted-foreground))" }}>
