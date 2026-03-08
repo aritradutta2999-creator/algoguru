@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { topics } from "@/data/topics";
 import { javaTopics } from "@/data/javaTopics";
 import { motion } from "framer-motion";
-import { ChevronRight, Zap, GitBranch, LayoutGrid, Terminal, Sparkles, ArrowRight, BookOpen, Coffee, Layers } from "lucide-react";
+import { ChevronRight, Zap, GitBranch, LayoutGrid, Terminal, Sparkles, ArrowRight, Coffee, Layers, Code2, BookOpen, Trophy, Flame, Star } from "lucide-react";
 import { useMode } from "@/contexts/ModeContext";
 
 const topicColors: Record<string, { color: string; bg: string; border: string }> = {
@@ -31,11 +31,11 @@ const topicColors: Record<string, { color: string; bg: string; border: string }>
 
 const container = {
   hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { staggerChildren: 0.08 } },
+  show: { opacity: 1, transition: { staggerChildren: 0.06 } },
 };
 
 const item = {
-  hidden: { opacity: 0, y: 20 },
+  hidden: { opacity: 0, y: 24 },
   show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] as const } },
 };
 
@@ -48,7 +48,7 @@ export default function Index() {
   const dsStats = [
     { label: "Topics", value: "12", icon: LayoutGrid },
     { label: "Sections", value: "140+", icon: GitBranch },
-    { label: "Code Examples", value: "300+", icon: Terminal },
+    { label: "Code Snippets", value: "300+", icon: Terminal },
     { label: "Algorithms", value: "180+", icon: Zap },
   ];
 
@@ -63,86 +63,108 @@ export default function Index() {
 
   return (
     <div className="min-h-screen">
-      {/* Hero */}
-      <section className="relative px-6 md:px-10 pt-16 pb-20 overflow-hidden">
+      {/* Hero Section */}
+      <section className="relative px-6 md:px-10 pt-14 pb-16 overflow-hidden">
+        {/* Background effects */}
         <div className="absolute inset-0 bg-gradient-hero" />
-        <div className="hero-glow w-[500px] h-[500px] -top-48 left-1/2 -translate-x-1/2 opacity-[0.08]" style={{ background: "hsl(var(--primary))" }} />
-        <div className="hero-glow w-72 h-72 bottom-0 -right-20 opacity-[0.05]" style={{ background: "hsl(var(--accent))" }} />
+        <div className="hero-glow w-[600px] h-[600px] -top-64 left-1/2 -translate-x-1/2 opacity-[0.07]" style={{ background: "hsl(var(--primary))" }} />
+        <div className="hero-glow w-80 h-80 bottom-0 -right-20 opacity-[0.04]" style={{ background: "hsl(var(--accent))" }} />
+        <div className="hero-glow w-60 h-60 top-20 -left-20 opacity-[0.03]" style={{ background: "hsl(var(--info))" }} />
 
         <motion.div
-          className="relative z-10 max-w-3xl mx-auto text-center"
+          className="relative z-10 max-w-4xl mx-auto"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
           key={currentMode.id}
         >
+          {/* Badge */}
           <motion.div
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium mb-8"
-            style={{ background: "hsl(var(--primary)/0.08)", color: "hsl(var(--primary))", border: "1px solid hsl(var(--primary)/0.15)" }}
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.2 }}
+            className="flex justify-center mb-8"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
           >
-            <Sparkles size={13} />
-            {isDSMode ? "Competitive Programming · Java Edition" : "Core & Advanced Java · A to Z"}
+            <div
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-[11px] font-semibold tracking-wide"
+              style={{
+                background: "hsl(var(--primary)/0.08)",
+                color: "hsl(var(--primary))",
+                border: "1px solid hsl(var(--primary)/0.15)",
+                boxShadow: "0 0 20px hsl(var(--primary)/0.08)",
+              }}
+            >
+              <Sparkles size={12} />
+              {isDSMode ? "Competitive Programming · Java Edition" : "Core & Advanced Java · Complete Guide"}
+            </div>
           </motion.div>
 
-          <h1 className="text-4xl md:text-6xl font-extrabold leading-[1.1] mb-6 tracking-tight" style={{ color: "hsl(var(--foreground))" }}>
-            {isDSMode ? (
-              <>
-                Master <span className="text-primary-glow">Algorithms</span>
-                <br />
-                <span className="text-accent-glow">From Zero to Expert</span>
-              </>
-            ) : (
-              <>
-                Master <span className="text-primary-glow">Java</span>
-                <br />
-                <span className="text-accent-glow">Core to Advanced</span>
-              </>
-            )}
-          </h1>
-
-          <p className="text-base md:text-lg leading-8 max-w-xl mx-auto mb-10 font-light" style={{ color: "hsl(var(--muted-foreground))" }}>
-            Your complete learning platform for DSA & Java — pick a track below to begin.
-          </p>
+          {/* Title */}
+          <div className="text-center mb-10">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold leading-[1.08] mb-5 tracking-tight" style={{ color: "hsl(var(--foreground))" }}>
+              {isDSMode ? (
+                <>
+                  Master{" "}
+                  <span className="text-primary-glow">Algorithms</span>
+                  <br />
+                  <span className="text-accent-glow">From Zero to Expert</span>
+                </>
+              ) : (
+                <>
+                  Master{" "}
+                  <span className="text-primary-glow">Java</span>
+                  <br />
+                  <span className="text-accent-glow">Core to Advanced</span>
+                </>
+              )}
+            </h1>
+            <p className="text-sm md:text-base leading-7 max-w-lg mx-auto font-light" style={{ color: "hsl(var(--muted-foreground))" }}>
+              Your complete learning platform for DSA & Java — pick a track below to begin your journey.
+            </p>
+          </div>
 
           {/* Mode Selection Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 max-w-2xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-xl mx-auto">
             {modes.map((mode) => {
               const isActive = currentMode.id === mode.id;
               const isDS = mode.id === "ds";
               return (
                 <motion.button
                   key={mode.id}
-                  whileHover={{ scale: 1.03, y: -4 }}
-                  whileTap={{ scale: 0.97 }}
+                  whileHover={{ scale: 1.02, y: -3 }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={() => {
                     setMode(mode.id);
                     const targetTopics = isDS ? topics : javaTopics;
                     navigate(`/${targetTopics[0].id}`);
                   }}
-                  className="relative flex flex-col items-center gap-3 px-8 py-8 rounded-2xl text-center transition-all duration-200 cursor-pointer overflow-hidden"
+                  className="relative flex items-center gap-4 px-5 py-5 rounded-2xl text-left transition-all duration-200 cursor-pointer overflow-hidden group"
                   style={{
-                    background: isActive ? "hsl(var(--primary)/0.10)" : "hsl(var(--card))",
-                    border: isActive ? "2px solid hsl(var(--primary)/0.4)" : "1px solid hsl(var(--border))",
-                    boxShadow: isActive ? "0 8px 32px hsl(var(--primary)/0.2)" : "var(--shadow-card)",
+                    background: isActive ? "hsl(var(--primary)/0.08)" : "var(--gradient-card)",
+                    border: isActive ? "1.5px solid hsl(var(--primary)/0.35)" : "1px solid hsl(var(--border))",
+                    boxShadow: isActive ? "0 8px 32px hsl(var(--primary)/0.15)" : "var(--shadow-card)",
                   }}
                 >
-                  <div className="text-4xl mb-1">{isDS ? "⊞" : "☕"}</div>
-                  <div className="flex items-center gap-2">
-                    {isDS ? <Layers size={18} style={{ color: "hsl(var(--primary))" }} /> : <Coffee size={18} style={{ color: "hsl(var(--accent))" }} />}
-                    <span className="text-lg font-bold" style={{ color: "hsl(var(--foreground))" }}>{mode.label}</span>
+                  <div
+                    className="w-12 h-12 rounded-xl flex items-center justify-center text-xl flex-shrink-0 transition-transform duration-300 group-hover:scale-110"
+                    style={{
+                      background: isDS ? "hsl(var(--primary)/0.1)" : "hsl(var(--accent)/0.1)",
+                      border: `1px solid ${isDS ? "hsl(var(--primary)/0.15)" : "hsl(var(--accent)/0.15)"}`,
+                    }}
+                  >
+                    {isDS ? <Layers size={20} style={{ color: "hsl(var(--primary))" }} /> : <Coffee size={20} style={{ color: "hsl(var(--accent))" }} />}
                   </div>
-                  <p className="text-xs font-light leading-relaxed" style={{ color: "hsl(var(--muted-foreground))" }}>
-                    {isDS
-                      ? "Recursion, DP, Graphs, Trees, Heaps, Strings, Number Theory — with complexity analysis & Java code."
-                      : "OOP, Collections, Generics, Streams, Multithreading, I/O — from fundamentals to advanced patterns."
-                    }
-                  </p>
-                  <div className="flex items-center gap-1.5 mt-2 text-xs font-semibold" style={{ color: isDS ? "hsl(var(--primary))" : "hsl(var(--accent))" }}>
-                    Start Learning <ArrowRight size={13} />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-bold mb-0.5" style={{ color: "hsl(var(--foreground))" }}>{mode.label}</div>
+                    <p className="text-[11px] font-light leading-relaxed" style={{ color: "hsl(var(--muted-foreground))" }}>
+                      {isDS ? "Recursion, DP, Graphs, Trees & more" : "OOP, Collections, Streams, Threads & more"}
+                    </p>
                   </div>
+                  <ArrowRight
+                    size={14}
+                    className="flex-shrink-0 opacity-40 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-200"
+                    style={{ color: isDS ? "hsl(var(--primary))" : "hsl(var(--accent))" }}
+                  />
                 </motion.button>
               );
             })}
@@ -150,48 +172,143 @@ export default function Index() {
         </motion.div>
       </section>
 
-
-      {/* Stats */}
-      <section className="px-6 md:px-10 py-8 border-y" style={{ borderColor: "hsl(var(--border))" }}>
+      {/* Stats Strip */}
+      <section className="px-6 md:px-10 py-6 border-y" style={{ borderColor: "hsl(var(--border))" }}>
         <motion.div
-          className="max-w-3xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6"
+          className="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-4"
           variants={container}
           initial="hidden"
           whileInView="show"
           viewport={{ once: true }}
         >
-          {quickStats.map(({ label, value, icon: Icon }) => (
-            <motion.div key={label} variants={item} className="flex items-center gap-3.5">
-              <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
-                style={{ background: "hsl(var(--primary)/0.08)", border: "1px solid hsl(var(--primary)/0.12)" }}>
-                <Icon size={18} style={{ color: "hsl(var(--primary))" }} />
+          {quickStats.map(({ label, value, icon: Icon }, i) => (
+            <motion.div
+              key={label}
+              variants={item}
+              className="flex items-center gap-3 px-4 py-3 rounded-xl"
+              style={{ background: "hsl(var(--muted)/0.3)" }}
+            >
+              <div
+                className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+                style={{
+                  background: `hsl(var(--primary)/0.08)`,
+                  border: "1px solid hsl(var(--primary)/0.1)",
+                }}
+              >
+                <Icon size={15} style={{ color: "hsl(var(--primary))" }} />
               </div>
               <div>
-                <div className="text-2xl font-bold font-mono tracking-tight" style={{ color: "hsl(var(--foreground))" }}>{value}</div>
-                <div className="text-xs font-medium" style={{ color: "hsl(var(--muted-foreground))" }}>{label}</div>
+                <div className="text-xl font-bold font-mono tracking-tight" style={{ color: "hsl(var(--foreground))" }}>{value}</div>
+                <div className="text-[10px] font-medium uppercase tracking-wider" style={{ color: "hsl(var(--muted-foreground))" }}>{label}</div>
               </div>
             </motion.div>
           ))}
         </motion.div>
       </section>
 
-      {/* Topic cards */}
-      <section className="px-6 md:px-10 py-14">
-        <div className="max-w-5xl mx-auto">
-          <motion.div className="mb-10" initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-            <h2 className="text-2xl md:text-3xl font-bold mb-2 tracking-tight" style={{ color: "hsl(var(--foreground))" }}>
-              {isDSMode ? "Topics" : "Java Modules"}
-            </h2>
-            <p className="text-sm font-light" style={{ color: "hsl(var(--muted-foreground))" }}>
-              {isDSMode
-                ? "Each topic builds on the previous — follow the order for maximum impact."
-                : "Master Java from the ground up — each module covers a core area of the language."
-              }
-            </p>
+      {/* Quick Start - Featured Topics */}
+      <section className="px-6 md:px-10 py-12">
+        <div className="max-w-4xl mx-auto">
+          <motion.div className="flex items-center justify-between mb-8" initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <Flame size={16} style={{ color: "hsl(var(--accent))" }} />
+                <span className="text-[10px] font-bold uppercase tracking-[0.15em] font-mono" style={{ color: "hsl(var(--accent))" }}>
+                  Quick Start
+                </span>
+              </div>
+              <h2 className="text-xl md:text-2xl font-bold tracking-tight" style={{ color: "hsl(var(--foreground))" }}>
+                {isDSMode ? "Begin Your DSA Journey" : "Start Learning Java"}
+              </h2>
+            </div>
+            <button
+              onClick={() => navigate(`/${activeTopics[0].id}`)}
+              className="hidden sm:flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors hover:bg-muted"
+              style={{ color: "hsl(var(--primary))" }}
+            >
+              View All <ArrowRight size={12} />
+            </button>
           </motion.div>
 
-            <motion.div
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"
+          {/* Featured - first 3 topics as horizontal cards */}
+          <motion.div
+            className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6"
+            variants={container}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true }}
+          >
+            {activeTopics.slice(0, 3).map((topic, idx) => {
+              const colors = topicColors[topic.id] || { color: "hsl(var(--primary))", bg: "hsl(var(--primary)/0.06)", border: "hsl(var(--primary)/0.15)" };
+              return (
+                <motion.div
+                  key={topic.id}
+                  variants={item}
+                  whileHover={{ y: -4, transition: { duration: 0.2 } }}
+                  className="group relative p-5 rounded-2xl cursor-pointer transition-all duration-300 overflow-hidden"
+                  onClick={() => navigate(`/${topic.id}`)}
+                  style={{
+                    background: "var(--gradient-card)",
+                    border: "1px solid hsl(var(--border))",
+                    boxShadow: "var(--shadow-card)",
+                  }}
+                >
+                  {/* Subtle glow on hover */}
+                  <div
+                    className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                    style={{ background: `radial-gradient(circle at 50% 0%, ${colors.color}08, transparent 70%)` }}
+                  />
+                  <div className="relative">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div
+                        className="w-10 h-10 rounded-xl flex items-center justify-center text-lg font-bold"
+                        style={{ background: colors.bg, border: `1px solid ${colors.border}`, color: colors.color }}
+                      >
+                        {topic.icon}
+                      </div>
+                      <div>
+                        <div className="text-[9px] font-mono font-medium uppercase tracking-wider" style={{ color: colors.color }}>
+                          Module {String(idx + 1).padStart(2, "0")}
+                        </div>
+                        <h3 className="font-bold text-sm" style={{ color: "hsl(var(--foreground))" }}>{topic.title}</h3>
+                      </div>
+                    </div>
+                    <p className="text-[11px] font-light leading-relaxed mb-3 line-clamp-2" style={{ color: "hsl(var(--muted-foreground))" }}>
+                      {topic.description}
+                    </p>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-mono" style={{ color: "hsl(var(--muted-foreground))" }}>
+                        {topic.subtopics.length} sections
+                      </span>
+                      <ChevronRight
+                        size={13}
+                        className="opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-200"
+                        style={{ color: colors.color }}
+                      />
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </motion.div>
+        </div>
+      </section>
+
+      {/* All Topics Grid */}
+      <section className="px-6 md:px-10 py-10 border-t" style={{ borderColor: "hsl(var(--border))" }}>
+        <div className="max-w-5xl mx-auto">
+          <motion.div className="flex items-center gap-2 mb-8" initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+            <BookOpen size={16} style={{ color: "hsl(var(--primary))" }} />
+            <h2 className="text-lg md:text-xl font-bold tracking-tight" style={{ color: "hsl(var(--foreground))" }}>
+              All {isDSMode ? "Topics" : "Modules"}
+            </h2>
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full" style={{ background: "hsl(var(--muted))", color: "hsl(var(--muted-foreground))" }}>
+              {activeTopics.length}
+            </span>
+          </motion.div>
+
+          <motion.div
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3"
             variants={container}
             initial="hidden"
             whileInView="show"
@@ -204,45 +321,33 @@ export default function Index() {
                 <motion.div
                   key={topic.id}
                   variants={item}
-                  whileHover={{ y: -6, transition: { duration: 0.25 } }}
-                  className="topic-card group aspect-square flex flex-col justify-between"
+                  whileHover={{ y: -3, transition: { duration: 0.2 } }}
+                  className="group flex items-center gap-3 p-3.5 rounded-xl cursor-pointer transition-all duration-200"
                   onClick={() => navigate(`/${topic.id}`)}
+                  style={{
+                    background: "var(--gradient-card)",
+                    border: "1px solid hsl(var(--border))",
+                  }}
                 >
-                  <div>
-                    <div className="flex items-center justify-between mb-4">
-                      <div
-                        className="w-12 h-12 rounded-xl flex items-center justify-center text-xl font-bold"
-                        style={{ background: colors.bg, border: `1px solid ${colors.border}`, color: colors.color }}
-                      >
-                        {topic.icon}
-                      </div>
-                      <ChevronRight
-                        size={16}
-                        className="opacity-0 group-hover:opacity-100 transition-all duration-200 group-hover:translate-x-1"
-                        style={{ color: colors.color }}
-                      />
-                    </div>
-
-                    <div className="text-[10px] font-mono font-medium mb-1" style={{ color: colors.color }}>
-                      MODULE {String(idx + 1).padStart(2, "0")}
-                    </div>
-                    <h3 className="font-bold text-[15px] mb-2" style={{ color: "hsl(var(--foreground))" }}>
+                  <div
+                    className="w-9 h-9 rounded-lg flex items-center justify-center text-sm font-bold flex-shrink-0 transition-transform duration-300 group-hover:scale-110"
+                    style={{ background: colors.bg, border: `1px solid ${colors.border}`, color: colors.color }}
+                  >
+                    {topic.icon}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-[13px] truncate" style={{ color: "hsl(var(--foreground))" }}>
                       {topic.title}
                     </h3>
-                    <p className="text-xs font-light leading-relaxed" style={{ color: "hsl(var(--muted-foreground))" }}>
-                      {topic.description}
-                    </p>
-                  </div>
-
-                  <div className="pt-4 flex items-center justify-between border-t" style={{ borderColor: "hsl(var(--border))" }}>
-                    <span className="text-[11px] font-mono font-medium" style={{ color: "hsl(var(--muted-foreground))" }}>
+                    <div className="text-[10px] font-mono" style={{ color: "hsl(var(--muted-foreground))" }}>
                       {topic.subtopics.length} sections
-                    </span>
-                    <span className="text-[11px] font-semibold flex items-center gap-1" style={{ color: colors.color }}>
-                      <Terminal size={11} />
-                      Java
-                    </span>
+                    </div>
                   </div>
+                  <ChevronRight
+                    size={13}
+                    className="flex-shrink-0 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all duration-200"
+                    style={{ color: colors.color }}
+                  />
                 </motion.div>
               );
             })}
@@ -254,13 +359,11 @@ export default function Index() {
       {isDSMode && (
         <section className="px-6 md:px-10 py-12 border-t" style={{ borderColor: "hsl(var(--border))" }}>
           <div className="max-w-3xl mx-auto">
-            <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-              <h2 className="text-xl font-bold mb-2 tracking-tight" style={{ color: "hsl(var(--foreground))" }}>
+            <motion.div className="flex items-center gap-2 mb-6" initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+              <Trophy size={16} style={{ color: "hsl(var(--accent))" }} />
+              <h2 className="text-lg font-bold tracking-tight" style={{ color: "hsl(var(--foreground))" }}>
                 Complexity Reference
               </h2>
-              <p className="text-sm font-light mb-6" style={{ color: "hsl(var(--muted-foreground))" }}>
-                Quick lookup for the most common algorithms covered.
-              </p>
             </motion.div>
             <motion.div
               className="overflow-x-auto rounded-2xl"
@@ -298,11 +401,56 @@ export default function Index() {
         </section>
       )}
 
-      <footer className="px-6 md:px-10 py-10 border-t text-center space-y-2" style={{ borderColor: "hsl(var(--border))" }}>
-        <div className="text-xs font-mono font-medium" style={{ color: "hsl(var(--muted-foreground))" }}>
+      {/* Playground CTA */}
+      <section className="px-6 md:px-10 py-10 border-t" style={{ borderColor: "hsl(var(--border))" }}>
+        <motion.div
+          className="max-w-2xl mx-auto text-center"
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+        >
+          <div
+            className="p-8 rounded-2xl relative overflow-hidden"
+            style={{
+              background: "var(--gradient-card)",
+              border: "1px solid hsl(var(--border))",
+              boxShadow: "var(--shadow-card)",
+            }}
+          >
+            <div className="hero-glow w-40 h-40 -top-10 -right-10 opacity-[0.08]" style={{ background: "hsl(var(--success))" }} />
+            <div className="relative">
+              <div className="flex items-center justify-center gap-2 mb-3">
+                <Code2 size={20} style={{ color: "hsl(var(--success))" }} />
+              </div>
+              <h3 className="text-lg font-bold mb-2" style={{ color: "hsl(var(--foreground))" }}>
+                Java Playground
+              </h3>
+              <p className="text-xs font-light mb-5 max-w-sm mx-auto" style={{ color: "hsl(var(--muted-foreground))" }}>
+                Write, compile, and run Java code instantly with built-in CP templates for Codeforces, CodeChef & LeetCode.
+              </p>
+              <motion.button
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={() => navigate("/playground")}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200"
+                style={{
+                  background: "hsl(var(--success)/0.12)",
+                  color: "hsl(var(--success))",
+                  border: "1px solid hsl(var(--success)/0.2)",
+                }}
+              >
+                Open Playground <ArrowRight size={14} />
+              </motion.button>
+            </div>
+          </div>
+        </motion.div>
+      </section>
+
+      <footer className="px-6 md:px-10 py-8 border-t text-center space-y-1.5" style={{ borderColor: "hsl(var(--border))" }}>
+        <div className="text-[11px] font-mono font-medium" style={{ color: "hsl(var(--muted-foreground))" }}>
           AlgoGuru · {isDSMode ? "Competitive Programming" : "Core & Advanced Java"} · Java Edition
         </div>
-        <div className="text-xs font-medium" style={{ color: "hsl(var(--muted-foreground))" }}>
+        <div className="text-[11px] font-medium" style={{ color: "hsl(var(--muted-foreground))" }}>
           by{" "}
           <a
             href="https://portfolio-aritra-pearl.vercel.app/"
