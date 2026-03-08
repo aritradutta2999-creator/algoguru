@@ -106,9 +106,9 @@ export function ContentRenderer({ section, isPractice }: ContentRendererProps) {
       {/* Complexity */}
       {(section.timeComplexity || section.spaceComplexity) && (
         <p className="cr-complexity">
-          {section.timeComplexity && <>Time: <code className="cr-code">{section.timeComplexity}</code></>}
+          {section.timeComplexity && <>Time: {renderSuperscript(section.timeComplexity)}</>}
           {section.timeComplexity && section.spaceComplexity && <span className="cr-sep">·</span>}
-          {section.spaceComplexity && <>Space: <code className="cr-code">{section.spaceComplexity}</code></>}
+          {section.spaceComplexity && <>Space: {renderSuperscript(section.spaceComplexity)}</>}
         </p>
       )}
 
