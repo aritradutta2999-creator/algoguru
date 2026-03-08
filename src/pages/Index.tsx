@@ -101,71 +101,52 @@ export default function Index() {
           </h1>
 
           <p className="text-base md:text-lg leading-8 max-w-xl mx-auto mb-10 font-light" style={{ color: "hsl(var(--muted-foreground))" }}>
-            {isDSMode
-              ? "A beautifully crafted guide covering Recursion, DP, Graphs, Heaps & more — with deep theory, complexity analysis, and production-quality Java code."
-              : "A comprehensive Java guide from fundamentals to advanced — OOP, Collections, Generics, Streams, Multithreading, I/O, and design patterns with hands-on examples."
-            }
+            Your complete learning platform for DSA & Java — pick a track below to begin.
           </p>
 
-          <div className="flex flex-wrap gap-4 justify-center">
-            <motion.button
-              whileHover={{ scale: 1.03, y: -2 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => navigate(`/${activeTopics[0].id}`)}
-              className="flex items-center gap-2.5 px-7 py-3.5 rounded-2xl text-sm font-semibold transition-shadow"
-              style={{
-                background: "var(--gradient-primary)",
-                color: "hsl(var(--primary-foreground))",
-                boxShadow: "0 4px 25px hsl(var(--primary)/0.3)",
-              }}
-            >
-              Start Learning
-              <ArrowRight size={16} />
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.03, y: -2 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => navigate(`/${activeTopics[Math.min(3, activeTopics.length - 1)].id}`)}
-              className="flex items-center gap-2.5 px-7 py-3.5 rounded-2xl text-sm font-semibold transition-shadow"
-              style={{
-                background: "hsl(var(--card))",
-                color: "hsl(var(--foreground))",
-                border: "1px solid hsl(var(--border))",
-                boxShadow: "var(--shadow-card)",
-              }}
-            >
-              <BookOpen size={15} />
-              Explore {isDSMode ? "Topics" : "Modules"}
-            </motion.button>
+          {/* Mode Selection Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 max-w-2xl mx-auto">
+            {modes.map((mode) => {
+              const isActive = currentMode.id === mode.id;
+              const isDS = mode.id === "ds";
+              return (
+                <motion.button
+                  key={mode.id}
+                  whileHover={{ scale: 1.03, y: -4 }}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => {
+                    setMode(mode.id);
+                    const targetTopics = isDS ? topics : javaTopics;
+                    navigate(`/${targetTopics[0].id}`);
+                  }}
+                  className="relative flex flex-col items-center gap-3 px-8 py-8 rounded-2xl text-center transition-all duration-200 cursor-pointer overflow-hidden"
+                  style={{
+                    background: isActive ? "hsl(var(--primary)/0.10)" : "hsl(var(--card))",
+                    border: isActive ? "2px solid hsl(var(--primary)/0.4)" : "1px solid hsl(var(--border))",
+                    boxShadow: isActive ? "0 8px 32px hsl(var(--primary)/0.2)" : "var(--shadow-card)",
+                  }}
+                >
+                  <div className="text-4xl mb-1">{isDS ? "⊞" : "☕"}</div>
+                  <div className="flex items-center gap-2">
+                    {isDS ? <Layers size={18} style={{ color: "hsl(var(--primary))" }} /> : <Coffee size={18} style={{ color: "hsl(var(--accent))" }} />}
+                    <span className="text-lg font-bold" style={{ color: "hsl(var(--foreground))" }}>{mode.label}</span>
+                  </div>
+                  <p className="text-xs font-light leading-relaxed" style={{ color: "hsl(var(--muted-foreground))" }}>
+                    {isDS
+                      ? "Recursion, DP, Graphs, Trees, Heaps, Strings, Number Theory — with complexity analysis & Java code."
+                      : "OOP, Collections, Generics, Streams, Multithreading, I/O — from fundamentals to advanced patterns."
+                    }
+                  </p>
+                  <div className="flex items-center gap-1.5 mt-2 text-xs font-semibold" style={{ color: isDS ? "hsl(var(--primary))" : "hsl(var(--accent))" }}>
+                    Start Learning <ArrowRight size={13} />
+                  </div>
+                </motion.button>
+              );
+            })}
           </div>
         </motion.div>
       </section>
 
-      {/* Mode Tabs */}
-      <section className="px-6 md:px-10 pt-8 pb-2">
-        <div className="max-w-3xl mx-auto">
-          <div className="flex gap-2 p-1 rounded-2xl w-fit mx-auto" style={{ background: "hsl(var(--muted)/0.5)", border: "1px solid hsl(var(--border))" }}>
-            {modes.map((mode) => {
-              const isActive = currentMode.id === mode.id;
-              return (
-                <button
-                  key={mode.id}
-                  onClick={() => setMode(mode.id)}
-                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200"
-                  style={{
-                    background: isActive ? "hsl(var(--primary)/0.12)" : "transparent",
-                    color: isActive ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))",
-                    boxShadow: isActive ? "0 2px 8px hsl(var(--primary)/0.15)" : "none",
-                  }}
-                >
-                  {mode.id === "ds" ? <Layers size={15} /> : <Coffee size={15} />}
-                  {mode.label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </section>
 
       {/* Stats */}
       <section className="px-6 md:px-10 py-8 border-y" style={{ borderColor: "hsl(var(--border))" }}>
