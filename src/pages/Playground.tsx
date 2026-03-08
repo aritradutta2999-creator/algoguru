@@ -479,6 +479,24 @@ export default function Playground() {
           </span>
           <div className="flex items-center gap-1.5">
             <button
+              onClick={resetCode}
+              title="Reset Code"
+              className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all hover:bg-muted"
+              style={{ color: "hsl(var(--muted-foreground))", border: "1px solid hsl(var(--border))" }}
+            >
+              <RotateCcw size={13} />
+              Reset
+            </button>
+            <button
+              onClick={formatCode}
+              title="Format Code"
+              className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all hover:bg-muted"
+              style={{ color: "hsl(var(--muted-foreground))", border: "1px solid hsl(var(--border))" }}
+            >
+              <AlignLeft size={13} />
+              Format
+            </button>
+            <button
               onClick={runCode}
               disabled={isRunning || !code.trim()}
               className="flex items-center gap-1.5 px-3 py-1 rounded-lg text-[11px] font-bold transition-all disabled:opacity-50"
