@@ -12,7 +12,7 @@ import Playground from "./pages/Playground";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
-import { Menu, Sun, Moon, ZoomIn, ZoomOut, Search, X, ChevronRight } from "lucide-react";
+import { Menu, Sun, Moon, ZoomIn, ZoomOut, Search, X, ChevronRight, Sparkles } from "lucide-react";
 import { SettingsProvider, useSettings } from "@/contexts/SettingsContext";
 import { ModeProvider, useMode } from "@/contexts/ModeContext";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
@@ -22,16 +22,89 @@ import Admin from "./pages/Admin";
 import { topics } from "@/data/topics";
 import { javaTopics } from "@/data/javaTopics";
 import { practiceTopics } from "@/data/practiceTopics";
+import { motion, AnimatePresence } from "framer-motion";
+
+// Import all content maps for deep search
+import { recursionContent } from "@/data/recursionContent";
+import { backtrackingContent } from "@/data/backtrackingContent";
+import { dpContent } from "@/data/dpContent";
+import { graphsContent } from "@/data/graphsContent";
+import { bitManipulationContent } from "@/data/bitManipulationContent";
+import { heapContent } from "@/data/heapContent";
+import { stringsContent } from "@/data/stringsContent";
+import { numberTheoryContent } from "@/data/numberTheoryContent";
+import { treesContent } from "@/data/treesContent";
+import { segmentTreeContent } from "@/data/segmentTreeContent";
+import { advancedMathContent } from "@/data/advancedMathContent";
+import { advancedTopicsContent } from "@/data/advancedTopicsContent";
+import { stackQueueContent } from "@/data/stackQueueContent";
+import { javaContentMap } from "@/data/javaContent";
+import { practiceContentMap } from "@/data/practiceContent";
 
 const allTopics = [...topics, ...javaTopics, ...practiceTopics];
 
-// Flatten all subtopics for search
-const allSearchItems = allTopics.flatMap((t) => [
-  { id: t.id, title: t.title, icon: t.icon, type: "topic" as const, path: `/${t.id}`, parent: null, subtopicCount: t.subtopics.length },
-  ...t.subtopics.map((s) => ({
-    id: s.id, title: s.title, icon: t.icon, type: "subtopic" as const, path: `/${t.id}#${s.id}`, parent: t.title, subtopicCount: 0,
-  })),
-]);
+// DS content map
+const dsContentMap: Record<string, any[]> = {
+  "stack-queue": stackQueueContent,
+  recursion: recursionContent,
+  backtracking: backtrackingContent,
+  dp: dpContent,
+  graphs: graphsContent,
+  bits: bitManipulationContent,
+  heaps: heapContent,
+  strings: stringsContent,
+  "number-theory": numberTheoryContent,
+  trees: treesContent,
+  "segment-tree": segmentTreeContent,
+  "advanced-math": advancedMathContent,
+  "advanced-topics": advancedTopicsContent,
+};
+
+const allContentMaps = { ...dsContentMap, ...javaContentMap, ...practiceContentMap };
+
+// Build comprehensive search index: topics + subtopics + individual problems/sections
+const allSearchItems = (() => {
+  const items: Array<{
+    id: string; title: string; icon: string; type: "topic" | "subtopic" | "problem";
+    path: string; parent: string | null; subtopicCount: number; difficulty?: string;
+  }> = [];
+
+  allTopics.forEach((t) => {
+    items.push({ id: t.id, title: t.title, icon: t.icon, type: "topic", path: `/${t.id}`, parent: null, subtopicCount: t.subtopics.length });
+    t.subtopics.forEach((s) => {
+      items.push({ id: s.id, title: s.title, icon: t.icon, type: "subtopic", path: `/${t.id}#${s.id}`, parent: t.title, subtopicCount: 0 });
+    });
+    // Add individual content sections (problems, algorithms)
+    const content = allContentMaps[t.id];
+    if (content) {
+      content.forEach((section: any) => {
+        if (section.title && section.id) {
+          // Skip group headers like "Easy Problems", "Medium Problems" etc.
+          const isGroupHeader = /^(Easy|Medium|Hard) Problems$/i.test(section.title);
+          if (!isGroupHeader) {
+            const alreadyExists = items.some((i) => i.id === section.id && i.path.startsWith(`/${t.id}`));
+            if (!alreadyExists) {
+              items.push({
+                id: section.id, title: section.title, icon: t.icon, type: "problem",
+                path: `/${t.id}#${section.id}`, parent: t.title, subtopicCount: 0,
+                difficulty: section.difficulty,
+              });
+            }
+          }
+        }
+      });
+    }
+  });
+
+  return items;
+})();
+
+const difficultyColors: Record<string, string> = {
+  Easy: "hsl(var(--success))",
+  Medium: "hsl(var(--warning))",
+  Hard: "hsl(var(--destructive, 0 84% 60%))",
+  Expert: "hsl(var(--info))",
+};
 
 function SearchButton() {
   const [open, setOpen] = useState(false);
@@ -41,9 +114,16 @@ function SearchButton() {
 
   const results = useMemo(() => {
     const q = query.toLowerCase().trim();
-    if (!q) return allSearchItems.filter((i) => i.type === "topic");
+    if (!q) return allSearchItems.filter((i) => i.type === "topic").slice(0, 12);
     return allSearchItems.filter((i) => i.title.toLowerCase().includes(q));
   }, [query]);
+
+  const grouped = useMemo(() => {
+    const topics = results.filter((r) => r.type === "topic");
+    const subtopics = results.filter((r) => r.type === "subtopic");
+    const problems = results.filter((r) => r.type === "problem");
+    return { topics, subtopics, problems };
+  }, [results]);
 
   useEffect(() => {
     if (open) {
@@ -53,7 +133,6 @@ function SearchButton() {
     }
   }, [open]);
 
-  // Ctrl+K shortcut
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
@@ -66,68 +145,160 @@ function SearchButton() {
     return () => window.removeEventListener("keydown", handler);
   }, []);
 
+  const totalResults = results.length;
+
   return (
     <>
       <button
         onClick={() => setOpen(true)}
         title="Search topics (Ctrl+K)"
-        className="flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all duration-200 hover:bg-muted"
-        style={{ color: "hsl(var(--muted-foreground))" }}
+        className="flex items-center gap-2.5 px-4 py-2 rounded-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+        style={{
+          background: "hsl(var(--muted)/0.5)",
+          border: "1px solid hsl(var(--border))",
+          color: "hsl(var(--muted-foreground))",
+        }}
       >
-        <Search size={14} />
-        <span className="hidden sm:inline text-[11px] font-mono">Search</span>
-        <kbd className="hidden sm:inline text-[9px] font-mono px-1.5 py-0.5 rounded" style={{ background: "hsl(var(--muted))", color: "hsl(var(--muted-foreground))" }}>⌘K</kbd>
+        <Search size={18} strokeWidth={2.5} />
+        <span className="hidden sm:inline text-sm font-medium">Search everything...</span>
+        <kbd
+          className="hidden sm:inline text-[10px] font-mono font-bold px-2 py-0.5 rounded-md ml-2"
+          style={{ background: "hsl(var(--background))", color: "hsl(var(--muted-foreground))", border: "1px solid hsl(var(--border))" }}
+        >
+          ⌘K
+        </kbd>
       </button>
 
-      {open && (
-        <div className="fixed inset-0 z-[100] flex items-start justify-center pt-[15vh]" onClick={() => setOpen(false)}>
-          <div className="fixed inset-0" style={{ background: "hsl(var(--background)/0.7)", backdropFilter: "blur(4px)" }} />
-          <div
-            className="relative w-full max-w-md mx-4 rounded-2xl overflow-hidden"
-            style={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", boxShadow: "0 20px 60px hsl(var(--foreground)/0.15)" }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center gap-3 px-4 py-3 border-b" style={{ borderColor: "hsl(var(--border))" }}>
-              <Search size={16} style={{ color: "hsl(var(--muted-foreground))" }} />
-              <input
-                ref={inputRef}
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search topics..."
-                className="flex-1 bg-transparent text-sm outline-none"
-                style={{ color: "hsl(var(--foreground))" }}
-              />
-              <button onClick={() => setOpen(false)} className="p-1 rounded-md hover:bg-muted" style={{ color: "hsl(var(--muted-foreground))" }}>
-                <X size={14} />
-              </button>
-            </div>
-            <div className="max-h-72 overflow-y-auto">
-              {results.length === 0 ? (
-                <div className="px-4 py-6 text-center text-sm" style={{ color: "hsl(var(--muted-foreground))" }}>No topics found</div>
-              ) : (
-                results.slice(0, 20).map((item) => (
-                  <button
-                    key={item.path}
-                    onClick={() => { navigate(item.path); setOpen(false); }}
-                    className="w-full flex items-center gap-3 px-4 py-3 text-left text-sm transition-colors hover:bg-[hsl(var(--muted)/0.5)]"
-                    style={{ color: "hsl(var(--foreground))", borderBottom: "1px solid hsl(var(--border)/0.5)" }}
-                  >
-                    <span className="text-lg">{item.icon}</span>
-                    <div className="flex-1 min-w-0">
-                      <div className="font-semibold text-sm truncate">{item.title}</div>
-                      <div className="text-[11px] font-light" style={{ color: "hsl(var(--muted-foreground))" }}>
-                        {item.type === "topic" ? `${item.subtopicCount} sections` : item.parent}
+      <AnimatePresence>
+        {open && (
+          <div className="fixed inset-0 z-[100] flex items-start justify-center pt-[12vh]" onClick={() => setOpen(false)}>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              className="fixed inset-0"
+              style={{ background: "hsl(var(--background)/0.75)", backdropFilter: "blur(8px)" }}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: -10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: -10 }}
+              transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+              className="relative w-full max-w-lg mx-4 rounded-2xl overflow-hidden"
+              style={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", boxShadow: "0 25px 80px hsl(var(--foreground)/0.2)" }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Search header */}
+              <div className="flex items-center gap-3 px-5 py-4 border-b" style={{ borderColor: "hsl(var(--border))" }}>
+                <div className="flex items-center justify-center w-9 h-9 rounded-xl" style={{ background: "hsl(var(--primary)/0.1)" }}>
+                  <Search size={20} strokeWidth={2.5} style={{ color: "hsl(var(--primary))" }} />
+                </div>
+                <input
+                  ref={inputRef}
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Search topics, algorithms, problems..."
+                  className="flex-1 bg-transparent text-base font-medium outline-none"
+                  style={{ color: "hsl(var(--foreground))" }}
+                />
+                {query && (
+                  <span className="text-[11px] font-mono px-2 py-0.5 rounded-lg" style={{ background: "hsl(var(--muted))", color: "hsl(var(--muted-foreground))" }}>
+                    {totalResults}
+                  </span>
+                )}
+                <button onClick={() => setOpen(false)} className="p-1.5 rounded-lg hover:bg-muted transition-colors" style={{ color: "hsl(var(--muted-foreground))" }}>
+                  <X size={16} />
+                </button>
+              </div>
+
+              {/* Results */}
+              <div className="max-h-[400px] overflow-y-auto">
+                {totalResults === 0 ? (
+                  <div className="px-5 py-10 text-center">
+                    <div className="text-2xl mb-2">🔍</div>
+                    <div className="text-sm font-medium" style={{ color: "hsl(var(--muted-foreground))" }}>No results for "{query}"</div>
+                    <div className="text-xs mt-1" style={{ color: "hsl(var(--muted-foreground)/0.6)" }}>Try searching for "Two Sum", "DFS", or "Backtracking"</div>
+                  </div>
+                ) : (
+                  <>
+                    {/* Topics */}
+                    {grouped.topics.length > 0 && (
+                      <div>
+                        <div className="px-5 py-2 text-[10px] font-bold uppercase tracking-widest" style={{ color: "hsl(var(--muted-foreground))", background: "hsl(var(--muted)/0.3)" }}>
+                          Topics
+                        </div>
+                        {grouped.topics.slice(0, 8).map((item) => (
+                          <SearchResultItem key={item.path} item={item} onSelect={() => { navigate(item.path); setOpen(false); }} />
+                        ))}
                       </div>
-                    </div>
-                    <ChevronRight size={13} style={{ color: "hsl(var(--muted-foreground))" }} />
-                  </button>
-                ))
-              )}
-            </div>
+                    )}
+                    {/* Subtopics / Sections */}
+                    {grouped.subtopics.length > 0 && (
+                      <div>
+                        <div className="px-5 py-2 text-[10px] font-bold uppercase tracking-widest" style={{ color: "hsl(var(--muted-foreground))", background: "hsl(var(--muted)/0.3)" }}>
+                          Sections
+                        </div>
+                        {grouped.subtopics.slice(0, 10).map((item) => (
+                          <SearchResultItem key={item.path} item={item} onSelect={() => { navigate(item.path); setOpen(false); }} />
+                        ))}
+                      </div>
+                    )}
+                    {/* Problems / Algorithms */}
+                    {grouped.problems.length > 0 && (
+                      <div>
+                        <div className="px-5 py-2 text-[10px] font-bold uppercase tracking-widest" style={{ color: "hsl(var(--muted-foreground))", background: "hsl(var(--muted)/0.3)" }}>
+                          Problems & Algorithms ({grouped.problems.length})
+                        </div>
+                        {grouped.problems.slice(0, 20).map((item) => (
+                          <SearchResultItem key={item.path} item={item} onSelect={() => { navigate(item.path); setOpen(false); }} />
+                        ))}
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+
+              {/* Footer */}
+              <div className="flex items-center justify-between px-5 py-2.5 border-t text-[10px]" style={{ borderColor: "hsl(var(--border))", color: "hsl(var(--muted-foreground))" }}>
+                <span className="font-mono">{allSearchItems.length} items indexed</span>
+                <div className="flex items-center gap-3">
+                  <span><kbd className="px-1.5 py-0.5 rounded font-mono text-[9px]" style={{ background: "hsl(var(--muted))", border: "1px solid hsl(var(--border))" }}>↑↓</kbd> navigate</span>
+                  <span><kbd className="px-1.5 py-0.5 rounded font-mono text-[9px]" style={{ background: "hsl(var(--muted))", border: "1px solid hsl(var(--border))" }}>esc</kbd> close</span>
+                </div>
+              </div>
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
     </>
+  );
+}
+
+function SearchResultItem({ item, onSelect }: { item: typeof allSearchItems[number]; onSelect: () => void }) {
+  return (
+    <button
+      onClick={onSelect}
+      className="w-full flex items-center gap-3 px-5 py-3 text-left transition-colors hover:bg-[hsl(var(--muted)/0.5)] group"
+      style={{ color: "hsl(var(--foreground))", borderBottom: "1px solid hsl(var(--border)/0.3)" }}
+    >
+      <span className="text-lg flex-shrink-0">{item.icon}</span>
+      <div className="flex-1 min-w-0">
+        <div className="font-semibold text-sm truncate">{item.title}</div>
+        <div className="text-[11px] font-light" style={{ color: "hsl(var(--muted-foreground))" }}>
+          {item.type === "topic" ? `${item.subtopicCount} sections` : item.parent}
+        </div>
+      </div>
+      {item.difficulty && (
+        <span
+          className="text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0"
+          style={{ color: difficultyColors[item.difficulty] || "hsl(var(--muted-foreground))", background: `${difficultyColors[item.difficulty] || "hsl(var(--muted-foreground))"}15` }}
+        >
+          {item.difficulty}
+        </span>
+      )}
+      <ChevronRight size={13} className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: "hsl(var(--muted-foreground))" }} />
+    </button>
   );
 }
 
