@@ -336,6 +336,72 @@ public class BFS {
     }
 }`,
       },
+      {
+        title: "BFS — Path Reconstruction",
+        language: "java",
+        content: `// Reconstruct shortest path from source to target using parent array
+public static List<Integer> reconstructPath(List<List<Integer>> adj, int source, int target, int V) {
+    int[] dist = new int[V];
+    int[] parent = new int[V];
+    Arrays.fill(dist, -1);
+    Arrays.fill(parent, -1);
+    Queue<Integer> queue = new LinkedList<>();
+    
+    dist[source] = 0;
+    queue.offer(source);
+    
+    while (!queue.isEmpty()) {
+        int v = queue.poll();
+        for (int u : adj.get(v)) {
+            if (dist[u] == -1) {
+                dist[u] = dist[v] + 1;
+                parent[u] = v;
+                queue.offer(u);
+            }
+        }
+    }
+    
+    if (dist[target] == -1) return Collections.emptyList(); // No path
+    
+    // Backtrack from target to source
+    List<Integer> path = new ArrayList<>();
+    for (int v = target; v != -1; v = parent[v])
+        path.add(v);
+    Collections.reverse(path);
+    return path;
+}`
+      },
+      {
+        title: "0-1 BFS — Shortest Path with 0/1 Weights",
+        language: "java",
+        content: `// For graphs where edge weights are 0 or 1
+// Use Deque: push 0-weight edges to FRONT, 1-weight edges to BACK
+// Gives shortest path in O(V + E) — no need for Dijkstra!
+
+public static int[] bfs01(List<List<int[]>> adj, int source, int V) {
+    // adj.get(u) = list of {neighbor, weight} where weight is 0 or 1
+    int[] dist = new int[V];
+    Arrays.fill(dist, Integer.MAX_VALUE);
+    dist[source] = 0;
+    
+    Deque<Integer> deque = new ArrayDeque<>();
+    deque.offerFirst(source);
+    
+    while (!deque.isEmpty()) {
+        int v = deque.pollFirst();
+        for (int[] edge : adj.get(v)) {
+            int u = edge[0], w = edge[1];
+            if (dist[v] + w < dist[u]) {
+                dist[u] = dist[v] + w;
+                if (w == 0) deque.offerFirst(u);  // 0-weight → front
+                else deque.offerLast(u);           // 1-weight → back
+            }
+        }
+    }
+    return dist;
+}
+// Common use: grid where some moves are free and others cost 1`
+      },
     ],
   },
   {
