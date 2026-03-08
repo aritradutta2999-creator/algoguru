@@ -680,15 +680,15 @@ public class LRUDemo {
     diagram: {
       type: "flow",
       title: "HashMap Internal Structure",
-      steps: [
-        "key.hashCode() → compute hash",
-        "hash ^ (hash >>> 16) → perturbation",
-        "hash & (capacity - 1) → bucket index",
-        "Bucket empty? → insert new Node",
-        "Bucket has entries → check equals()",
-        "Key matches → update value",
-        "Key doesn't match → chain (list/tree)",
-        "Chain length ≥ 8 → treeify to Red-Black Tree"
+      data: [
+        { label: "key.hashCode() → compute hash", color: "primary" },
+        { label: "hash ^ (hash >>> 16) → perturbation", color: "primary" },
+        { label: "hash & (capacity - 1) → bucket index", color: "info" },
+        { label: "Bucket empty? → insert new Node", color: "success" },
+        { label: "Bucket has entries → check equals()", color: "warning" },
+        { label: "Key matches → update value", color: "success" },
+        { label: "Key doesn't match → chain (list/tree)", color: "accent" },
+        { label: "Chain length ≥ 8 → treeify to Red-Black Tree", color: "heap" }
       ]
     },
     code: [
@@ -1480,20 +1480,19 @@ public class ImmutableCollections {
       "**Rule:** Start with ArrayList/HashMap/HashSet. Switch only when you need specific properties (ordering, navigation, thread-safety)"
     ],
     diagram: {
-      type: "table",
+      type: "table-visual",
       title: "Collection Performance Cheat Sheet",
-      headers: ["Collection", "Add", "Remove", "Get/Contains", "Ordered?", "Best For"],
-      rows: [
-        ["ArrayList", "O(1)*", "O(n)", "O(1) / O(n)", "Insertion", "General purpose list"],
-        ["LinkedList", "O(1)", "O(1)**", "O(n)", "Insertion", "Deque operations"],
-        ["ArrayDeque", "O(1)", "O(1)", "O(n)", "LIFO/FIFO", "Stack & Queue"],
-        ["HashSet", "O(1)", "O(1)", "O(1)", "No", "Unique elements, lookups"],
-        ["LinkedHashSet", "O(1)", "O(1)", "O(1)", "Insertion", "Unique + order"],
-        ["TreeSet", "O(log n)", "O(log n)", "O(log n)", "Sorted", "Sorted unique, ranges"],
-        ["HashMap", "O(1)", "O(1)", "O(1)", "No", "Key-value lookups"],
-        ["LinkedHashMap", "O(1)", "O(1)", "O(1)", "Insertion", "LRU cache, ordered map"],
-        ["TreeMap", "O(log n)", "O(log n)", "O(log n)", "Sorted", "Sorted keys, ranges"],
-        ["PriorityQueue", "O(log n)", "O(log n)", "O(n)", "Priority", "Top-K, scheduling"]
+      data: [
+        { label: "ArrayList — O(1) add, O(n) remove, O(1) get — General purpose", color: "info" },
+        { label: "LinkedList — O(1) add, O(1) remove*, O(n) get — Deque ops", color: "info" },
+        { label: "ArrayDeque — O(1) add/remove, O(n) search — Stack & Queue", color: "accent" },
+        { label: "HashSet — O(1) add/remove/contains — Unique lookups", color: "success" },
+        { label: "LinkedHashSet — O(1) ops + insertion order", color: "success" },
+        { label: "TreeSet — O(log n) all ops — Sorted unique, ranges", color: "success" },
+        { label: "HashMap — O(1) put/get/remove — Key-value lookups", color: "warning" },
+        { label: "LinkedHashMap — O(1) ops + insertion order — LRU cache", color: "warning" },
+        { label: "TreeMap — O(log n) all ops — Sorted keys, ranges", color: "warning" },
+        { label: "PriorityQueue — O(log n) add/poll, O(1) peek — Top-K", color: "heap" }
       ]
     },
     code: [
