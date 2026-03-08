@@ -26,6 +26,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useMode } from "@/contexts/ModeContext";
 
 const dsContentMap: Record<string, ContentSection[]> = {
+  "stack-queue": stackQueueContent,
   recursion: recursionContent,
   backtracking: backtrackingContent,
   dp: dpContent,
@@ -41,6 +42,7 @@ const dsContentMap: Record<string, ContentSection[]> = {
 };
 
 const topicColorVars: Record<string, string> = {
+  "stack-queue": "hsl(var(--info))",
   recursion: "hsl(var(--primary))",
   backtracking: "hsl(var(--accent))",
   dp: "hsl(var(--success))",
