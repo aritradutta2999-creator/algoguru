@@ -97,4 +97,16 @@ export const practiceTopics: Topic[] = [
       { id: "stackq-hard", title: "Hard Problems" },
     ],
   },
+  {
+    id: "practice-math",
+    title: "Mathematics",
+    icon: "∑",
+    color: "success",
+    description: "Number theory, combinatorics, modular arithmetic — CSES Mathematics section",
+    subtopics: [
+      { id: "math-easy", title: "Easy Problems" },
+      { id: "math-medium", title: "Medium Problems" },
+      { id: "math-hard", title: "Hard Problems" },
+    ],
+  },
 ];
