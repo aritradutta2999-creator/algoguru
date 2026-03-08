@@ -29,6 +29,8 @@ type SidebarContext = {
   setOpenMobile: (open: boolean) => void;
   isMobile: boolean;
   toggleSidebar: () => void;
+  sidebarWidth: number;
+  setSidebarWidth: (width: number) => void;
 };
 
 const SidebarContext = React.createContext<SidebarContext | null>(null);
