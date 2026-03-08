@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { LogOut, User, Settings } from "lucide-react";
+import { getAvatarUrl } from "@/lib/avatarUrl";
+import { LogOut, Settings } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,6 +22,7 @@ export function UserMenu() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<{ display_name: string | null; avatar_url: string | null }>({ display_name: null, avatar_url: null });
+  const [resolvedAvatar, setResolvedAvatar] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -29,15 +31,19 @@ export function UserMenu() {
       .select("display_name, avatar_url")
       .eq("user_id", user.id)
       .single()
-      .then(({ data }) => {
-        if (data) setProfile(data);
+      .then(async ({ data }) => {
+        if (data) {
+          setProfile(data);
+          const url = await getAvatarUrl(data.avatar_url);
+          setResolvedAvatar(url);
+        }
       });
   }, [user]);
 
   if (!user) return null;
 
   const name = profile.display_name || user.user_metadata?.full_name || user.email?.split("@")[0] || "User";
-  const avatar = isValidHttpsUrl(profile.avatar_url) ? profile.avatar_url : null;
+  const avatar = resolvedAvatar;
   const initial = (name[0] || "U").toUpperCase();
 
   return (

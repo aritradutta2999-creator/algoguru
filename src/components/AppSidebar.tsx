@@ -1,5 +1,6 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { getAvatarUrl } from "@/lib/avatarUrl";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   Sidebar,
