@@ -190,8 +190,8 @@ export default function Playground() {
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setShowCompilerMenu(false)} />
                 <div
-                  className="absolute right-0 top-full mt-1 w-44 rounded-xl overflow-hidden z-50"
-                  style={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", boxShadow: "0 8px 30px hsl(var(--foreground)/0.1)" }}
+                  className="absolute left-0 top-full mt-1 w-48 rounded-xl overflow-hidden z-50 shadow-lg"
+                  style={{ backgroundColor: "hsl(var(--popover))", color: "hsl(var(--popover-foreground))", border: "1px solid hsl(var(--border))" }}
                 >
                   {JAVA_COMPILERS.map((c) => (
                     <button
@@ -226,8 +226,8 @@ export default function Playground() {
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setShowThemeMenu(false)} />
                 <div
-                  className="absolute right-0 top-full mt-1 w-44 rounded-xl overflow-hidden z-50"
-                  style={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", boxShadow: "0 8px 30px hsl(var(--foreground)/0.1)" }}
+                  className="absolute left-0 top-full mt-1 w-48 rounded-xl overflow-hidden z-50 shadow-lg"
+                  style={{ backgroundColor: "hsl(var(--popover))", color: "hsl(var(--popover-foreground))", border: "1px solid hsl(var(--border))" }}
                 >
                   {THEMES.map((t) => (
                     <button
