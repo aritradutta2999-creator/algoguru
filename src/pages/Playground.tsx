@@ -303,76 +303,16 @@ export default function Playground() {
         </div>
 
         <div className="flex items-center gap-1.5 flex-wrap">
-          {/* Java version selector */}
-          <div className="relative">
-            <button
-              onClick={() => setShowCompilerMenu(!showCompilerMenu)}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-all"
-              style={{ background: "hsl(var(--success)/0.1)", color: "hsl(var(--success))", border: "1px solid hsl(var(--success)/0.25)" }}
-            >
-              ☕ {selectedCompiler.label}
-              <ChevronDown size={11} />
-            </button>
-            {showCompilerMenu && (
-              <>
-                <div className="fixed inset-0 z-40" onClick={() => setShowCompilerMenu(false)} />
-                <div
-                  className="absolute left-0 top-full mt-1 w-48 rounded-xl overflow-hidden z-50 shadow-lg"
-                  style={{ backgroundColor: "hsl(var(--popover))", color: "hsl(var(--popover-foreground))", border: "1px solid hsl(var(--border))" }}
-                >
-                  {availableCompilers.map((c) => (
-                    <button
-                      key={c.compiler}
-                      onClick={() => { setSelectedCompiler(c); setShowCompilerMenu(false); }}
-                      className="w-full flex items-center gap-2 px-3 py-2.5 text-left text-[11px] transition-colors hover:bg-muted"
-                      style={{
-                        color: selectedCompiler.compiler === c.compiler ? "hsl(var(--primary))" : "hsl(var(--foreground))",
-                        fontWeight: selectedCompiler.compiler === c.compiler ? 600 : 400,
-                      }}
-                    >
-                      ☕ {c.label}
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
-
-          {/* Theme selector */}
-          <div className="relative">
-            <button
-              onClick={() => setShowThemeMenu(!showThemeMenu)}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-all"
-              style={{ background: "hsl(var(--muted))", color: "hsl(var(--foreground))", border: "1px solid hsl(var(--border))" }}
-            >
-              {currentTheme.icon}
-              {currentTheme.label}
-              <ChevronDown size={11} />
-            </button>
-            {showThemeMenu && (
-              <>
-                <div className="fixed inset-0 z-40" onClick={() => setShowThemeMenu(false)} />
-                <div
-                  className="absolute left-0 top-full mt-1 w-48 rounded-xl overflow-hidden z-50 shadow-lg"
-                  style={{ backgroundColor: "hsl(var(--popover))", color: "hsl(var(--popover-foreground))", border: "1px solid hsl(var(--border))" }}
-                >
-                  {THEMES.map((t) => (
-                    <button
-                      key={t.id}
-                      onClick={() => { setCurrentTheme(t); setShowThemeMenu(false); }}
-                      className="w-full flex items-center gap-2 px-3 py-2.5 text-left text-[11px] transition-colors hover:bg-muted"
-                      style={{
-                        color: currentTheme.id === t.id ? "hsl(var(--primary))" : "hsl(var(--foreground))",
-                        fontWeight: currentTheme.id === t.id ? 600 : 400,
-                      }}
-                    >
-                      {t.icon} {t.label}
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
+          {/* Reset */}
+          <button
+            onClick={resetCode}
+            title="Reset to default"
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-all hover:bg-muted"
+            style={{ color: "hsl(var(--muted-foreground))", border: "1px solid hsl(var(--border))" }}
+          >
+            <RotateCcw size={13} />
+            Reset
+          </button>
 
           {/* Format */}
           <button
@@ -385,28 +325,7 @@ export default function Playground() {
             Format
           </button>
 
-          {/* Copy */}
-          <button
-            onClick={copyCode}
-            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-all hover:bg-muted"
-            style={{ color: "hsl(var(--muted-foreground))", border: "1px solid hsl(var(--border))" }}
-          >
-            {copied ? <Check size={13} /> : <Copy size={13} />}
-            {copied ? "Copied" : "Copy"}
-          </button>
-
-          {/* Reset */}
-          <button
-            onClick={resetCode}
-            title="Reset to default"
-            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-all hover:bg-muted"
-            style={{ color: "hsl(var(--muted-foreground))", border: "1px solid hsl(var(--border))" }}
-          >
-            <RotateCcw size={13} />
-            Reset
-          </button>
-
-
+          {/* Run */}
           <button
             onClick={runCode}
             disabled={isRunning || !code.trim()}
@@ -420,6 +339,97 @@ export default function Playground() {
             {isRunning ? <Loader2 size={13} className="animate-spin" /> : <Play size={13} />}
             {isRunning ? "Running..." : "Run ⌘↵"}
           </button>
+
+          {/* Settings */}
+          <div className="relative">
+            <button
+              onClick={() => setShowSettingsMenu(!showSettingsMenu)}
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-all hover:bg-muted"
+              style={{ color: "hsl(var(--muted-foreground))", border: "1px solid hsl(var(--border))" }}
+            >
+              <Settings size={13} />
+              Settings
+              <ChevronDown size={11} />
+            </button>
+            {showSettingsMenu && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setShowSettingsMenu(false)} />
+                <div
+                  className="absolute right-0 top-full mt-1 w-64 rounded-xl overflow-hidden z-50 shadow-xl"
+                  style={{ backgroundColor: "hsl(var(--popover))", color: "hsl(var(--popover-foreground))", border: "1px solid hsl(var(--border))" }}
+                >
+                  {/* Java Compiler Section */}
+                  <div className="px-3 pt-3 pb-1">
+                    <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "hsl(var(--muted-foreground))" }}>
+                      Java Compiler
+                    </span>
+                  </div>
+                  {availableCompilers.map((c) => (
+                    <button
+                      key={c.compiler}
+                      onClick={() => { setSelectedCompiler(c); }}
+                      className="w-full flex items-center gap-2 px-3 py-2 text-left text-[11px] transition-colors hover:bg-muted"
+                      style={{
+                        color: selectedCompiler.compiler === c.compiler ? "hsl(var(--primary))" : "hsl(var(--foreground))",
+                        fontWeight: selectedCompiler.compiler === c.compiler ? 600 : 400,
+                      }}
+                    >
+                      ☕ {c.label}
+                      {selectedCompiler.compiler === c.compiler && <Check size={11} className="ml-auto" />}
+                    </button>
+                  ))}
+
+                  <div className="mx-3 my-1 border-t" style={{ borderColor: "hsl(var(--border))" }} />
+
+                  {/* Editor Theme Section */}
+                  <div className="px-3 pt-2 pb-1">
+                    <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "hsl(var(--muted-foreground))" }}>
+                      Editor Theme
+                    </span>
+                  </div>
+                  {THEMES.map((t) => (
+                    <button
+                      key={t.id}
+                      onClick={() => { setCurrentTheme(t); }}
+                      className="w-full flex items-center gap-2 px-3 py-2 text-left text-[11px] transition-colors hover:bg-muted"
+                      style={{
+                        color: currentTheme.id === t.id ? "hsl(var(--primary))" : "hsl(var(--foreground))",
+                        fontWeight: currentTheme.id === t.id ? 600 : 400,
+                      }}
+                    >
+                      {t.icon} {t.label}
+                      {currentTheme.id === t.id && <Check size={11} className="ml-auto" />}
+                    </button>
+                  ))}
+
+                  <div className="mx-3 my-1 border-t" style={{ borderColor: "hsl(var(--border))" }} />
+
+                  {/* Other Actions */}
+                  <div className="px-3 pt-2 pb-1">
+                    <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "hsl(var(--muted-foreground))" }}>
+                      Actions
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => { copyCode(); }}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-left text-[11px] transition-colors hover:bg-muted"
+                    style={{ color: "hsl(var(--foreground))" }}
+                  >
+                    {copied ? <Check size={13} /> : <Copy size={13} />}
+                    {copied ? "Copied!" : "Copy Code"}
+                  </button>
+                  <button
+                    onClick={() => { resetCode(); setShowSettingsMenu(false); }}
+                    className="w-full flex items-center gap-2 px-3 py-2.5 text-left text-[11px] transition-colors hover:bg-muted"
+                    style={{ color: "hsl(var(--foreground))" }}
+                  >
+                    <RotateCcw size={13} />
+                    Reset to Default
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
