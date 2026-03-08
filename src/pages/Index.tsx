@@ -123,51 +123,49 @@ export default function Index() {
             </p>
           </div>
 
-          {/* Mode Selection Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-xl mx-auto">
-            {modes.map((mode) => {
-              const isActive = currentMode.id === mode.id;
-              const isDS = mode.id === "ds";
-              return (
-                <motion.button
-                  key={mode.id}
-                  whileHover={{ scale: 1.02, y: -3 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => {
-                    setMode(mode.id);
-                    const targetTopics = isDS ? topics : javaTopics;
-                    navigate(`/${targetTopics[0].id}`);
-                  }}
-                  className="relative flex items-center gap-4 px-5 py-5 rounded-2xl text-left transition-all duration-200 cursor-pointer overflow-hidden group"
-                  style={{
-                    background: isActive ? "hsl(var(--primary)/0.08)" : "var(--gradient-card)",
-                    border: isActive ? "1.5px solid hsl(var(--primary)/0.35)" : "1px solid hsl(var(--border))",
-                    boxShadow: isActive ? "0 8px 32px hsl(var(--primary)/0.15)" : "var(--shadow-card)",
-                  }}
-                >
-                  <div
-                    className="w-12 h-12 rounded-xl flex items-center justify-center text-xl flex-shrink-0 transition-transform duration-300 group-hover:scale-110"
+          {/* Mode Toggle */}
+          <div className="flex justify-center mb-6">
+            <div
+              className="inline-flex items-center p-1 rounded-xl"
+              style={{ background: "hsl(var(--muted)/0.5)", border: "1px solid hsl(var(--border))" }}
+            >
+              {modes.map((mode) => {
+                const isActive = currentMode.id === mode.id;
+                const isDS = mode.id === "ds";
+                return (
+                  <button
+                    key={mode.id}
+                    onClick={() => setMode(mode.id)}
+                    className="relative flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200"
                     style={{
-                      background: isDS ? "hsl(var(--primary)/0.1)" : "hsl(var(--accent)/0.1)",
-                      border: `1px solid ${isDS ? "hsl(var(--primary)/0.15)" : "hsl(var(--accent)/0.15)"}`,
+                      background: isActive ? "hsl(var(--card))" : "transparent",
+                      color: isActive ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
+                      boxShadow: isActive ? "var(--shadow-card)" : "none",
                     }}
                   >
-                    {isDS ? <Layers size={20} style={{ color: "hsl(var(--primary))" }} /> : <Coffee size={20} style={{ color: "hsl(var(--accent))" }} />}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-bold mb-0.5" style={{ color: "hsl(var(--foreground))" }}>{mode.label}</div>
-                    <p className="text-[11px] font-light leading-relaxed" style={{ color: "hsl(var(--muted-foreground))" }}>
-                      {isDS ? "Recursion, DP, Graphs, Trees & more" : "OOP, Collections, Streams, Threads & more"}
-                    </p>
-                  </div>
-                  <ArrowRight
-                    size={14}
-                    className="flex-shrink-0 opacity-40 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-200"
-                    style={{ color: isDS ? "hsl(var(--primary))" : "hsl(var(--accent))" }}
-                  />
-                </motion.button>
-              );
-            })}
+                    {isDS ? <Layers size={15} /> : <Coffee size={15} />}
+                    {mode.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Start Learning CTA */}
+          <div className="flex justify-center">
+            <motion.button
+              whileHover={{ scale: 1.04 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={() => navigate(`/${activeTopics[0].id}`)}
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold transition-all duration-200"
+              style={{
+                background: "var(--gradient-primary)",
+                color: "hsl(var(--primary-foreground))",
+                boxShadow: "0 4px 20px hsl(var(--primary)/0.3)",
+              }}
+            >
+              Start Learning <ArrowRight size={15} />
+            </motion.button>
           </div>
         </motion.div>
       </section>
