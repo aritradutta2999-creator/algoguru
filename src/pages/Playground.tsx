@@ -148,7 +148,14 @@ export default function Playground() {
       .then((list: any[]) => {
         const javaCompilers = list
           .filter((c: any) => c.language === "Java")
-          .map((c: any) => ({ label: c["display-name"] || c.name, compiler: c.name }));
+          .map((c: any) => {
+            const name = c.name as string;
+            let label = c["display-name"] || name;
+            if (name.includes("17")) label = "OpenJDK 17";
+            else if (name.includes("25")) label = "OpenJDK 25";
+            else if (name.includes("15")) label = "OpenJDK 15";
+            return { label, compiler: name };
+          });
         if (javaCompilers.length > 0) {
           setAvailableCompilers(javaCompilers);
           setSelectedCompiler(javaCompilers[0]);
