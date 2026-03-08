@@ -228,8 +228,10 @@ function instrumentCodeForDebug(source: string, breakpointLines: Set<number>): s
       }
     }
 
-    // Only inject debug prints if inside a method body and line has real code
-    const canInject = inMethodBody && 
+    // Only inject debug prints if we were ALREADY inside a method body BEFORE this line
+    // prevDepth >= 2 means we were inside method body before any braces on this line
+    // This prevents injecting prints on method signature lines or class-level lines
+    const canInject = prevDepth >= 2 && 
       !trimmed.startsWith("//") && !trimmed.startsWith("/*") && !trimmed.startsWith("*") && 
       trimmed.length > 0 && trimmed !== "{" && trimmed !== "}";
 
