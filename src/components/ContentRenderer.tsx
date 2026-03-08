@@ -269,9 +269,7 @@ export function ContentRenderer({ section, isPractice }: ContentRendererProps) {
             <FlaskConical size={13} />
             Example
           </div>
-          <div className="cr-example-content">
-            {classified.examples.map((line, i) => renderIOLine(line, i))}
-          </div>
+          {renderExampleContent(classified.examples)}
         </div>
       )}
 
