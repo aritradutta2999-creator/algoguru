@@ -182,12 +182,12 @@ function instrumentCodeForDebug(source: string, breakpointLines: Set<number>): s
       const forVarMatch = trimmed.match(/^for\s*\(\s*(?:final\s+)?(\w+(?:<[^>]*>)?(?:\[\])*)\s+(\w+)\s*[=:]/);
       if (forVarMatch) {
         const typePart = forVarMatch[1];
-        // For-loop vars are scoped to the loop body (current depth + the brace that follows)
         initializedVars.push({ 
           name: forVarMatch[2], 
           line: lineNum, 
-          isArray: ARRAY_TYPE_PATTERN.test(typePart),
-          scopeDepth: braceDepth + 1, // Will be inside the for's { }
+          isArray: ARRAY_ANY_PATTERN.test(typePart),
+          is2dArray: ARRAY_2D_PATTERN.test(typePart),
+          scopeDepth: braceDepth + 1,
         });
       }
 
@@ -203,7 +203,8 @@ function instrumentCodeForDebug(source: string, breakpointLines: Set<number>): s
             initializedVars.push({ 
               name: varName, 
               line: lineNum, 
-              isArray: ARRAY_TYPE_PATTERN.test(typePart),
+              isArray: ARRAY_ANY_PATTERN.test(typePart),
+              is2dArray: ARRAY_2D_PATTERN.test(typePart),
               scopeDepth: braceDepth,
             });
           }
@@ -213,7 +214,7 @@ function instrumentCodeForDebug(source: string, breakpointLines: Set<number>): s
       // Match: var varName = ... (Java 10+)
       const varMatch = trimmed.match(/^(?:final\s+)?var\s+(\w+)\s*=/);
       if (varMatch) {
-        initializedVars.push({ name: varMatch[1], line: lineNum, isArray: false, scopeDepth: braceDepth });
+        initializedVars.push({ name: varMatch[1], line: lineNum, isArray: false, is2dArray: false, scopeDepth: braceDepth });
       }
 
       // Match multiple declarations: int a = 1, b = 2;
@@ -224,7 +225,7 @@ function instrumentCodeForDebug(source: string, breakpointLines: Set<number>): s
         for (const part of parts) {
           const nameMatch = part.trim().match(/^(\w+)\s*=/);
           if (nameMatch && !initializedVars.some(v => v.name === nameMatch[1] && v.line === lineNum)) {
-            initializedVars.push({ name: nameMatch[1], line: lineNum, isArray: false, scopeDepth: braceDepth });
+            initializedVars.push({ name: nameMatch[1], line: lineNum, isArray: false, is2dArray: false, scopeDepth: braceDepth });
           }
         }
       }
