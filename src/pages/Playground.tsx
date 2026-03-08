@@ -130,6 +130,65 @@ export default function Playground() {
   const handleEditorMount: OnMount = (editor, monaco) => {
     editorRef.current = editor;
     monaco.editor.defineTheme("solarized-dark", SOLARIZED_DARK_THEME);
+
+    // Register Java snippets & auto-completions
+    monaco.languages.registerCompletionItemProvider("java", {
+      provideCompletionItems: (model, position) => {
+        const word = model.getWordUntilPosition(position);
+        const range = {
+          startLineNumber: position.lineNumber,
+          endLineNumber: position.lineNumber,
+          startColumn: word.startColumn,
+          endColumn: word.endColumn,
+        };
+
+        const snippets = [
+          { label: "sout", detail: "System.out.println()", insertText: "System.out.println(${1});", documentation: "Print to console" },
+          { label: "souf", detail: "System.out.printf()", insertText: "System.out.printf(${1:\"format\"}, ${2});", documentation: "Formatted print" },
+          { label: "serr", detail: "System.err.println()", insertText: "System.err.println(${1});", documentation: "Print to error stream" },
+          { label: "main", detail: "public static void main", insertText: "public static void main(String[] args) {\n\t${1}\n}", documentation: "Main method" },
+          { label: "psvm", detail: "public static void main", insertText: "public static void main(String[] args) {\n\t${1}\n}", documentation: "Main method (alias)" },
+          { label: "fori", detail: "for (int i = 0; ...)", insertText: "for (int ${1:i} = 0; ${1:i} < ${2:n}; ${1:i}++) {\n\t${3}\n}", documentation: "Indexed for loop" },
+          { label: "fore", detail: "for-each loop", insertText: "for (${1:Type} ${2:item} : ${3:collection}) {\n\t${4}\n}", documentation: "Enhanced for loop" },
+          { label: "while", detail: "while loop", insertText: "while (${1:condition}) {\n\t${2}\n}", documentation: "While loop" },
+          { label: "ifelse", detail: "if-else block", insertText: "if (${1:condition}) {\n\t${2}\n} else {\n\t${3}\n}", documentation: "If-else statement" },
+          { label: "trycatch", detail: "try-catch block", insertText: "try {\n\t${1}\n} catch (${2:Exception} ${3:e}) {\n\t${4:e.printStackTrace();}\n}", documentation: "Try-catch block" },
+          { label: "tryf", detail: "try-finally block", insertText: "try {\n\t${1}\n} finally {\n\t${2}\n}", documentation: "Try-finally block" },
+          { label: "swtch", detail: "switch statement", insertText: "switch (${1:variable}) {\n\tcase ${2:value}:\n\t\t${3}\n\t\tbreak;\n\tdefault:\n\t\t${4}\n\t\tbreak;\n}", documentation: "Switch statement" },
+          { label: "itar", detail: "Iterate array", insertText: "for (int ${1:i} = 0; ${1:i} < ${2:arr}.length; ${1:i}++) {\n\t${3}\n}", documentation: "Iterate over array" },
+          { label: "lst", detail: "ArrayList declaration", insertText: "List<${1:String}> ${2:list} = new ArrayList<>();", documentation: "New ArrayList" },
+          { label: "map", detail: "HashMap declaration", insertText: "Map<${1:String}, ${2:Integer}> ${3:map} = new HashMap<>();", documentation: "New HashMap" },
+          { label: "set", detail: "HashSet declaration", insertText: "Set<${1:String}> ${2:set} = new HashSet<>();", documentation: "New HashSet" },
+          { label: "st", detail: "Stack declaration", insertText: "Stack<${1:Integer}> ${2:stack} = new Stack<>();", documentation: "New Stack" },
+          { label: "que", detail: "Queue declaration", insertText: "Queue<${1:Integer}> ${2:queue} = new LinkedList<>();", documentation: "New Queue" },
+          { label: "pq", detail: "PriorityQueue declaration", insertText: "PriorityQueue<${1:Integer}> ${2:pq} = new PriorityQueue<>();", documentation: "New PriorityQueue" },
+          { label: "arr", detail: "Array declaration", insertText: "${1:int}[] ${2:arr} = new ${1:int}[${3:n}];", documentation: "New array" },
+          { label: "sc", detail: "Scanner declaration", insertText: "Scanner ${1:sc} = new Scanner(System.in);", documentation: "New Scanner" },
+          { label: "cls", detail: "Class template", insertText: "public class ${1:ClassName} {\n\t${2}\n}", documentation: "New class" },
+          { label: "ctor", detail: "Constructor", insertText: "public ${1:ClassName}(${2}) {\n\t${3}\n}", documentation: "Constructor" },
+          { label: "met", detail: "Method template", insertText: "public ${1:void} ${2:methodName}(${3}) {\n\t${4}\n}", documentation: "New method" },
+          { label: "tostr", detail: "toString override", insertText: "@Override\npublic String toString() {\n\treturn ${1:\"\"};\n}", documentation: "Override toString" },
+          { label: "soutv", detail: "Print variable", insertText: "System.out.println(\"${1:var} = \" + ${1:var});", documentation: "Print variable with label" },
+        ];
+
+        return {
+          suggestions: snippets.map((s) => ({
+            label: s.label,
+            kind: monaco.languages.CompletionItemKind.Snippet,
+            insertText: s.insertText,
+            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+            detail: s.detail,
+            documentation: s.documentation,
+            range,
+          })),
+        };
+      },
+    });
+
+    // Ctrl+Enter / Cmd+Enter to run
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
+      runCode();
+    });
   };
 
   const formatCode = useCallback(() => {
