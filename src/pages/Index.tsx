@@ -444,12 +444,9 @@ export default function Index() {
         </motion.div>
       </section>
 
-      <footer className="px-6 md:px-10 py-8 border-t text-center space-y-1.5" style={{ borderColor: "hsl(var(--border))" }}>
-        <div className="text-[11px] font-mono font-medium" style={{ color: "hsl(var(--muted-foreground))" }}>
-          AlgoGuru · {isDSMode ? "Competitive Programming" : "Core & Advanced Java"} · Java Edition
-        </div>
-        <div className="text-[11px] font-medium" style={{ color: "hsl(var(--muted-foreground))" }}>
-          by{" "}
+      <footer className="px-6 md:px-10 py-8 border-t text-center" style={{ borderColor: "hsl(var(--border))" }}>
+        <div className="flex items-center justify-center gap-1.5 text-[11px] font-medium" style={{ color: "hsl(var(--muted-foreground))" }}>
+          Made with <span style={{ color: "hsl(var(--destructive))" }}>❤</span> by{" "}
           <a
             href="https://portfolio-aritra-pearl.vercel.app/"
             target="_blank"
@@ -457,7 +454,7 @@ export default function Index() {
             className="font-semibold underline underline-offset-2 transition-colors hover:text-[hsl(var(--primary))]"
             style={{ color: "hsl(var(--foreground))" }}
           >
-            Aritra Dutta
+            Aritra
           </a>
         </div>
       </footer>
