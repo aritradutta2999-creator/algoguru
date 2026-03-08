@@ -243,7 +243,6 @@ export default function Index() {
               <h2 className="text-xl md:text-2xl font-bold tracking-tight" style={{ color: "hsl(var(--foreground))" }}>
                 {isDSMode ? "Begin Your DSA Journey" : isPracticeMode ? "Start Practicing" : "Start Learning Java"}
               </h2>
-              </h2>
             </div>
             <button
               onClick={() => navigate(`/${activeTopics[0].id}`)}
