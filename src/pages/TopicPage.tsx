@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useSettings } from "@/contexts/SettingsContext";
 import { ContentRenderer } from "@/components/ContentRenderer";
@@ -146,9 +146,9 @@ export default function TopicPage() {
     );
   }
 
-  const currentIdx = allTopics.findIndex((t) => t.id === topicId);
-  const prevTopic = currentIdx > 0 ? allTopics[currentIdx - 1] : null;
-  const nextTopic = currentIdx < allTopics.length - 1 ? allTopics[currentIdx + 1] : null;
+  const currentIdx = allTopicsForPage.findIndex((t) => t.id === topicId);
+  const prevTopic = currentIdx > 0 ? allTopicsForPage[currentIdx - 1] : null;
+  const nextTopic = currentIdx < allTopicsForPage.length - 1 ? allTopicsForPage[currentIdx + 1] : null;
   const color = topicColorVars[topic.id] || "hsl(var(--primary))";
 
   return (
@@ -207,7 +207,7 @@ export default function TopicPage() {
 
         <div className="px-6 md:px-12 lg:px-16 py-14">
           {content.map((section) => (
-            <ContentRenderer key={section.id} section={section} isPractice={isPracticeMode} />
+            <ContentRenderer key={section.id} section={section} isPractice={detectedMode === "practice"} />
           ))}
 
           <div className="flex items-center justify-between mt-10 pt-8" style={{ borderTop: "1px solid hsl(var(--border))" }}>
