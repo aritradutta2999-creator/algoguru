@@ -1,5 +1,6 @@
 import { ContentSection } from "@/data/recursionContent";
 import { CodeBlock } from "@/components/CodeBlock";
+import { DiagramRenderer } from "@/components/DiagramRenderer";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 
