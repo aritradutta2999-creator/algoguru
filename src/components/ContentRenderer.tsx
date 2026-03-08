@@ -3,6 +3,8 @@ import { CodeBlock } from "@/components/CodeBlock";
 import { DiagramRenderer } from "@/components/DiagramRenderer";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
+import { Play } from "lucide-react";
 
 /**
  * Parses simple markdown: **bold**, `code`, and regular text
@@ -72,9 +74,27 @@ const difficultyClass: Record<string, string> = {
 
 interface ContentRendererProps {
   section: ContentSection;
+  isPractice?: boolean;
 }
 
-export function ContentRenderer({ section }: ContentRendererProps) {
+export function ContentRenderer({ section, isPractice }: ContentRendererProps) {
+  const navigate = useNavigate();
+
+  const openInPlayground = () => {
+    const problemData = {
+      id: section.id,
+      title: section.title,
+      difficulty: section.difficulty,
+      timeComplexity: section.timeComplexity,
+      spaceComplexity: section.spaceComplexity,
+      theory: section.theory,
+      keyPoints: section.keyPoints,
+      code: section.code,
+    };
+    localStorage.setItem("playground-practice-problem", JSON.stringify(problemData));
+    navigate("/playground?practice=" + section.id);
+  };
+
   return (
     <motion.div
       id={section.id}
@@ -234,6 +254,24 @@ export function ContentRenderer({ section }: ContentRendererProps) {
       {section.code?.map((block, i) => (
         <CodeBlock key={i} title={block.title} language={block.language} code={block.content} />
       ))}
+
+      {/* Practice in Playground button */}
+      {isPractice && section.code && section.code.length > 0 && (
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={openInPlayground}
+          className="flex items-center gap-2 mt-6 px-5 py-3 rounded-xl text-sm font-bold transition-all duration-200"
+          style={{
+            background: "hsl(var(--success)/0.1)",
+            color: "hsl(var(--success))",
+            border: "1px solid hsl(var(--success)/0.2)",
+          }}
+        >
+          <Play size={15} />
+          Practice in Playground
+        </motion.button>
+      )}
 
       {/* Section divider */}
       <div className="section-divider mt-14" />
