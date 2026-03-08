@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { getAvatarUrl } from "@/lib/avatarUrl";
 import { toast } from "@/hooks/use-toast";
 import { Camera, Save, Loader2 } from "lucide-react";
 
@@ -20,10 +21,11 @@ export default function Profile() {
       .select("display_name, avatar_url")
       .eq("user_id", user.id)
       .single()
-      .then(({ data }) => {
+      .then(async ({ data }) => {
         if (data) {
           setDisplayName(data.display_name || "");
-          setAvatarUrl(data.avatar_url);
+          const url = await getAvatarUrl(data.avatar_url);
+          setAvatarUrl(url);
         }
         setLoading(false);
       });
@@ -52,12 +54,15 @@ export default function Profile() {
       return;
     }
 
-    const { data: publicData } = supabase.storage.from("avatars").getPublicUrl(path);
-    const newUrl = `${publicData.publicUrl}?t=${Date.now()}`;
+    const { data: signedData } = await supabase.storage
+      .from("avatars")
+      .createSignedUrl(path, 3600);
+
+    const newUrl = signedData?.signedUrl || null;
 
     await supabase
       .from("profiles")
-      .update({ avatar_url: newUrl })
+      .update({ avatar_url: path })
       .eq("user_id", user.id);
 
     setAvatarUrl(newUrl);

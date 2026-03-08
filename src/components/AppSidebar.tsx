@@ -1,5 +1,6 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { getAvatarUrl } from "@/lib/avatarUrl";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   Sidebar,
@@ -68,20 +69,21 @@ export function AppSidebar() {
   const currentHash = location.hash.replace("#", "");
 
   const [profile, setProfile] = useState<{ display_name: string | null; avatar_url: string | null }>({ display_name: null, avatar_url: null });
+  const [resolvedAvatar, setResolvedAvatar] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
-    supabase.from("profiles").select("display_name, avatar_url").eq("user_id", user.id).single().then(({ data }) => {
-      if (data) setProfile(data);
+    supabase.from("profiles").select("display_name, avatar_url").eq("user_id", user.id).single().then(async ({ data }) => {
+      if (data) {
+        setProfile(data);
+        const url = await getAvatarUrl(data.avatar_url);
+        setResolvedAvatar(url);
+      }
     });
   }, [user]);
 
   const userName = profile.display_name || user?.email?.split("@")[0] || "User";
-  const isValidUrl = (url: unknown): url is string => {
-    if (typeof url !== "string") return false;
-    try { return new URL(url).protocol === "https:"; } catch { return false; }
-  };
-  const avatarUrl = isValidUrl(profile.avatar_url) ? profile.avatar_url : null;
+  const avatarUrl = resolvedAvatar;
 
   const activeTopics = currentMode.id === "ds" ? topics : javaTopics;
 
