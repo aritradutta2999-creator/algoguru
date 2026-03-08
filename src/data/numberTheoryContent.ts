@@ -193,6 +193,182 @@ static long extGcd(long a, long b, long[] x, long[] y) {
     ]
   },
   {
+    id: "nt-binexp",
+    title: "Binary Exponentiation",
+    difficulty: "Medium",
+    timeComplexity: "O(log n)",
+    spaceComplexity: "O(1)",
+    theory: [
+      "**Binary Exponentiation** (also called exponentiation by squaring) computes `a^n` using only **O(log n)** multiplications instead of O(n) with the naive approach.",
+      "The key idea: split the exponent using its **binary representation**. For example: `3^(13) = 3^(1101₂) = 3^8 · 3^4 · 3^1`.",
+      "Since n has ⌊log₂n⌋ + 1 binary digits, we only need O(log n) multiplications if we know `a^1, a^2, a^4, a^8, ...` — each is just the **square of the previous**.",
+      "**Recursive formulation**: a^n = 1 if n=0; (a^(n/2))^2 if n is even; (a^((n-1)/2))^2 · a if n is odd.",
+      "Works with any **associative** operation: modular multiplication, matrix multiplication, permutation composition, and more.",
+      "Example: a^(13) = a^(8+4+1) = a^8 · a^4 · a^1. We compute a^1 → a^2 → a^4 → a^8 by repeated squaring, then multiply only those where the corresponding bit is set."
+    ],
+    keyPoints: [
+      "Reduces O(n) multiplications to O(log n) — crucial for large exponents",
+      "The iterative version is faster in practice (no recursion overhead)",
+      "For modular exponentiation, take mod at every multiplication step to prevent overflow",
+      "Applies to any associative operation: matrix power, permutation power, polynomial power",
+      "Used in: modular inverse (Fermat's theorem), Fibonacci via matrix exponentiation, RSA encryption",
+      "In Java, use `long` type and take `% mod` after each multiply to avoid overflow"
+    ],
+    code: [
+      {
+        title: "Binary Exponentiation — Recursive",
+        language: "java",
+        content: `// Computes a^b using O(log b) multiplications
+static long binpow(long a, long b) {
+    if (b == 0) return 1;
+    long half = binpow(a, b / 2);
+    if (b % 2 == 1)
+        return half * half * a;
+    else
+        return half * half;
+}`
+      },
+      {
+        title: "Binary Exponentiation — Iterative (Preferred)",
+        language: "java",
+        content: `// Iterative version — no recursion overhead
+static long binpow(long a, long b) {
+    long res = 1;
+    while (b > 0) {
+        if ((b & 1) == 1)  // If current bit is set
+            res = res * a;
+        a = a * a;          // Square the base
+        b >>= 1;            // Move to next bit
+    }
+    return res;
+}
+// Example: binpow(3, 13)
+// b=13(1101): res*=3, a=9  | b=6(110): a=81  | b=3(11): res*=81, a=6561  | b=1(1): res*=6561
+// Result: 3 * 81 * 6561 = 1594323 ✓`
+      },
+      {
+        title: "Modular Exponentiation — a^b mod m",
+        language: "java",
+        content: `// Most common variant in CP — compute a^b mod m
+static long binpow(long a, long b, long m) {
+    a %= m;
+    long res = 1;
+    while (b > 0) {
+        if ((b & 1) == 1)
+            res = res * a % m;
+        a = a * a % m;
+        b >>= 1;
+    }
+    return res;
+}
+// Usage: binpow(2, 1000000000, 1_000_000_007)
+// Computes 2^(10^9) mod 10^9+7 instantly`
+      },
+      {
+        title: "Application — Modular Inverse using Fermat's Theorem",
+        language: "java",
+        content: `// When m is prime: a^(-1) ≡ a^(m-2) (mod m)
+static final long MOD = 1_000_000_007;
+
+static long modInverse(long a) {
+    return binpow(a, MOD - 2, MOD);
+}
+
+// Modular division: (a / b) mod m = a * b^(-1) mod m
+static long modDivide(long a, long b) {
+    return a % MOD * modInverse(b) % MOD;
+}`
+      },
+      {
+        title: "Application — Fibonacci in O(log n) via Matrix Exponentiation",
+        language: "java",
+        content: `// Matrix form: |F(n+1)| = |1 1|^n * |F(1)| = |1 1|^n * |1|
+//              |F(n)  |   |1 0|    |F(0)|   |1 0|    |0|
+static long fibonacci(long n, long mod) {
+    if (n <= 1) return n;
+    long[][] M = {{1, 1}, {1, 0}};
+    long[][] result = matPow(M, n - 1, mod);
+    return result[0][0];
+}
+
+static long[][] matMul(long[][] A, long[][] B, long mod) {
+    int n = A.length;
+    long[][] C = new long[n][n];
+    for (int i = 0; i < n; i++)
+        for (int k = 0; k < n; k++)
+            if (A[i][k] != 0)
+                for (int j = 0; j < n; j++)
+                    C[i][j] = (C[i][j] + A[i][k] * B[k][j]) % mod;
+    return C;
+}
+
+static long[][] matPow(long[][] M, long p, long mod) {
+    int n = M.length;
+    long[][] res = new long[n][n];
+    for (int i = 0; i < n; i++) res[i][i] = 1; // Identity
+    while (p > 0) {
+        if ((p & 1) == 1) res = matMul(res, M, mod);
+        M = matMul(M, M, mod);
+        p >>= 1;
+    }
+    return res;
+}
+// fibonacci(10^18, 10^9+7) computes instantly!`
+      },
+      {
+        title: "Application — Applying a Permutation K Times",
+        language: "java",
+        content: `// Given a permutation P, apply it K times to a sequence
+// Uses binary exponentiation on permutation composition
+static int[] applyPermutation(int[] seq, int[] perm) {
+    int[] result = new int[seq.length];
+    for (int i = 0; i < seq.length; i++)
+        result[i] = seq[perm[i]];
+    return result;
+}
+
+static int[] permuteKTimes(int[] seq, int[] perm, long k) {
+    while (k > 0) {
+        if ((k & 1) == 1)
+            seq = applyPermutation(seq, perm);
+        // Compose permutation with itself
+        perm = applyPermutation(perm, perm);
+        k >>= 1;
+    }
+    return seq;
+}
+// Time: O(n · log k)`
+      },
+      {
+        title: "Application — Number of Paths of Length K in a Graph",
+        language: "java",
+        content: `// Given adjacency matrix adj of a directed graph,
+// adj^k[i][j] = number of paths of length k from i to j
+static long[][] countPaths(int[][] adj, long k, long mod) {
+    int n = adj.length;
+    long[][] M = new long[n][n];
+    for (int i = 0; i < n; i++)
+        for (int j = 0; j < n; j++)
+            M[i][j] = adj[i][j];
+    return matPow(M, k, mod);
+}
+// Time: O(n^3 · log k)`
+      }
+    ],
+    table: {
+      headers: ["Application", "Operation", "Complexity"],
+      rows: [
+        ["a^n mod m", "Modular multiply", "O(log n)"],
+        ["Modular inverse (prime m)", "a^(m-2) mod m", "O(log m)"],
+        ["Fibonacci F(n)", "2×2 matrix power", "O(log n)"],
+        ["Permutation^k", "Permutation composition", "O(n·log k)"],
+        ["Graph paths of length k", "Adjacency matrix power", "O(n³·log k)"],
+        ["Linear recurrence", "k×k matrix power", "O(k³·log n)"],
+      ]
+    },
+    note: "For very large values where a*a may overflow `long`, use BigInteger or a `mulMod` helper that splits multiplication into additions."
+  },
+  {
     id: "nt-modular",
     title: "Modular Arithmetic",
     difficulty: "Medium",
