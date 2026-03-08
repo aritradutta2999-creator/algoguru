@@ -617,11 +617,26 @@ public class TreeDP {
   {
     id: "dp-1d",
     title: "1D DP Problems",
+    difficulty: "Medium",
+    timeComplexity: "O(n) for most problems",
+    spaceComplexity: "O(n) → O(1) with space optimization",
     theory: [
-      "1D DP problems have a single dimensional state: dp[i] represents some optimal value for the first i elements.",
-      "Classic examples: Climbing Stairs, House Robber, Jump Game, Maximum Subarray (Kadane's), Coin Change, Decode Ways.",
-      "The recurrence often looks back at dp[i-1], dp[i-2], or dp[i-j] for some j. Identify the transitions from state to state.",
+      "1D DP problems have a single dimensional state: dp[i] represents some optimal value for the first i elements (or ending at index i, or up to value i).",
+      "Classic examples: Climbing Stairs, House Robber, Jump Game, Maximum Subarray (Kadane's), Coin Change, Decode Ways. These are the bread-and-butter of DP — master these first before moving to 2D and beyond.",
+      "The recurrence often looks back at dp[i-1], dp[i-2], or dp[i-j] for some j. Identify the transitions from state to state. Ask: 'To compute dp[i], which previous dp values do I need?'",
+      "Space optimization: If dp[i] only depends on dp[i-1] and dp[i-2], you don't need the full array — just keep two variables (prev1, prev2). This reduces O(n) space to O(1). Always look for this optimization!",
+      "How to approach 1D DP: (1) Define dp[i] clearly in words. (2) Think about the LAST decision. For House Robber: 'Do I rob house i or skip it?' This gives the recurrence. (3) Handle base cases. (4) Code it up.",
+      "Common mistake: Confusing 'dp[i] = best answer for first i elements' vs 'dp[i] = best answer ending at index i'. These are different! Kadane's uses the latter (maximum subarray ENDING at i), while Climbing Stairs uses the former.",
     ],
+    keyPoints: [
+      "Define dp[i] precisely in words before coding",
+      "Think about the LAST decision to derive the recurrence",
+      "Space optimization: if dp[i] uses only dp[i-1], dp[i-2], use variables instead of array",
+      "House Robber pattern: dp[i] = max(dp[i-1], dp[i-2] + val[i]) — skip or take",
+      "Kadane's: dp[i] = max(nums[i], dp[i-1] + nums[i]) — restart or extend",
+      "Coin Change: dp[i] = min(dp[i-coin] + 1) for each coin — try all last coins",
+    ],
+    tip: "When you're stuck on a DP problem, start with the brute-force recursive solution first. Once you have that, memoize it (top-down DP). Then optionally convert to bottom-up. Don't try to go directly to bottom-up tabulation — the recursive solution makes the recurrence obvious.",
     code: [
       {
         title: "Essential 1D DP Problems",
