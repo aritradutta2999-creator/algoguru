@@ -1,4 +1,10 @@
 import { ContentSection } from "./recursionContent";
+import { javaCollectionsContent } from "./javaCollectionsContent";
+import { javaGenericsContent } from "./javaGenericsContent";
+import { javaStreamsContent } from "./javaStreamsContent";
+import { javaMultithreadingContent } from "./javaMultithreadingContent";
+import { javaIOContent } from "./javaIOContent";
+import { javaAdvancedContent } from "./javaAdvancedContent";
 
 // Java Fundamentals content
 export const javaBasicsContent: ContentSection[] = [
