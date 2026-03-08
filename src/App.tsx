@@ -17,6 +17,14 @@ import { javaTopics } from "@/data/javaTopics";
 
 const allTopics = [...topics, ...javaTopics];
 
+// Flatten all subtopics for search
+const allSearchItems = allTopics.flatMap((t) => [
+  { id: t.id, title: t.title, icon: t.icon, type: "topic" as const, path: `/${t.id}`, parent: null, subtopicCount: t.subtopics.length },
+  ...t.subtopics.map((s) => ({
+    id: s.id, title: s.title, icon: t.icon, type: "subtopic" as const, path: `/${t.id}#${s.id}`, parent: t.title, subtopicCount: 0,
+  })),
+]);
+
 function SearchButton() {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -24,13 +32,9 @@ function SearchButton() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const results = useMemo(() => {
-    if (!query.trim()) return allTopics;
-    const q = query.toLowerCase();
-    return allTopics.filter(
-      (t) =>
-        t.title.toLowerCase().includes(q) ||
-        t.subtopics.some((s) => s.title.toLowerCase().includes(q))
-    );
+    const q = query.toLowerCase().trim();
+    if (!q) return allSearchItems.filter((i) => i.type === "topic");
+    return allSearchItems.filter((i) => i.title.toLowerCase().includes(q));
   }, [query]);
 
   useEffect(() => {
@@ -93,17 +97,19 @@ function SearchButton() {
               {results.length === 0 ? (
                 <div className="px-4 py-6 text-center text-sm" style={{ color: "hsl(var(--muted-foreground))" }}>No topics found</div>
               ) : (
-                results.map((t) => (
+                results.slice(0, 20).map((item) => (
                   <button
-                    key={t.id}
-                    onClick={() => { navigate(`/${t.id}`); setOpen(false); }}
+                    key={item.path}
+                    onClick={() => { navigate(item.path); setOpen(false); }}
                     className="w-full flex items-center gap-3 px-4 py-3 text-left text-sm transition-colors hover:bg-[hsl(var(--muted)/0.5)]"
                     style={{ color: "hsl(var(--foreground))", borderBottom: "1px solid hsl(var(--border)/0.5)" }}
                   >
-                    <span className="text-lg">{t.icon}</span>
+                    <span className="text-lg">{item.icon}</span>
                     <div className="flex-1 min-w-0">
-                      <div className="font-semibold text-sm truncate">{t.title}</div>
-                      <div className="text-[11px] font-light" style={{ color: "hsl(var(--muted-foreground))" }}>{t.subtopics.length} sections</div>
+                      <div className="font-semibold text-sm truncate">{item.title}</div>
+                      <div className="text-[11px] font-light" style={{ color: "hsl(var(--muted-foreground))" }}>
+                        {item.type === "topic" ? `${item.subtopicCount} sections` : item.parent}
+                      </div>
                     </div>
                     <ChevronRight size={13} style={{ color: "hsl(var(--muted-foreground))" }} />
                   </button>
