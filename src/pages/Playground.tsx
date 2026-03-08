@@ -497,7 +497,7 @@ export default function Playground() {
                     value={stdin}
                     onChange={(e) => setStdin(e.target.value)}
                     placeholder="Enter input for your program..."
-                    className="flex-1 w-full px-4 py-2 font-mono text-xs resize-none outline-none"
+                    className="flex-1 w-full px-4 py-2 font-mono text-sm resize-none outline-none"
                     style={{ background: "hsl(var(--card))", color: "hsl(var(--foreground))", caretColor: "hsl(var(--primary))" }}
                   />
                 </div>
