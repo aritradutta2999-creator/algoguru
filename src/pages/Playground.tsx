@@ -150,17 +150,10 @@ export default function Playground() {
           .filter((c: any) => c.language === "Java")
           .map((c: any) => {
             const name = c.name as string;
-            const version = (c.version || "") as string;
-            const combined = `${name} ${version}`;
-            let label: string;
-            if (combined.includes("17")) label = "OpenJDK 17";
-            else if (combined.includes("25")) label = "OpenJDK 25";
-            else if (combined.includes("15")) label = "OpenJDK 15";
-            else if (combined.includes("head")) label = "OpenJDK (Latest)";
-            else {
-              const majorMatch = version.match(/^(\d+)/);
-              label = majorMatch ? `OpenJDK ${majorMatch[1]}` : `OpenJDK (${name})`;
-            }
+            // Extract major version from name like "openjdk-jdk-22+36"
+            const versionMatch = name.match(/(\d+)[\+\.\-]/);
+            const major = versionMatch ? versionMatch[1] : "";
+            const label = major ? `OpenJDK ${major}` : `OpenJDK (${name})`;
             return { label, compiler: name };
           });
         if (javaCompilers.length > 0) {
