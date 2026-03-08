@@ -3,6 +3,66 @@ import { CodeBlock } from "@/components/CodeBlock";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 
+/**
+ * Parses simple markdown: **bold**, `code`, and regular text
+ * into styled React elements.
+ */
+function renderMarkdown(text: string) {
+  // Split by **bold** and `code` patterns
+  const parts: React.ReactNode[] = [];
+  // Regex: match **bold** or `code`
+  const regex = /(\*\*(.+?)\*\*)|(`(.+?)`)/g;
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+  let key = 0;
+
+  while ((match = regex.exec(text)) !== null) {
+    // Add text before the match
+    if (match.index > lastIndex) {
+      parts.push(text.slice(lastIndex, match.index));
+    }
+
+    if (match[2]) {
+      // **bold** match
+      parts.push(
+        <span
+          key={key++}
+          className="font-bold px-1 py-0.5 rounded"
+          style={{
+            color: "hsl(var(--foreground))",
+            background: "hsl(var(--primary)/0.08)",
+          }}
+        >
+          {match[2]}
+        </span>
+      );
+    } else if (match[4]) {
+      // `code` match
+      parts.push(
+        <code
+          key={key++}
+          className="text-[13px] font-mono px-1.5 py-0.5 rounded"
+          style={{
+            background: "hsl(var(--muted))",
+            color: "hsl(var(--primary))",
+          }}
+        >
+          {match[4]}
+        </code>
+      );
+    }
+
+    lastIndex = match.index + match[0].length;
+  }
+
+  // Add remaining text
+  if (lastIndex < text.length) {
+    parts.push(text.slice(lastIndex));
+  }
+
+  return parts.length > 0 ? parts : text;
+}
+
 const difficultyClass: Record<string, string> = {
   Easy: "difficulty-easy",
   Medium: "difficulty-medium",
