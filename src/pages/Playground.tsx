@@ -125,7 +125,9 @@ const SOLARIZED_DARK_THEME = {
  * showing the line number and any visible local variables.
  */
 // Types that are arrays and need Arrays.toString() or Arrays.deepToString()
-const ARRAY_TYPE_PATTERN = /\[\]/;
+const ARRAY_1D_PATTERN = /^\w+\[\]$/;  // e.g., int[], String[]
+const ARRAY_2D_PATTERN = /\[\]\[\]/;    // e.g., int[][], String[][]
+const ARRAY_ANY_PATTERN = /\[\]/;       // any array
 
 function instrumentCodeForDebug(source: string, breakpointLines: Set<number>): string {
   if (breakpointLines.size === 0) return source;
@@ -135,7 +137,7 @@ function instrumentCodeForDebug(source: string, breakpointLines: Set<number>): s
 
   // Track initialized variables with their scope depth
   // When brace depth drops below a variable's declared depth, it's out of scope
-  const initializedVars: { name: string; line: number; isArray: boolean; scopeDepth: number }[] = [];
+  const initializedVars: { name: string; line: number; isArray: boolean; is2dArray: boolean; scopeDepth: number }[] = [];
 
   let braceDepth = 0;
 
@@ -180,12 +182,12 @@ function instrumentCodeForDebug(source: string, breakpointLines: Set<number>): s
       const forVarMatch = trimmed.match(/^for\s*\(\s*(?:final\s+)?(\w+(?:<[^>]*>)?(?:\[\])*)\s+(\w+)\s*[=:]/);
       if (forVarMatch) {
         const typePart = forVarMatch[1];
-        // For-loop vars are scoped to the loop body (current depth + the brace that follows)
         initializedVars.push({ 
           name: forVarMatch[2], 
           line: lineNum, 
-          isArray: ARRAY_TYPE_PATTERN.test(typePart),
-          scopeDepth: braceDepth + 1, // Will be inside the for's { }
+          isArray: ARRAY_ANY_PATTERN.test(typePart),
+          is2dArray: ARRAY_2D_PATTERN.test(typePart),
+          scopeDepth: braceDepth + 1,
         });
       }
 
@@ -201,7 +203,8 @@ function instrumentCodeForDebug(source: string, breakpointLines: Set<number>): s
             initializedVars.push({ 
               name: varName, 
               line: lineNum, 
-              isArray: ARRAY_TYPE_PATTERN.test(typePart),
+              isArray: ARRAY_ANY_PATTERN.test(typePart),
+              is2dArray: ARRAY_2D_PATTERN.test(typePart),
               scopeDepth: braceDepth,
             });
           }
@@ -211,7 +214,7 @@ function instrumentCodeForDebug(source: string, breakpointLines: Set<number>): s
       // Match: var varName = ... (Java 10+)
       const varMatch = trimmed.match(/^(?:final\s+)?var\s+(\w+)\s*=/);
       if (varMatch) {
-        initializedVars.push({ name: varMatch[1], line: lineNum, isArray: false, scopeDepth: braceDepth });
+        initializedVars.push({ name: varMatch[1], line: lineNum, isArray: false, is2dArray: false, scopeDepth: braceDepth });
       }
 
       // Match multiple declarations: int a = 1, b = 2;
@@ -222,7 +225,7 @@ function instrumentCodeForDebug(source: string, breakpointLines: Set<number>): s
         for (const part of parts) {
           const nameMatch = part.trim().match(/^(\w+)\s*=/);
           if (nameMatch && !initializedVars.some(v => v.name === nameMatch[1] && v.line === lineNum)) {
-            initializedVars.push({ name: nameMatch[1], line: lineNum, isArray: false, scopeDepth: braceDepth });
+            initializedVars.push({ name: nameMatch[1], line: lineNum, isArray: false, is2dArray: false, scopeDepth: braceDepth });
           }
         }
       }
@@ -246,6 +249,9 @@ function instrumentCodeForDebug(source: string, breakpointLines: Set<number>): s
       let debugExpr: string;
       if (availableVars.length > 0) {
         const parts = availableVars.map(v => {
+          if (v.is2dArray) {
+            return `" ${v.name}=" + java.util.Arrays.deepToString(${v.name})`;
+          }
           if (v.isArray) {
             return `" ${v.name}=" + java.util.Arrays.toString(${v.name})`;
           }
