@@ -501,14 +501,14 @@ export default function Playground() {
               <ResizablePanel defaultSize={30} minSize={15}>
                 <div className="flex flex-col h-full">
                   <div className="flex items-center gap-2 px-3 py-1.5 border-b" style={{ borderColor: "hsl(var(--border))", background: "hsl(var(--muted)/0.3)" }}>
-                    <Keyboard size={12} style={{ color: "hsl(var(--muted-foreground))" }} />
-                    <span className="text-[10px] font-mono font-medium" style={{ color: "hsl(var(--muted-foreground))" }}>Standard Input (stdin)</span>
+                    <Keyboard size={14} style={{ color: "hsl(var(--muted-foreground))" }} />
+                    <span className="text-xs font-mono font-medium" style={{ color: "hsl(var(--muted-foreground))" }}>Standard Input (stdin)</span>
                   </div>
                   <textarea
                     value={stdin}
                     onChange={(e) => setStdin(e.target.value)}
                     placeholder="Enter input for your program..."
-                    className="flex-1 w-full px-4 py-2 font-mono text-sm resize-none outline-none"
+                    className="flex-1 w-full px-4 py-2.5 font-mono text-base resize-none outline-none"
                     style={{ background: "hsl(var(--card))", color: "hsl(var(--foreground))", caretColor: "hsl(var(--primary))" }}
                   />
                 </div>
