@@ -1,4 +1,5 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, useMemo } from "react";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import { motion } from "framer-motion";
 import {
@@ -6,6 +7,7 @@ import {
   Code2, RotateCcw, Sun, Moon, Palette,
   AlignLeft, ChevronDown, Keyboard, Settings, Maximize, Minimize,
   FileCode, Plus, Pencil, Trash2, Save, X,
+  BookOpen, ArrowLeft,
 } from "lucide-react";
 import Editor, { OnMount } from "@monaco-editor/react";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
