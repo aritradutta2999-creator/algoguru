@@ -144,7 +144,6 @@ export default function Auth() {
                     background: "hsl(var(--muted)/0.4)",
                     border: "1px solid hsl(var(--border))",
                     color: "hsl(var(--foreground))",
-                    ringColor: "hsl(var(--primary)/0.3)",
                   }}
                 />
               </div>
@@ -162,7 +161,6 @@ export default function Auth() {
                   background: "hsl(var(--muted)/0.4)",
                   border: "1px solid hsl(var(--border))",
                   color: "hsl(var(--foreground))",
-                  ringColor: "hsl(var(--primary)/0.3)",
                 }}
               />
             </div>
@@ -180,7 +178,7 @@ export default function Auth() {
                   background: "hsl(var(--muted)/0.4)",
                   border: "1px solid hsl(var(--border))",
                   color: "hsl(var(--foreground))",
-                  ringColor: "hsl(var(--primary)/0.3)",
+                  
                 }}
               />
               <button
