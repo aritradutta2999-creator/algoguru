@@ -24,6 +24,7 @@ interface UserTemplate {
 }
 
 const USER_TEMPLATES_KEY = "playground-user-templates";
+const BUILTIN_OVERRIDES_KEY = "playground-builtin-overrides";
 
 const loadUserTemplates = (): UserTemplate[] => {
   try {
@@ -34,6 +35,17 @@ const loadUserTemplates = (): UserTemplate[] => {
 
 const saveUserTemplates = (templates: UserTemplate[]) => {
   localStorage.setItem(USER_TEMPLATES_KEY, JSON.stringify(templates));
+};
+
+const loadBuiltinOverrides = (): Record<string, { code: string; description: string }> => {
+  try {
+    const raw = localStorage.getItem(BUILTIN_OVERRIDES_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch { return {}; }
+};
+
+const saveBuiltinOverrides = (overrides: Record<string, { code: string; description: string }>) => {
+  localStorage.setItem(BUILTIN_OVERRIDES_KEY, JSON.stringify(overrides));
 };
 const FALLBACK_JAVA_COMPILERS = [
   { label: "Java 21", compiler: "openjdk-jdk-21+35" },
@@ -120,8 +132,10 @@ export default function Playground() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showTemplateMenu, setShowTemplateMenu] = useState(false);
   const [userTemplates, setUserTemplates] = useState<UserTemplate[]>(loadUserTemplates);
+  const [builtinOverrides, setBuiltinOverrides] = useState<Record<string, { code: string; description: string }>>(loadBuiltinOverrides);
   const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<UserTemplate | null>(null);
+  const [editingBuiltinPrefix, setEditingBuiltinPrefix] = useState<string | null>(null);
   const [templateName, setTemplateName] = useState("");
   const [templateDesc, setTemplateDesc] = useState("");
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
@@ -315,6 +329,7 @@ export default function Playground() {
 
   const openCreateTemplate = () => {
     setEditingTemplate(null);
+    setEditingBuiltinPrefix(null);
     setTemplateName("");
     setTemplateDesc("");
     setShowTemplateMenu(false);
@@ -323,14 +338,39 @@ export default function Playground() {
 
   const openEditTemplate = (tmpl: UserTemplate) => {
     setEditingTemplate(tmpl);
+    setEditingBuiltinPrefix(null);
     setTemplateName(tmpl.name);
     setTemplateDesc(tmpl.description);
     setShowTemplateMenu(false);
     setTemplateDialogOpen(true);
   };
 
+  const openEditBuiltinTemplate = (tmpl: typeof CP_TEMPLATES[0]) => {
+    setEditingTemplate(null);
+    setEditingBuiltinPrefix(tmpl.prefix);
+    const override = builtinOverrides[tmpl.prefix];
+    setTemplateName(tmpl.name);
+    setTemplateDesc(override?.description ?? tmpl.description);
+    setShowTemplateMenu(false);
+    // Load the current code from editor into the template
+    setTemplateDialogOpen(true);
+  };
+
   const handleSaveTemplate = () => {
     if (!templateName.trim()) return;
+
+    if (editingBuiltinPrefix) {
+      // Save built-in template override
+      const updated = {
+        ...builtinOverrides,
+        [editingBuiltinPrefix]: { code, description: templateDesc.trim() },
+      };
+      setBuiltinOverrides(updated);
+      saveBuiltinOverrides(updated);
+      setTemplateDialogOpen(false);
+      return;
+    }
+
     let updated: UserTemplate[];
     if (editingTemplate) {
       updated = userTemplates.map((t) =>
@@ -350,6 +390,13 @@ export default function Playground() {
     setUserTemplates(updated);
     saveUserTemplates(updated);
     setTemplateDialogOpen(false);
+  };
+
+  const handleResetBuiltinTemplate = (prefix: string) => {
+    const updated = { ...builtinOverrides };
+    delete updated[prefix];
+    setBuiltinOverrides(updated);
+    saveBuiltinOverrides(updated);
   };
 
   const handleDeleteTemplate = (id: string) => {
@@ -408,24 +455,54 @@ export default function Playground() {
                       CP Templates by Aritra Dutta
                     </span>
                   </div>
-                  {CP_TEMPLATES.map((tmpl) => (
-                    <button
-                      key={tmpl.prefix}
-                      onClick={() => {
-                        setCode(tmpl.code);
-                        setOutput("");
-                        setShowTemplateMenu(false);
-                      }}
-                      className="w-full flex flex-col gap-0.5 px-3 py-2 text-left transition-colors hover:bg-muted"
-                    >
-                      <span className="text-[11px] font-semibold" style={{ color: "hsl(var(--foreground))" }}>
-                        {tmpl.name}
-                      </span>
-                      <span className="text-[9px]" style={{ color: "hsl(var(--muted-foreground))" }}>
-                        {tmpl.description}
-                      </span>
-                    </button>
-                  ))}
+                  {CP_TEMPLATES.map((tmpl) => {
+                    const override = builtinOverrides[tmpl.prefix];
+                    const isOverridden = !!override;
+                    return (
+                      <div key={tmpl.prefix} className="group flex items-center hover:bg-muted transition-colors">
+                        <button
+                          onClick={() => {
+                            setCode(override?.code ?? tmpl.code);
+                            setOutput("");
+                            setShowTemplateMenu(false);
+                          }}
+                          className="flex-1 flex flex-col gap-0.5 px-3 py-2 text-left"
+                        >
+                          <span className="text-[11px] font-semibold flex items-center gap-1" style={{ color: "hsl(var(--foreground))" }}>
+                            {tmpl.name}
+                            {isOverridden && (
+                              <span className="text-[8px] px-1 py-0.5 rounded font-medium" style={{ background: "hsl(var(--primary)/0.15)", color: "hsl(var(--primary))" }}>
+                                edited
+                              </span>
+                            )}
+                          </span>
+                          <span className="text-[9px]" style={{ color: "hsl(var(--muted-foreground))" }}>
+                            {override?.description ?? tmpl.description}
+                          </span>
+                        </button>
+                        <div className="flex items-center gap-0.5 pr-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); openEditBuiltinTemplate(tmpl); }}
+                            className="p-1 rounded hover:bg-accent/50 transition-colors"
+                            style={{ color: "hsl(var(--muted-foreground))" }}
+                            title="Edit template (saves current editor code)"
+                          >
+                            <Pencil size={11} />
+                          </button>
+                          {isOverridden && (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleResetBuiltinTemplate(tmpl.prefix); }}
+                              className="p-1 rounded hover:bg-accent/50 transition-colors"
+                              style={{ color: "hsl(var(--muted-foreground))" }}
+                              title="Reset to original"
+                            >
+                              <RotateCcw size={11} />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
 
                   {userTemplates.length > 0 && (
                     <>
@@ -833,10 +910,12 @@ export default function Playground() {
         <DialogContent className="sm:max-w-md" style={{ backgroundColor: "hsl(var(--background))", border: "1px solid hsl(var(--border))" }}>
           <DialogHeader>
             <DialogTitle className="text-base font-bold" style={{ color: "hsl(var(--foreground))" }}>
-              {editingTemplate ? "Edit Template" : "Save as Template"}
+              {editingBuiltinPrefix ? "Edit Built-in Template" : editingTemplate ? "Edit Template" : "Save as Template"}
             </DialogTitle>
             <DialogDescription className="text-xs" style={{ color: "hsl(var(--muted-foreground))" }}>
-              {editingTemplate
+              {editingBuiltinPrefix
+                ? "Update this built-in template's description. Current editor code will be saved as your custom version."
+                : editingTemplate
                 ? "Update template name, description, and code (current editor code will be saved)."
                 : "Save your current editor code as a reusable template."}
             </DialogDescription>
@@ -844,13 +923,14 @@ export default function Playground() {
           <div className="flex flex-col gap-3 py-2">
             <div>
               <label className="text-[11px] font-medium mb-1 block" style={{ color: "hsl(var(--muted-foreground))" }}>
-                Template Name *
+                Template Name {editingBuiltinPrefix ? "" : "*"}
               </label>
               <Input
                 value={templateName}
                 onChange={(e) => setTemplateName(e.target.value)}
                 placeholder="e.g. My Graph Template"
                 className="text-sm"
+                disabled={!!editingBuiltinPrefix}
               />
             </div>
             <div>
@@ -873,9 +953,9 @@ export default function Playground() {
             <Button variant="outline" size="sm" onClick={() => setTemplateDialogOpen(false)}>
               Cancel
             </Button>
-            <Button size="sm" onClick={handleSaveTemplate} disabled={!templateName.trim()}>
+            <Button size="sm" onClick={handleSaveTemplate} disabled={!editingBuiltinPrefix && !templateName.trim()}>
               <Save size={13} className="mr-1" />
-              {editingTemplate ? "Update" : "Save"}
+              {editingTemplate || editingBuiltinPrefix ? "Update" : "Save"}
             </Button>
           </DialogFooter>
         </DialogContent>
