@@ -79,18 +79,31 @@ export default function TopicPage() {
   const { topicId } = useParams<{ topicId: string }>();
   const location = useLocation();
   const navigate = useNavigate();
-  const { currentMode } = useMode();
+  const { currentMode, setMode } = useMode();
   const [tocOpen, setTocOpen] = useState(false);
   const mainRef = useRef<HTMLDivElement>(null);
   const [activeSection, setActiveSection] = useState<string>("");
   const { contentWidth } = useSettings();
 
-  const isDSMode = currentMode.id === "ds";
-  const isPracticeMode = currentMode.id === "practice";
-  const allTopics = isDSMode ? topics : isPracticeMode ? practiceTopics : javaTopics;
-  const contentMap = isDSMode ? dsContentMap : isPracticeMode ? practiceContentMap : javaContentMap;
+  // Auto-detect the correct mode based on topicId
+  const detectedMode = useMemo(() => {
+    if (topicId && topics.some((t) => t.id === topicId)) return "ds";
+    if (topicId && practiceTopics.some((t) => t.id === topicId)) return "practice";
+    if (topicId && javaTopics.some((t) => t.id === topicId)) return "lang";
+    return currentMode.id;
+  }, [topicId, currentMode.id]);
 
-  const topic = allTopics.find((t) => t.id === topicId);
+  // Switch mode if navigating to a topic from a different mode
+  useEffect(() => {
+    if (detectedMode !== currentMode.id) {
+      setMode(detectedMode);
+    }
+  }, [detectedMode, currentMode.id, setMode]);
+
+  const allTopicsForPage = detectedMode === "ds" ? topics : detectedMode === "practice" ? practiceTopics : javaTopics;
+  const contentMap = detectedMode === "ds" ? dsContentMap : detectedMode === "practice" ? practiceContentMap : javaContentMap;
+
+  const topic = allTopicsForPage.find((t) => t.id === topicId);
   const content = topicId ? contentMap[topicId] : null;
 
   useEffect(() => {
