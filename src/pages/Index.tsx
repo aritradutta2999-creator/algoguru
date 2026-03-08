@@ -3,8 +3,10 @@ import { topics } from "@/data/topics";
 import { javaTopics } from "@/data/javaTopics";
 import { practiceTopics } from "@/data/practiceTopics";
 import { motion } from "framer-motion";
-import { ChevronRight, Zap, GitBranch, LayoutGrid, Terminal, Sparkles, ArrowRight, Coffee, Layers, Code2, BookOpen, Trophy, Flame, Star, Mail, Send, Bug } from "lucide-react";
+import { ChevronRight, Zap, GitBranch, LayoutGrid, Terminal, Sparkles, ArrowRight, Coffee, Layers, Code2, BookOpen, Trophy, Flame, Star, Mail, Send, Bug, SlidersHorizontal } from "lucide-react";
 import { useMode } from "@/contexts/ModeContext";
+import { useSettings } from "@/contexts/SettingsContext";
+import { Slider } from "@/components/ui/slider";
 
 const topicColors: Record<string, { color: string; bg: string; border: string }> = {
   recursion: { color: "hsl(var(--primary))", bg: "hsl(var(--primary)/0.06)", border: "hsl(var(--primary)/0.15)" },
@@ -52,6 +54,7 @@ const item = {
 export default function Index() {
   const navigate = useNavigate();
   const { currentMode, setMode, modes } = useMode();
+  const { contentWidth, setContentWidth } = useSettings();
   const isDSMode = currentMode.id === "ds";
   const isPracticeMode = currentMode.id === "practice";
   const activeTopics = isDSMode ? topics : isPracticeMode ? practiceTopics : javaTopics;
@@ -467,6 +470,41 @@ export default function Index() {
             </div>
           </div>
         </motion.div>
+      </section>
+
+      {/* Reading Width Slider */}
+      <section className="px-6 md:px-10 py-10 border-t" style={{ borderColor: "hsl(var(--border))" }}>
+        <div className="max-w-md mx-auto">
+          <motion.div
+            className="p-6 rounded-2xl"
+            style={{ background: "var(--gradient-card)", border: "1px solid hsl(var(--border))" }}
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+          >
+            <div className="flex items-center gap-2 mb-4">
+              <SlidersHorizontal size={14} style={{ color: "hsl(var(--primary))" }} />
+              <span className="text-sm font-semibold" style={{ color: "hsl(var(--foreground))" }}>
+                Content Width
+              </span>
+              <span className="ml-auto text-[11px] font-mono px-2 py-0.5 rounded-md" style={{ background: "hsl(var(--muted))", color: "hsl(var(--muted-foreground))" }}>
+                {contentWidth}px
+              </span>
+            </div>
+            <Slider
+              value={[contentWidth]}
+              onValueChange={(v) => setContentWidth(v[0])}
+              min={640}
+              max={1200}
+              step={20}
+              className="w-full"
+            />
+            <div className="flex justify-between mt-2 text-[10px] font-mono" style={{ color: "hsl(var(--muted-foreground))" }}>
+              <span>Narrow</span>
+              <span>Wide</span>
+            </div>
+          </motion.div>
+        </div>
       </section>
 
       <footer className="px-6 md:px-10 py-8 border-t" style={{ borderColor: "hsl(var(--border))" }}>
