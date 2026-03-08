@@ -153,7 +153,7 @@ export default function Playground() {
             // Extract major version from name like "openjdk-jdk-22+36"
             const versionMatch = name.match(/(\d+)[\+\.\-]/);
             const major = versionMatch ? versionMatch[1] : "";
-            const label = major ? `OpenJDK ${major}` : `OpenJDK (${name})`;
+            const label = major ? `JDK ${major}` : name;
             return { label, compiler: name };
           });
         if (javaCompilers.length > 0) {
