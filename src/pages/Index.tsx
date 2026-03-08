@@ -60,13 +60,6 @@ export default function Index() {
 
   return (
     <div className="min-h-screen">
-      {/* Top Bar */}
-      <div className="sticky top-0 z-30 px-6 md:px-10 py-3 flex items-center justify-center" style={{ background: "hsl(var(--background)/0.85)", backdropFilter: "blur(12px)", borderBottom: "1px solid hsl(var(--border))" }}>
-        <span className="text-sm font-bold tracking-wide font-mono" style={{ color: "hsl(var(--foreground))" }}>
-          Java <span style={{ color: "hsl(var(--muted-foreground))" }}>·</span> <span style={{ color: "hsl(var(--primary))" }}>CP Guide</span>
-        </span>
-      </div>
-
       {/* Hero */}
       <section className="relative px-6 md:px-10 pt-16 pb-20 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-hero" />
