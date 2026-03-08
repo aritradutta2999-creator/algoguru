@@ -189,7 +189,7 @@ export default function TopicPage() {
           </div>
         </motion.div>
 
-        <div style={{ maxWidth: `${contentWidth}px` }} className="mx-auto px-6 md:px-10 py-14">
+        <div style={{ maxWidth: `min(${contentWidth}px, 100%)` }} className="mx-auto px-6 md:px-12 lg:px-16 py-14">
           {content.map((section) => (
             <ContentRenderer key={section.id} section={section} isPractice={isPracticeMode} />
           ))}

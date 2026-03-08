@@ -35,7 +35,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
 
   const [contentWidth, setContentWidthState] = useState<number>(() => {
     const saved = localStorage.getItem("cp-content-width");
-    return saved ? Number(saved) : 920;
+    return saved ? Number(saved) : 1100;
   });
 
   const setContentWidth = (w: number) => {
