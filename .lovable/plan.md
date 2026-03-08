@@ -1,84 +1,113 @@
 
 
-# Add 5-6 Problems Per Difficulty Per Category from CSES & LeetCode
+# Add Bit Manipulation Topic -- Basics to Advanced
 
-## Current State
-- 8 practice categories, each with ~3 Easy, 3 Medium, 2-3 Hard problems (~60 total in 1710 lines)
-- All in one file `src/data/practiceContent.ts`
+## Overview
+Add a comprehensive **Bit Manipulation** topic as the 5th section in the CP Guide, following the same architecture and patterns used by existing topics. The content will be split across multiple subtopics (each rendered as a separate scrollable section on one page), with each section containing focused theory and multiple dedicated code blocks.
 
-## Problem
-Adding ~130 new problems to a single file would make it ~8000+ lines — unmaintainable. Need to split into separate files per category.
+## Content Structure (Subtopics)
 
-## Plan
+The Bit Manipulation topic will have **10 subtopics**, progressing from absolute basics to expert-level techniques:
 
-### Step 1: Split into 8 category-specific files
-Create separate data files to keep each manageable (~800-1000 lines each):
+1. **Introduction to Bits & Number Systems** (Easy)
+   - Binary representation, decimal-to-binary conversion
+   - How integers are stored (32-bit, 64-bit), signed vs unsigned
+   - Code: Binary conversion utility, printing binary representation in Java
 
-- `src/data/practice/arraysProblems.ts`
-- `src/data/practice/stringsProblems.ts`
-- `src/data/practice/recursionProblems.ts`
-- `src/data/practice/dpProblems.ts`
-- `src/data/practice/graphsProblems.ts`
-- `src/data/practice/treesProblems.ts`
-- `src/data/practice/greedyProblems.ts`
-- `src/data/practice/stackQueueProblems.ts`
+2. **Basic Bitwise Operators** (Easy)
+   - AND, OR, XOR, NOT, Left Shift, Right Shift (arithmetic vs logical)
+   - Truth tables, operator precedence
+   - Code: Demonstrating each operator with examples, Odd/Even check using AND
 
-Each file exports its Easy/Medium/Hard arrays with existing + new problems.
+3. **Common Bit Tricks & Hacks** (Easy-Medium)
+   - Check if number is power of 2
+   - Count set bits (Brian Kernighan's algorithm)
+   - Toggle, set, clear, check specific bit
+   - Swap two numbers without temp variable
+   - Code: Each trick as a separate code block with explanation
 
-### Step 2: Update `practiceContent.ts` to import from split files
-Becomes a thin aggregator — imports all category arrays, exports `practiceContentMap`.
+4. **Bit Masking Fundamentals** (Medium)
+   - What is a bitmask, creating and using masks
+   - Extracting/setting bit ranges
+   - Using bitmasks for subset representation
+   - Code: Subset generation using bitmasks, permission flags example
 
-### Step 3: New Problems (5-6 per difficulty per category)
+5. **XOR Properties & Problems** (Medium)
+   - XOR properties (self-inverse, associativity, commutativity)
+   - Find the single non-repeating element
+   - Find two non-repeating elements
+   - XOR from 1 to N in O(1)
+   - Code: Each problem as a separate code block
 
-**Arrays & Hashing** (currently 3+3+3 → 8+8+8):
-- Easy: Contains Duplicate, Missing Number, Single Number, Majority Element, Intersection of Two Arrays (LC 217, 268, 136, 169, 349)
-- Medium: 4Sum, Next Permutation, Sort Colors, Merge Intervals, Spiral Matrix (LC 18, 31, 75, 56, 54)
-- Hard: Sliding Window Maximum, Count of Smaller Numbers After Self, Max Points on a Line, Minimum Number of Arrows, Candy (LC 239, 315, 149, 452, 135)
+6. **Counting Bits & Lookups** (Medium)
+   - Counting set bits: naive, Kernighan, lookup table, `Integer.bitCount()`
+   - Counting bits for all numbers 0 to N (DP approach)
+   - Hamming distance, total Hamming distance
+   - Code: All approaches compared, DP solution for counting bits
 
-**Strings Practice** (currently 3+3+2 → 8+8+8):
-- Easy: First Unique Character, Longest Common Prefix, Roman to Integer, Is Subsequence, Count & Say (LC 387, 14, 13, 392, 38)
-- Medium: String to Integer (atoi), Decode Ways, Palindrome Partitioning, Repeated DNA Sequences, Compare Version Numbers (LC 8, 91, 131, 187, 165)
-- Hard: Wildcard Matching, Palindrome Pairs, Shortest Palindrome, Distinct Subsequences, Regular Expression Matching, Word Break II (LC 44, 336, 214, 115, 10, 140)
+7. **Bit Manipulation in Competitive Programming** (Hard)
+   - Maximum XOR subarray (using Trie)
+   - Minimum XOR pair
+   - XOR queries on arrays (prefix XOR)
+   - Bitwise AND/OR of ranges
+   - Code: Trie-based max XOR, prefix XOR queries, range AND
 
-**Recursion & Backtracking** (currently 3+3+2 → 8+8+8):
-- Easy: Fibonacci Number, Climbing Stairs, Sum of Digits, Count Good Numbers, Letter Case Permutation (LC 509, 70, CSES, LC 1922, LC 784)
-- Medium: Combination Sum, Word Search, Sudoku Validator, Letter Combinations of Phone, Generate Parentheses (LC 39, 79, CSES, LC 17, LC 22)
-- Hard: N-Queens, Word Break, Palindrome Partitioning II, Expression Add Operators, Stickers to Spell Word, Chessboard & Queens-CSES (LC 51, 139, 132, 282, 691, CSES)
+8. **Bitmask DP** (Hard)
+   - Subset enumeration with bitmask
+   - Travelling Salesman Problem (TSP) with bitmask DP
+   - Assignment Problem
+   - Iterating over all submasks of a mask
+   - Code: TSP implementation, assignment problem, submask enumeration
 
-**Dynamic Programming** (currently 3+3+2 → 8+8+8):
-- Easy: House Robber, Min Cost Climbing Stairs, Pascal's Triangle, Divisible Sum Pairs, Counting Bits (LC 198, 746, 118, CSES, LC 338)
-- Medium: Coin Change, Longest Increasing Subsequence, Unique Paths, Partition Equal Subset Sum, Longest Common Subsequence (LC 322, 300, 62, 416, 1143; CSES: Dice Combinations, Grid Paths)
-- Hard: Burst Balloons, Longest Valid Parentheses, Interleaving String, Palindrome Partitioning II, Edit Distance, CSES: Elevator Rides (LC 312, 32, 97, 132, 72, CSES)
+9. **Advanced Bit Techniques** (Expert)
+   - Gosper's Hack (iterating subsets of size k)
+   - Bit-parallel algorithms
+   - Gray Code generation
+   - Bitboard representation (chess/game programming)
+   - SOS DP (Sum over Subsets)
+   - Code: Gosper's Hack, Gray Code, SOS DP
 
-**Graph Problems** (currently 3+3+2 → 8+8+8):
-- Easy: Find if Path Exists, Find the Town Judge, Island Perimeter, Flood Fill, Find Center of Star Graph (LC 1971, 997, 463, 733, 1791)
-- Medium: Course Schedule, Rotting Oranges, Clone Graph, Pacific Atlantic Water Flow, Cheapest Flights Within K Stops (LC 207, 994, 133, 417, 787; CSES: Building Roads, Message Route)
-- Hard: Word Ladder, Alien Dictionary, Swim in Rising Water, Critical Connections, Network Delay Time, CSES: Shortest Routes I (LC 127, 269, 778, 1192, 743, CSES)
+10. **Practice Problems & Patterns** (Expert)
+    - Comprehensive problem set with solutions
+    - Patterns summary: when to use which technique
+    - Complexity reference table for all bit operations
+    - Code: Selected hard problems with full Java solutions
 
-**Trees Practice** (currently 3+3+2 → 8+8+8):
-- Easy: Maximum Depth of Binary Tree, Symmetric Tree, Path Sum, Invert Binary Tree, Same Tree (LC 104, 101, 112, 226, 100)
-- Medium: Binary Tree Right Side View, Construct BT from Preorder+Inorder, Kth Smallest in BST, Validate BST, Count Good Nodes (LC 199, 105, 230, 98, 1448)
-- Hard: Serialize & Deserialize BT, Binary Tree Maximum Path Sum, Vertical Order Traversal, Binary Tree Cameras, Count Complete Tree Nodes, Recover BST (LC 297, 124, 987, 968, 222, 99)
+## Files to Create / Modify
 
-**Greedy & Sorting** (currently 3+3+2 → 8+8+8):
-- Easy: Assign Cookies, Lemonade Change, Best Time to Buy/Sell Stock, Maximum Units on Truck, Partition Labels (LC 455, 860, 121, 1710, 763)
-- Medium: Jump Game, Gas Station, Task Scheduler, Reorganize String, Minimum Platforms (LC 55, 134, 621, 767, CSES: Movie Festival)
-- Hard: Candy, IPO, Minimum Cost to Hire K Workers, Job Scheduling, Course Schedule III, CSES: Movie Festival II (LC 135, 502, 857, 1235, 630, CSES)
+### 1. Create `src/data/bitManipulationContent.ts`
+- Export `bitManipulationContent: ContentSection[]` with all 10 sections
+- Each section uses the existing `ContentSection` interface (id, title, difficulty, theory, keyPoints, code blocks, tables, notes, tips, warnings)
+- Multiple code blocks per section (not one giant block)
 
-**Stack & Queue** (currently 3+3+2 → 8+8+8):
-- Easy: Valid Parentheses, Min Stack, Implement Queue using Stacks, Baseball Game, Next Greater Element I (LC 20, 155, 232, 682, 496)
-- Medium: Daily Temperatures, Evaluate Reverse Polish Notation, Decode String, Online Stock Span, Asteroid Collision (LC 739, 150, 394, 901, 735)
-- Hard: Largest Rectangle in Histogram, Maximal Rectangle, Trapping Rain Water (stack), Basic Calculator, Longest Valid Parentheses, CSES: Maximum Building I (LC 84, 85, 42, 224, 32, CSES)
+### 2. Modify `src/data/topics.ts`
+- Add a new topic entry:
+  - id: `"bits"`
+  - title: `"Bit Manipulation"`
+  - icon: `"⊕"`
+  - color: `"info"` (a new color, or reuse an existing one)
+  - description: `"Bitwise operations & masking"`
+  - subtopics: all 10 subtopic entries with matching IDs
 
-### Problem Format
-Each problem includes:
-- Problem statement with source attribution (LeetCode #/CSES name)
-- 2 example inputs/outputs with clear explanation
-- Approach description
-- Key points
-- Full Java solution with `main()` and test cases
+### 3. Modify `src/pages/TopicPage.tsx`
+- Import `bitManipulationContent`
+- Add `bits: bitManipulationContent` to the `contentMap`
+- Add `bits` to `topicColorVars`
 
-### File Changes Summary
-- **Create** 8 new files in `src/data/practice/`
-- **Rewrite** `src/data/practiceContent.ts` as thin aggregator importing from split files
+### 4. Modify `src/components/AppSidebar.tsx`
+- Add `bits` entry to `topicIcons` and `topicColorVars`
+
+### 5. Modify `src/pages/Index.tsx`
+- Add `bits` to `topicColors` and `topicIcons` maps
+- Update quick stats (Topics: 5, Sections: 45+, Code Examples: 80+)
+- Add "Bit Manipulation" to the roadmap steps
+
+### 6. Modify `src/index.css`
+- Add an `--info` CSS variable color (e.g., a distinct purple/magenta) for the new topic if needed, or assign an existing color
+
+## Approach
+- Follow the exact same `ContentSection` data schema
+- Each subtopic gets its own `id` matching the sidebar entry
+- Code blocks are split by concept (e.g., "Brian Kernighan's Algorithm" is one block, "Toggle Bit" is another)
+- Difficulty progresses: Easy -> Easy -> Medium -> Medium -> Medium -> Medium -> Hard -> Hard -> Expert -> Expert
 
