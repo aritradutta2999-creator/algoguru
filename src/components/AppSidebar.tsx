@@ -1,6 +1,7 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getAvatarUrl } from "@/lib/avatarUrl";
+import { getAvatarUrl } from "@/lib/avatarUrl";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   Sidebar,
@@ -14,7 +15,8 @@ import {
 } from "@/components/ui/sidebar";
 import { topics } from "@/data/topics";
 import { javaTopics } from "@/data/javaTopics";
-import { ChevronDown, Home, BookOpen, Layers, Coffee, Search, X, Code2, LogOut } from "lucide-react";
+import { practiceTopics } from "@/data/practiceTopics";
+import { ChevronDown, Home, BookOpen, Layers, Coffee, Search, X, Code2, LogOut, Trophy } from "lucide-react";
 import { useSettings } from "@/contexts/SettingsContext";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
@@ -53,11 +55,21 @@ const topicColorVars: Record<string, string> = {
   "java-multithreading": "hsl(var(--primary))",
   "java-io": "hsl(var(--accent))",
   "java-advanced": "hsl(var(--warning))",
+  // Practice topic colors
+  "practice-warmup": "hsl(var(--primary))",
+  "practice-arrays": "hsl(var(--accent))",
+  "practice-strings": "hsl(var(--success))",
+  "practice-recursion": "hsl(var(--warning))",
+  "practice-dp": "hsl(var(--info))",
+  "practice-graphs": "hsl(var(--heap))",
+  "practice-trees": "hsl(var(--primary))",
+  "practice-greedy": "hsl(var(--accent))",
 };
 
 const modeIcons: Record<string, React.ReactNode> = {
   ds: <Layers size={14} />,
   lang: <Coffee size={14} />,
+  practice: <Trophy size={14} />,
 };
 
 export function AppSidebar() {
@@ -85,7 +97,7 @@ export function AppSidebar() {
   const userName = profile.display_name || user?.email?.split("@")[0] || "User";
   const avatarUrl = resolvedAvatar;
 
-  const activeTopics = currentMode.id === "ds" ? topics : javaTopics;
+  const activeTopics = currentMode.id === "ds" ? topics : currentMode.id === "lang" ? javaTopics : practiceTopics;
 
   const [openTopics, setOpenTopics] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {};
@@ -99,7 +111,7 @@ export function AppSidebar() {
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   const allSearchItems = useMemo(() => {
-    const allTopicsList = [...topics, ...javaTopics];
+    const allTopicsList = [...topics, ...javaTopics, ...practiceTopics];
     return allTopicsList.flatMap((t) => [
       { id: t.id, title: t.title, icon: t.icon, type: "topic" as const, path: `/${t.id}`, parent: null, subtopicCount: t.subtopics.length },
       ...t.subtopics.map((s) => ({
@@ -185,7 +197,7 @@ export function AppSidebar() {
         </div>
 
         <div className="px-3.5 py-2 text-[10px] font-bold uppercase tracking-[0.15em] font-mono" style={{ color: "hsl(var(--muted-foreground))" }}>
-          {currentMode.id === "ds" ? "Topics" : "Java Modules"}
+          {currentMode.id === "ds" ? "Topics" : currentMode.id === "lang" ? "Java Modules" : "Practice Sets"}
         </div>
 
         <SidebarMenu>
