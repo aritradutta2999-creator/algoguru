@@ -269,8 +269,9 @@ function instrumentCodeForDebug(source: string, breakpointLines: Set<number>): s
       const indent = line.match(/^(\s*)/)?.[1] || "";
       
       // Only include variables initialized BEFORE this line AND still in scope
+      // Filter out main's "args" parameter as it's never useful for debugging
       const availableVars = initializedVars
-        .filter(v => v.line < lineNum)
+        .filter(v => v.line < lineNum && v.name !== "args")
         .slice(-8);
       
       let debugExpr: string;
