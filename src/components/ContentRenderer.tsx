@@ -121,7 +121,7 @@ export function ContentRenderer({ section }: ContentRendererProps) {
         {section.theory.map((para, i) => (
           <li key={i} className="flex items-start gap-3 text-[15px] leading-[1.9] font-normal" style={{ color: "hsl(var(--muted-foreground))" }}>
             <span className="mt-2.5 w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: "hsl(var(--primary)/0.5)" }} />
-            <span>{para}</span>
+            <span>{renderMarkdown(para)}</span>
           </li>
         ))}
       </ul>
