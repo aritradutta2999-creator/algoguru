@@ -434,6 +434,35 @@ export default function Playground() {
           </div>
         </div>
       </div>
+      )}
+
+      {/* Fullscreen toggle bar */}
+      {isFullscreen && (
+        <div className="flex items-center justify-between px-4 py-1.5 border-b flex-shrink-0" style={{ borderColor: "hsl(var(--border))", background: "hsl(var(--muted)/0.3)" }}>
+          <span className="text-xs font-mono font-medium" style={{ color: "hsl(var(--muted-foreground))" }}>
+            ☕ Java Playground — Fullscreen
+          </span>
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={runCode}
+              disabled={isRunning || !code.trim()}
+              className="flex items-center gap-1.5 px-3 py-1 rounded-lg text-[11px] font-bold transition-all disabled:opacity-50"
+              style={{ background: "var(--gradient-primary)", color: "hsl(var(--primary-foreground))" }}
+            >
+              {isRunning ? <Loader2 size={13} className="animate-spin" /> : <Play size={13} />}
+              {isRunning ? "Running..." : "Run ⌘↵"}
+            </button>
+            <button
+              onClick={() => setIsFullscreen(false)}
+              className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all hover:bg-muted"
+              style={{ color: "hsl(var(--muted-foreground))", border: "1px solid hsl(var(--border))" }}
+            >
+              <Minimize size={13} />
+              Exit
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Editor + Output with resizable panels */}
       <div className="flex-1 min-h-0">
