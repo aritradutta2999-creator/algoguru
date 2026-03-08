@@ -115,7 +115,7 @@ export default function Playground() {
   const [showCompilerMenu, setShowCompilerMenu] = useState(false);
   const [copied, setCopied] = useState(false);
   const [stdin, setStdin] = useState("");
-  const [showStdin, setShowStdin] = useState(false);
+  
   const editorRef = useRef<any>(null);
 
   useEffect(() => {
@@ -515,19 +515,6 @@ export default function Playground() {
             Reset
           </button>
 
-          {/* Input toggle */}
-          <button
-            onClick={() => setShowStdin(!showStdin)}
-            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-all"
-            style={{
-              color: showStdin ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))",
-              border: `1px solid ${showStdin ? "hsl(var(--primary)/0.3)" : "hsl(var(--border))"}`,
-              background: showStdin ? "hsl(var(--primary)/0.1)" : undefined,
-            }}
-          >
-            <Keyboard size={13} />
-            Input
-          </button>
 
           <button
             onClick={runCode}
@@ -609,21 +596,12 @@ export default function Playground() {
           {/* Right Panel: Input (top) + Output (bottom) */}
           <ResizablePanel defaultSize={45} minSize={20}>
             <ResizablePanelGroup direction="vertical" className="h-full">
-              {/* Input Panel */}
-              <ResizablePanel defaultSize={showStdin ? 35 : 0} minSize={0} collapsible>
+              {/* Input Panel - always visible */}
+              <ResizablePanel defaultSize={30} minSize={15}>
                 <div className="flex flex-col h-full">
-                  <div className="flex items-center justify-between px-3 py-1.5 border-b" style={{ borderColor: "hsl(var(--border))", background: "hsl(var(--muted)/0.3)" }}>
-                    <div className="flex items-center gap-2">
-                      <Keyboard size={12} style={{ color: "hsl(var(--muted-foreground))" }} />
-                      <span className="text-[10px] font-mono font-medium" style={{ color: "hsl(var(--muted-foreground))" }}>Standard Input (stdin)</span>
-                    </div>
-                    <button
-                      onClick={() => setShowStdin(false)}
-                      className="text-[10px] font-mono px-1.5 py-0.5 rounded hover:bg-muted transition-colors"
-                      style={{ color: "hsl(var(--muted-foreground))" }}
-                    >
-                      ✕
-                    </button>
+                  <div className="flex items-center gap-2 px-3 py-1.5 border-b" style={{ borderColor: "hsl(var(--border))", background: "hsl(var(--muted)/0.3)" }}>
+                    <Keyboard size={12} style={{ color: "hsl(var(--muted-foreground))" }} />
+                    <span className="text-[10px] font-mono font-medium" style={{ color: "hsl(var(--muted-foreground))" }}>Standard Input (stdin)</span>
                   </div>
                   <textarea
                     value={stdin}
@@ -635,10 +613,10 @@ export default function Playground() {
                 </div>
               </ResizablePanel>
 
-              {showStdin && <ResizableHandle withHandle />}
+              <ResizableHandle withHandle />
 
               {/* Output Panel */}
-              <ResizablePanel defaultSize={showStdin ? 65 : 100} minSize={30}>
+              <ResizablePanel defaultSize={70} minSize={20}>
                 <div className="flex flex-col h-full">
                   <div
                     className="flex items-center gap-2 px-4 py-1.5 border-b"
