@@ -1,113 +1,51 @@
 
 
-# Add Bit Manipulation Topic -- Basics to Advanced
+## Security Assessment & Hardening Plan
 
-## Overview
-Add a comprehensive **Bit Manipulation** topic as the 5th section in the CP Guide, following the same architecture and patterns used by existing topics. The content will be split across multiple subtopics (each rendered as a separate scrollable section on one page), with each section containing focused theory and multiple dedicated code blocks.
+### Current Security Status
 
-## Content Structure (Subtopics)
+Your project is already in a **strong security position**:
+- **No SQL injection risk** — the database client uses parameterized queries automatically; no raw SQL is ever built from user input
+- **RLS (Row Level Security)** is enabled on the profiles table with proper policies
+- **No XSS vulnerabilities** — no user-supplied HTML is rendered; the only `dangerouslySetInnerHTML` is in a UI library component generating safe CSS
+- **Auth is enforced** on all content routes via `ProtectedRoute`
+- **SECURITY DEFINER** functions have `search_path` locked down
+- Automated security scan: **0 issues found**
 
-The Bit Manipulation topic will have **10 subtopics**, progressing from absolute basics to expert-level techniques:
+### Proposed Hardening Improvements
 
-1. **Introduction to Bits & Number Systems** (Easy)
-   - Binary representation, decimal-to-binary conversion
-   - How integers are stored (32-bit, 64-bit), signed vs unsigned
-   - Code: Binary conversion utility, printing binary representation in Java
+1. **Add input validation with Zod on the Auth form** — validate email format, password strength (min 8 chars, mixed case/numbers), and name length before sending to the backend. Prevents malformed data and gives users better feedback.
 
-2. **Basic Bitwise Operators** (Easy)
-   - AND, OR, XOR, NOT, Left Shift, Right Shift (arithmetic vs logical)
-   - Truth tables, operator precedence
-   - Code: Demonstrating each operator with examples, Odd/Even check using AND
+2. **Fix RLS: add DELETE policy on profiles** — currently users cannot delete their own profile. Add a restrictive delete policy so only the owning user can delete, preventing orphaned data issues.
 
-3. **Common Bit Tricks & Hacks** (Easy-Medium)
-   - Check if number is power of 2
-   - Count set bits (Brian Kernighan's algorithm)
-   - Toggle, set, clear, check specific bit
-   - Swap two numbers without temp variable
-   - Code: Each trick as a separate code block with explanation
+3. **Add rate-limit UX protection on auth forms** — disable the submit button for a few seconds after failed attempts to discourage brute-force from the client side. (Server-side rate limiting is already handled by the authentication system.)
 
-4. **Bit Masking Fundamentals** (Medium)
-   - What is a bitmask, creating and using masks
-   - Extracting/setting bit ranges
-   - Using bitmasks for subset representation
-   - Code: Subset generation using bitmasks, permission flags example
+4. **Sanitize user metadata display** — the `UserMenu` renders `user.user_metadata` values (name, avatar URL). Add validation that avatar URLs are valid HTTPS URLs before rendering in an `<img>` tag, and truncate/escape display names.
 
-5. **XOR Properties & Problems** (Medium)
-   - XOR properties (self-inverse, associativity, commutativity)
-   - Find the single non-repeating element
-   - Find two non-repeating elements
-   - XOR from 1 to N in O(1)
-   - Code: Each problem as a separate code block
+5. **Add Content Security headers via meta tags** — add `<meta>` referrer policy to prevent leaking auth tokens in referrer headers.
 
-6. **Counting Bits & Lookups** (Medium)
-   - Counting set bits: naive, Kernighan, lookup table, `Integer.bitCount()`
-   - Counting bits for all numbers 0 to N (DP approach)
-   - Hamming distance, total Hamming distance
-   - Code: All approaches compared, DP solution for counting bits
+### Technical Details
 
-7. **Bit Manipulation in Competitive Programming** (Hard)
-   - Maximum XOR subarray (using Trie)
-   - Minimum XOR pair
-   - XOR queries on arrays (prefix XOR)
-   - Bitwise AND/OR of ranges
-   - Code: Trie-based max XOR, prefix XOR queries, range AND
+```text
+Auth Form (Auth.tsx)
+├── Add Zod schema: email, password (min 8, regex), name (max 100)
+├── Show inline validation errors
+└── Add 3-second cooldown after failed login
 
-8. **Bitmask DP** (Hard)
-   - Subset enumeration with bitmask
-   - Travelling Salesman Problem (TSP) with bitmask DP
-   - Assignment Problem
-   - Iterating over all submasks of a mask
-   - Code: TSP implementation, assignment problem, submask enumeration
+UserMenu (App.tsx)  
+├── Validate avatar_url is https:// before rendering
+└── Sanitize display name (truncate, strip HTML entities)
 
-9. **Advanced Bit Techniques** (Expert)
-   - Gosper's Hack (iterating subsets of size k)
-   - Bit-parallel algorithms
-   - Gray Code generation
-   - Bitboard representation (chess/game programming)
-   - SOS DP (Sum over Subsets)
-   - Code: Gosper's Hack, Gray Code, SOS DP
+Database (migration)
+└── ADD POLICY "Users can delete own profile" ON profiles
+    FOR DELETE USING (auth.uid() = user_id)
 
-10. **Practice Problems & Patterns** (Expert)
-    - Comprehensive problem set with solutions
-    - Patterns summary: when to use which technique
-    - Complexity reference table for all bit operations
-    - Code: Selected hard problems with full Java solutions
+index.html
+└── Add <meta name="referrer" content="strict-origin-when-cross-origin">
+```
 
-## Files to Create / Modify
-
-### 1. Create `src/data/bitManipulationContent.ts`
-- Export `bitManipulationContent: ContentSection[]` with all 10 sections
-- Each section uses the existing `ContentSection` interface (id, title, difficulty, theory, keyPoints, code blocks, tables, notes, tips, warnings)
-- Multiple code blocks per section (not one giant block)
-
-### 2. Modify `src/data/topics.ts`
-- Add a new topic entry:
-  - id: `"bits"`
-  - title: `"Bit Manipulation"`
-  - icon: `"⊕"`
-  - color: `"info"` (a new color, or reuse an existing one)
-  - description: `"Bitwise operations & masking"`
-  - subtopics: all 10 subtopic entries with matching IDs
-
-### 3. Modify `src/pages/TopicPage.tsx`
-- Import `bitManipulationContent`
-- Add `bits: bitManipulationContent` to the `contentMap`
-- Add `bits` to `topicColorVars`
-
-### 4. Modify `src/components/AppSidebar.tsx`
-- Add `bits` entry to `topicIcons` and `topicColorVars`
-
-### 5. Modify `src/pages/Index.tsx`
-- Add `bits` to `topicColors` and `topicIcons` maps
-- Update quick stats (Topics: 5, Sections: 45+, Code Examples: 80+)
-- Add "Bit Manipulation" to the roadmap steps
-
-### 6. Modify `src/index.css`
-- Add an `--info` CSS variable color (e.g., a distinct purple/magenta) for the new topic if needed, or assign an existing color
-
-## Approach
-- Follow the exact same `ContentSection` data schema
-- Each subtopic gets its own `id` matching the sidebar entry
-- Code blocks are split by concept (e.g., "Brian Kernighan's Algorithm" is one block, "Toggle Bit" is another)
-- Difficulty progresses: Easy -> Easy -> Medium -> Medium -> Medium -> Medium -> Hard -> Hard -> Expert -> Expert
+### What This Does NOT Change
+- No changes to your content/learning pages — they render static data, no security concern
+- No changes to the database client — it's already safe by design
+- No changes to RLS on SELECT/INSERT/UPDATE — those are correct
 
