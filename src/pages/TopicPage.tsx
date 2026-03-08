@@ -139,7 +139,7 @@ export default function TopicPage() {
     <div className="flex min-h-screen relative" ref={mainRef}>
       <div className="flex-1 min-w-0">
         <motion.div
-          className="px-6 md:px-10 py-12 border-b relative overflow-hidden"
+          className="border-b relative overflow-hidden"
           style={{ borderColor: "hsl(var(--border))" }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -148,7 +148,7 @@ export default function TopicPage() {
           <div className="hero-glow w-80 h-80 -top-20 -right-20 opacity-[0.08]" style={{ background: color }} />
           <div className="absolute inset-0" style={{ background: "var(--gradient-hero)" }} />
 
-          <div className="relative z-10 max-w-4xl">
+          <div style={{ maxWidth: `min(${contentWidth}px, 100%)` }} className="relative z-10 mx-auto px-6 md:px-12 lg:px-16 py-12">
             <div className="flex items-center gap-2 mb-4 text-xs font-medium" style={{ color: "hsl(var(--muted-foreground))" }}>
               <span className="cursor-pointer hover:underline transition-colors" onClick={() => navigate("/")} style={{ color: "hsl(var(--primary))" }}>
                 Home
