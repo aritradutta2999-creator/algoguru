@@ -7,8 +7,10 @@ export const numberTheoryContent: ContentSection[] = [
     difficulty: "Easy",
     theory: [
       "A **prime number** is a natural number greater than 1 that has no positive divisors other than 1 and itself.",
-      "**Trial division**: check divisibility up to √n. For large n, use **Miller-Rabin** probabilistic test.",
-      "Fundamental theorem of arithmetic: every integer > 1 is either prime or a unique product of primes."
+      "**Trial division**: check divisibility up to √n — if no divisor found, n is prime. Optimization: after checking 2 and 3, only check numbers of the form 6k±1 (all primes > 3 have this form).",
+      "**Fundamental theorem of arithmetic**: every integer > 1 is either prime or can be uniquely represented as a product of primes (up to order). This is the basis of many number theory algorithms.",
+      "**Prime counting**: The number of primes ≤ n is approximately n/ln(n) (Prime Number Theorem). For n = 10⁶, there are ~78,498 primes. For n = 10⁹, there are ~50,847,534 primes.",
+      "**Fermat's primality test**: If p is prime and gcd(a,p) = 1, then a^(p-1) ≡ 1 (mod p). The converse is not always true — Carmichael numbers (e.g., 561) pass this test but aren't prime. Use **Miller-Rabin** for deterministic testing."
     ],
     code: [
       {
@@ -59,9 +61,11 @@ export const numberTheoryContent: ContentSection[] = [
     title: "Sieve of Eratosthenes",
     difficulty: "Easy",
     theory: [
-      "The **Sieve of Eratosthenes** finds all primes up to n in O(n·log(log n)) time.",
-      "Optimization: start marking from p² (smaller multiples already marked). Only check odd numbers after 2.",
-      "Variants: **Linear sieve** O(n), **Segmented sieve** for ranges [L, R] when R is large but R-L is small."
+      "The **Sieve of Eratosthenes** finds all primes up to n in O(n·log(log n)) time. The inner sum of operations is Σ(n/p) for primes p ≤ √n, which equals n·log(log n) by Mertens' theorem.",
+      "**Optimization**: Start marking from p² (smaller multiples already marked by smaller primes). Only iterate over odd numbers after handling 2 separately — halves memory and time constant.",
+      "**Smallest Prime Factor (SPF) sieve**: Instead of boolean, store the smallest prime factor of each number. This enables O(log n) factorization of any number ≤ n by repeatedly dividing by spf[x].",
+      "**Segmented sieve** for ranges [L, R]: When R is large (up to 10¹²) but R-L is small (up to 10⁶), sieve primes up to √R first, then mark composites in [L, R] using those primes. Memory: O(√R + (R-L)).",
+      "**Linear sieve** O(n): Each composite is marked exactly once by its smallest prime factor. Additionally produces the list of primes. The key: for each i, iterate primes p ≤ spf[i] and mark i·p. This ensures each composite i·p is marked only when p = spf(i·p)."
     ],
     code: [
       {
@@ -149,9 +153,10 @@ static List<Integer> factorize(int x, int[] spf) {
     title: "GCD, LCM & Extended Euclidean",
     difficulty: "Easy",
     theory: [
-      "**GCD** (Greatest Common Divisor): largest number dividing both a and b. Euclidean algorithm: gcd(a,b) = gcd(b, a%b).",
-      "**LCM** = (a × b) / gcd(a, b). Always compute this way to avoid overflow.",
-      "**Extended GCD** finds x, y such that a·x + b·y = gcd(a, b). Used for modular inverse and solving linear Diophantine equations."
+      "**GCD** (Greatest Common Divisor): largest number dividing both a and b. **Euclidean algorithm**: gcd(a,b) = gcd(b, a%b). Terminates when b=0, returning a. The number of steps is at most 2·log₂(min(a,b)) — each step reduces the larger number by at least half.",
+      "**LCM** = (a × b) / gcd(a, b). Always divide first to avoid overflow: `a / gcd(a,b) * b`. For multiple values: lcm(a,b,c) = lcm(lcm(a,b), c).",
+      "**Extended GCD** finds x, y such that a·x + b·y = gcd(a, b). The solution exists by **Bézout's identity**. Found by back-substituting the Euclidean algorithm steps. Used for: modular inverse (a·x ≡ 1 mod m → solve a·x + m·y = 1), solving linear Diophantine equations (a·x + b·y = c has solutions iff gcd(a,b) | c).",
+      "**Diophantine equation** a·x + b·y = c: has integer solutions iff g = gcd(a,b) divides c. One solution: (x₀·c/g, y₀·c/g) where a·x₀ + b·y₀ = g. General solution: x = x₀ + k·(b/g), y = y₀ - k·(a/g) for any integer k."
     ],
     code: [
       {
@@ -373,9 +378,11 @@ static long[][] countPaths(int[][] adj, long k, long mod) {
     title: "Modular Arithmetic",
     difficulty: "Medium",
     theory: [
-      "In CP, results are often asked **modulo 10⁹+7** (a prime). Key rules: (a+b)%m = ((a%m)+(b%m))%m, same for multiplication.",
-      "**Modular inverse**: a⁻¹ mod m exists iff gcd(a,m) = 1. If m is prime: a⁻¹ = a^(m-2) mod m (Fermat's little theorem).",
-      "**Modular division**: (a/b) mod m = (a × b⁻¹) mod m."
+      "In CP, results are often asked **modulo 10⁹+7** (a prime). This prime is chosen because: (1) it fits in 32-bit int, (2) two such values fit in 64-bit long when multiplied, (3) being prime means every non-zero element has a modular inverse.",
+      "**Key rules**: (a+b) % m = ((a%m) + (b%m)) % m. Same for multiplication. Subtraction: (a-b) % m = ((a%m) - (b%m) + m) % m (add m to handle negatives). **Division is NOT direct** — use modular inverse instead.",
+      "**Modular inverse**: a⁻¹ mod m exists iff gcd(a,m) = 1. Two methods: (1) If m is prime: a⁻¹ = a^(m-2) mod m (Fermat's little theorem). (2) For any m with gcd(a,m)=1: use Extended Euclidean algorithm to find x where a·x + m·y = 1, then x mod m is the inverse.",
+      "**Modular division**: (a/b) mod m = (a × b⁻¹) mod m. Never do integer division first and then take mod — this gives wrong answers. Always multiply by the modular inverse.",
+      "**Precomputing inverse factorials**: Compute fact[n] = n! mod m, then invFact[n] = modInverse(fact[n]), then invFact[i] = invFact[i+1] × (i+1) mod m going backwards. This gives O(n) preprocessing for O(1) nCr queries."
     ],
     code: [
       {
@@ -482,9 +489,11 @@ static void precompute(int n) {
     title: "Euler's Totient Function",
     difficulty: "Medium",
     theory: [
-      "**Euler's Totient φ(n)** counts integers from 1 to n that are coprime with n.",
-      "Formula: φ(n) = n × Π(1 - 1/p) for each prime factor p of n.",
-      "**Euler's Theorem**: a^φ(n) ≡ 1 (mod n) when gcd(a,n) = 1. Generalizes Fermat's little theorem."
+      "**Euler's Totient φ(n)** counts integers from 1 to n that are coprime with n. For prime p: φ(p) = p-1. For prime power: φ(p^k) = p^k - p^(k-1). For general n: φ(n) = n × Π(1 - 1/p) for each prime factor p of n.",
+      "φ is **multiplicative**: if gcd(a,b) = 1, then φ(a·b) = φ(a)·φ(b). This allows efficient computation from prime factorization.",
+      "**Euler's Theorem**: a^φ(n) ≡ 1 (mod n) when gcd(a,n) = 1. This generalizes Fermat's little theorem (where n is prime, φ(n) = n-1). Used for computing a^b mod n when b is very large: a^b ≡ a^(b mod φ(n)) mod n.",
+      "**Divisor sum property**: Σ φ(d) for all d dividing n equals n. This identity is useful in Möbius inversion and counting problems.",
+      "**Sieve-based computation**: Compute φ for all values 1..n in O(n·log(log n)) — similar to Sieve of Eratosthenes. For each prime p, multiply φ[j] by (1 - 1/p) for all multiples j of p."
     ],
     code: [
       {
@@ -611,8 +620,11 @@ static long[][] matMul(long[][] A, long[][] B) {
     title: "Advanced Number Theory",
     difficulty: "Expert",
     theory: [
-      "Advanced topics: **Möbius function** & **Möbius inversion**, **Discrete logarithm** (Baby-step Giant-step), **Primitive roots**, **Miller-Rabin** primality test.",
-      "These appear in Div 1/2 Codeforces and ICPC regionals."
+      "**Miller-Rabin primality test**: Probabilistic test based on Fermat's theorem + the fact that x² ≡ 1 (mod p) implies x ≡ ±1 (mod p) for prime p. Write n-1 = d·2^r. For witness a: compute a^d mod n, then square r times. If we never see 1 or n-1 at the right moments, n is composite.",
+      "**Deterministic Miller-Rabin**: For n < 3.3×10²⁴, testing witnesses {2,3,5,7,11,13,17,19,23,29,31,37} gives a deterministic answer — no false positives. For n < 10¹⁸, witnesses {2,3,5,7,11,13,17,19,23} suffice.",
+      "**Möbius function μ(n)**: μ(1)=1; μ(n)=0 if n has a squared prime factor; μ(n)=(-1)^k if n is product of k distinct primes. Used in **Möbius inversion**: if g(n) = Σf(d) for d|n, then f(n) = Σμ(d)·g(n/d) for d|n.",
+      "**Baby-step Giant-step**: Solves the discrete logarithm a^x ≡ b (mod m) in O(√m) time and space. Write x = i·n + j where n = ⌈√m⌉. Precompute a^j for j=0..n-1 (baby steps). Then check b·(a^(-n))^i for i=0..n-1 (giant steps). A meet-in-the-middle approach.",
+      "**Primitive roots**: A number g is a primitive root modulo n if every number coprime to n can be represented as g^k mod n for some k. Primitive roots exist for n = 1, 2, 4, p^k, 2p^k (p odd prime). If g is the smallest primitive root mod p, then g = O(p^(1/4)) in practice."
     ],
     code: [
       {
