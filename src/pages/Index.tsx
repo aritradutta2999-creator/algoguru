@@ -29,7 +29,6 @@ const topicColors: Record<string, { color: string; bg: string; border: string }>
   "java-io": { color: "hsl(var(--accent))", bg: "hsl(var(--accent)/0.06)", border: "hsl(var(--accent)/0.15)" },
   "java-advanced": { color: "hsl(var(--warning))", bg: "hsl(var(--warning)/0.06)", border: "hsl(var(--warning)/0.15)" },
   // Practice topic colors
-  "practice-warmup": { color: "hsl(var(--primary))", bg: "hsl(var(--primary)/0.06)", border: "hsl(var(--primary)/0.15)" },
   "practice-arrays": { color: "hsl(var(--accent))", bg: "hsl(var(--accent)/0.06)", border: "hsl(var(--accent)/0.15)" },
   "practice-strings": { color: "hsl(var(--success))", bg: "hsl(var(--success)/0.06)", border: "hsl(var(--success)/0.15)" },
   "practice-recursion": { color: "hsl(var(--warning))", bg: "hsl(var(--warning)/0.06)", border: "hsl(var(--warning)/0.15)" },
@@ -37,6 +36,7 @@ const topicColors: Record<string, { color: string; bg: string; border: string }>
   "practice-graphs": { color: "hsl(var(--heap))", bg: "hsl(var(--heap)/0.06)", border: "hsl(var(--heap)/0.15)" },
   "practice-trees": { color: "hsl(var(--primary))", bg: "hsl(var(--primary)/0.06)", border: "hsl(var(--primary)/0.15)" },
   "practice-greedy": { color: "hsl(var(--accent))", bg: "hsl(var(--accent)/0.06)", border: "hsl(var(--accent)/0.15)" },
+  "practice-stack-queue": { color: "hsl(var(--primary))", bg: "hsl(var(--primary)/0.06)", border: "hsl(var(--primary)/0.15)" },
 };
 
 const container = {

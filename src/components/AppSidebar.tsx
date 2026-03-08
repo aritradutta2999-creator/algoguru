@@ -55,7 +55,6 @@ const topicColorVars: Record<string, string> = {
   "java-io": "hsl(var(--accent))",
   "java-advanced": "hsl(var(--warning))",
   // Practice topic colors
-  "practice-warmup": "hsl(var(--primary))",
   "practice-arrays": "hsl(var(--accent))",
   "practice-strings": "hsl(var(--success))",
   "practice-recursion": "hsl(var(--warning))",
@@ -63,6 +62,7 @@ const topicColorVars: Record<string, string> = {
   "practice-graphs": "hsl(var(--heap))",
   "practice-trees": "hsl(var(--primary))",
   "practice-greedy": "hsl(var(--accent))",
+  "practice-stack-queue": "hsl(var(--primary))",
 };
 
 const modeIcons: Record<string, React.ReactNode> = {
