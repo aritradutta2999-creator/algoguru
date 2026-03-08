@@ -6,14 +6,17 @@ export const dpContent: ContentSection[] = [
     title: "DP Fundamentals",
     difficulty: "Medium",
     theory: [
-      "Dynamic Programming is an optimization technique for problems with two key properties: (1) Optimal Substructure — optimal solution to the problem contains optimal solutions to subproblems; (2) Overlapping Subproblems — the same subproblems are solved multiple times.",
+      "Dynamic Programming is an optimization technique for problems with two key properties: (1) **Optimal Substructure** — optimal solution to the problem contains optimal solutions to subproblems; (2) **Overlapping Subproblems** — the same subproblems are solved multiple times.",
+      "The essence of DP is to **avoid repeated calculation**. Often, DP problems are naturally solvable by recursion. Write the recursive solution, then save repeated states in a lookup table. This is called **top-down DP with memoization** (like writing in a memo pad — not 'memorization').",
       "DP is NOT just about filling a table — it's about recognizing that the brute-force recursive solution recomputes the same states. DP eliminates this redundancy by storing results of subproblems.",
       "Think of DP as 'smart recursion'. Regular recursion might solve the same subproblem 100 times. DP solves it once, stores the answer, and reuses it. This transforms exponential algorithms into polynomial ones.",
-      "Two approaches: Top-Down (Memoization) — start from the original problem, recurse, cache results; Bottom-Up (Tabulation) — solve smallest subproblems first, build up to the original problem. Both give the same answer.",
+      "**Runtime analysis**: The layman's way of analyzing a memoized function is: **work per subproblem × number of subproblems**. For Fibonacci: O(1) work × O(n) subproblems = O(n) total.",
+      "Two approaches: **Top-Down (Memoization)** — start from the original problem, recurse, cache results; **Bottom-Up (Tabulation)** — solve smallest subproblems first, build up to the original problem. Both give the same answer.",
       "The DP thought process: (1) Define the state (what does dp[i] or dp[i][j] represent?), (2) Write the recurrence relation, (3) Identify base cases, (4) Determine iteration order. Get step 1 right and the rest follows.",
-      "State definition is the hardest part. A good state captures everything needed to solve the subproblem without knowing how you got there (optimal substructure). Ask yourself: 'What information do I need to make the optimal decision at this point?'",
+      "State definition is the hardest part. A good state captures everything needed to solve the subproblem without knowing how you got there (optimal substructure). Ask: 'What information do I need to make the optimal decision at this point?'",
       "Common patterns for state definition: dp[i] = answer using first i elements; dp[i][j] = answer for subarray [i..j]; dp[i][w] = answer using first i items with capacity w; dp[mask] = answer when subset of items represented by bitmask 'mask' are used.",
       "How to know a problem is DP: (1) It asks for min/max/count. (2) You need to make choices at each step. (3) Future decisions depend on past decisions. (4) You can break it into smaller, similar subproblems. If it says 'find the number of ways' or 'find the minimum cost', think DP.",
+      "**Space optimization trick**: In bottom-up DP, if the current state only depends on the last few states, use modulo indexing (`dp[i % 3]`) to reduce O(n) space to O(1). This is a common optimization in contests.",
     ],
     diagram: {
       type: "table-visual",
@@ -41,13 +44,15 @@ export const dpContent: ContentSection[] = [
         }
       ]
     },
-    note: "DP is a skill that improves with practice. Don't try to memorize solutions — understand the thought process. For each problem, practice defining the state and recurrence from scratch.",
+    note: "DP is a skill that improves with practice. Don't try to memorize solutions — understand the thought process. For each problem, practice defining the state and recurrence from scratch. Best practice resources: AtCoder Educational DP Contest (26 problems A-Z) and CSES Problem Set (DP section).",
     keyPoints: [
       "DP = Recursion + Memoization (or equivalently, smart iteration order)",
       "Define the state clearly: dp[i] = 'minimum cost to reach position i'",
       "Recurrence relation comes from the recursive solution",
+      "Runtime = work per subproblem × number of subproblems",
       "Bottom-up avoids recursion overhead and stack overflow for large inputs",
-      "Space optimization: often only the last 1-2 rows of the DP table are needed",
+      "Space optimization: use modulo trick `dp[i % k]` when only last k states are needed",
+      "Classic problems to master: 0-1 Knapsack, Subset Sum, LIS, LCS, Edit Distance, Coin Change, Grid Paths, Rod Cutting, Longest Palindromic Subsequence",
     ],
     code: [
       {
@@ -124,6 +129,27 @@ public class ClimbingStairs {
         /* Output: 1,2,3,5,8,13,21,34,55,89 — Fibonacci sequence! */
     }
 }`,
+      },
+      {
+        title: "Space Optimization — Modulo Trick (O(1) Memory)",
+        language: "java",
+        content: `// When dp[i] only depends on dp[i-1] and dp[i-2], 
+// we only need to keep 3 values at any time.
+// Use i % 3 as the index → O(1) space!
+public static int climbModuloTrick(int n) {
+    if (n <= 2) return n;
+    int[] dp = new int[3]; // Only 3 slots!
+    dp[0 % 3] = 0;
+    dp[1 % 3] = 1;
+    dp[2 % 3] = 2;
+    for (int i = 3; i <= n; i++) {
+        dp[i % 3] = dp[(i - 1) % 3] + dp[(i - 2) % 3];
+    }
+    return dp[n % 3];
+}
+// This trick generalizes: if dp[i] depends on last K values,
+// use dp[i % (K+1)] to reduce space from O(n) to O(K).
+// Works for: Fibonacci, Climbing Stairs, Tribonacci, etc.`
       },
     ],
     table: {
