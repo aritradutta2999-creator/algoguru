@@ -48,9 +48,8 @@ const saveBuiltinOverrides = (overrides: Record<string, { code: string; descript
   localStorage.setItem(BUILTIN_OVERRIDES_KEY, JSON.stringify(overrides));
 };
 const FALLBACK_JAVA_COMPILERS = [
-  { label: "Java 25", compiler: "openjdk-jdk-25+5" },
-  { label: "Java 17", compiler: "openjdk-jdk-17+35" },
-  { label: "Java 8", compiler: "openjdk-jdk-8u121-b13" },
+  { label: "Java 17", compiler: "openjdk-jdk-17.0.1+12" },
+  { label: "Java 15", compiler: "openjdk-jdk-15+36" },
 ];
 
 const THEMES = [
@@ -143,8 +142,25 @@ export default function Playground() {
   const editorRef = useRef<any>(null);
 
   useEffect(() => {
-    setAvailableCompilers(FALLBACK_JAVA_COMPILERS);
-    setSelectedCompiler(FALLBACK_JAVA_COMPILERS[0]);
+    // Fetch actual available Java compilers from Wandbox
+    fetch("https://wandbox.org/api/list.json")
+      .then((res) => res.json())
+      .then((list: any[]) => {
+        const javaCompilers = list
+          .filter((c: any) => c.language === "Java")
+          .map((c: any) => ({ label: c["display-name"] || c.name, compiler: c.name }));
+        if (javaCompilers.length > 0) {
+          setAvailableCompilers(javaCompilers);
+          setSelectedCompiler(javaCompilers[0]);
+        } else {
+          setAvailableCompilers(FALLBACK_JAVA_COMPILERS);
+          setSelectedCompiler(FALLBACK_JAVA_COMPILERS[0]);
+        }
+      })
+      .catch(() => {
+        setAvailableCompilers(FALLBACK_JAVA_COMPILERS);
+        setSelectedCompiler(FALLBACK_JAVA_COMPILERS[0]);
+      });
   }, []);
 
   const handleEditorMount: OnMount = (editor, monaco) => {
