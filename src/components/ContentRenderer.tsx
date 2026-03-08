@@ -56,14 +56,15 @@ export function ContentRenderer({ section }: ContentRendererProps) {
         </div>
       )}
 
-      {/* Theory paragraphs */}
-      <div className="space-y-5 mb-7">
+      {/* Theory bullet points */}
+      <ul className="space-y-3 mb-7">
         {section.theory.map((para, i) => (
-          <p key={i} className="text-[15px] leading-[1.9] font-normal" style={{ color: "hsl(var(--muted-foreground))" }}>
-            {para}
-          </p>
+          <li key={i} className="flex items-start gap-3 text-[15px] leading-[1.9] font-normal" style={{ color: "hsl(var(--muted-foreground))" }}>
+            <span className="mt-2.5 w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: "hsl(var(--primary)/0.5)" }} />
+            <span>{para}</span>
+          </li>
         ))}
-      </div>
+      </ul>
 
       {/* Key points */}
       {section.keyPoints && (
