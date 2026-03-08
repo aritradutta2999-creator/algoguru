@@ -308,6 +308,52 @@ export default function Playground() {
         </div>
 
         <div className="flex items-center gap-1.5 flex-wrap">
+          {/* Templates */}
+          <div className="relative">
+            <button
+              onClick={() => setShowTemplateMenu(!showTemplateMenu)}
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-all hover:bg-muted"
+              style={{ color: "hsl(var(--muted-foreground))", border: "1px solid hsl(var(--border))" }}
+            >
+              <FileCode size={13} />
+              Templates
+              <ChevronDown size={11} />
+            </button>
+            {showTemplateMenu && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setShowTemplateMenu(false)} />
+                <div
+                  className="absolute left-0 top-full mt-1 w-72 rounded-xl overflow-hidden z-50 shadow-xl"
+                  style={{ backgroundColor: "hsl(var(--popover))", color: "hsl(var(--popover-foreground))", border: "1px solid hsl(var(--border))" }}
+                >
+                  <div className="px-3 pt-3 pb-1">
+                    <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "hsl(var(--muted-foreground))" }}>
+                      CP Templates by Aritra Dutta
+                    </span>
+                  </div>
+                  {CP_TEMPLATES.map((tmpl) => (
+                    <button
+                      key={tmpl.prefix}
+                      onClick={() => {
+                        setCode(tmpl.code);
+                        setOutput("");
+                        setShowTemplateMenu(false);
+                      }}
+                      className="w-full flex flex-col gap-0.5 px-3 py-2 text-left transition-colors hover:bg-muted"
+                    >
+                      <span className="text-[11px] font-semibold" style={{ color: "hsl(var(--foreground))" }}>
+                        {tmpl.name}
+                      </span>
+                      <span className="text-[9px]" style={{ color: "hsl(var(--muted-foreground))" }}>
+                        {tmpl.description}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+
           {/* Reset */}
           <button
             onClick={resetCode}
