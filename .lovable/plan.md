@@ -1,113 +1,76 @@
 
 
-# Add Bit Manipulation Topic -- Basics to Advanced
+## Best Reading Experience — LeetCode-quality Content Layout
 
-## Overview
-Add a comprehensive **Bit Manipulation** topic as the 5th section in the CP Guide, following the same architecture and patterns used by existing topics. The content will be split across multiple subtopics (each rendered as a separate scrollable section on one page), with each section containing focused theory and multiple dedicated code blocks.
+### Problem
+Currently, all content (problem statement, examples, approach) is dumped into a single bullet-point list. There's no visual hierarchy — everything looks the same, making it hard to scan and read.
 
-## Content Structure (Subtopics)
+### Goal
+Every section follows a clear, visually distinct order:
+**Question → Theory → Example → Approach → Key Points → Code**
 
-The Bit Manipulation topic will have **10 subtopics**, progressing from absolute basics to expert-level techniques:
+Each block gets its own styling — like LeetCode's problem pages with distinct sections for description, examples, and solution.
 
-1. **Introduction to Bits & Number Systems** (Easy)
-   - Binary representation, decimal-to-binary conversion
-   - How integers are stored (32-bit, 64-bit), signed vs unsigned
-   - Code: Binary conversion utility, printing binary representation in Java
+### Approach
 
-2. **Basic Bitwise Operators** (Easy)
-   - AND, OR, XOR, NOT, Left Shift, Right Shift (arithmetic vs logical)
-   - Truth tables, operator precedence
-   - Code: Demonstrating each operator with examples, Odd/Even check using AND
+**Smart parsing in ContentRenderer** — detect patterns in the existing `theory[]` strings to auto-separate content into styled blocks, avoiding changes to dozens of data files.
 
-3. **Common Bit Tricks & Hacks** (Easy-Medium)
-   - Check if number is power of 2
-   - Count set bits (Brian Kernighan's algorithm)
-   - Toggle, set, clear, check specific bit
-   - Swap two numbers without temp variable
-   - Code: Each trick as a separate code block with explanation
+Detection rules:
+- Lines starting with `**Example:**` or containing `Input:` / `Output:` → render in an **Example box** (bordered, distinct background, monospace for I/O)
+- Lines starting with `**Approach:**` → render in an **Approach section** (highlighted left-border box)
+- Lines containing `Explanation:` → group with the example above
+- Everything else → normal theory bullets
 
-4. **Bit Masking Fundamentals** (Medium)
-   - What is a bitmask, creating and using masks
-   - Extracting/setting bit ranges
-   - Using bitmasks for subset representation
-   - Code: Subset generation using bitmasks, permission flags example
+### Visual Design
 
-5. **XOR Properties & Problems** (Medium)
-   - XOR properties (self-inverse, associativity, commutativity)
-   - Find the single non-repeating element
-   - Find two non-repeating elements
-   - XOR from 1 to N in O(1)
-   - Code: Each problem as a separate code block
+```text
+┌─────────────────────────────────────────┐
+│  Problem Title                    Easy  │
+│  Time: O(n) · Space: O(n)              │
+├─────────────────────────────────────────┤
+│                                         │
+│  ● Theory bullet 1                      │
+│  ● Theory bullet 2                      │
+│                                         │
+│  ┌─ Example ──────────────────────────┐ │
+│  │  Input:  nums = [2,7,11,15]        │ │
+│  │  Output: [0, 1]                    │ │
+│  │  Explanation: nums[0]+nums[1]=9    │ │
+│  └────────────────────────────────────┘ │
+│                                         │
+│  ┌─ Approach ─────────────────────────┐ │
+│  │  Use a HashMap to store each...    │ │
+│  └────────────────────────────────────┘ │
+│                                         │
+│  Key Points                             │
+│  ● HashMap lookup is O(1) average       │
+│  ● Check complement before inserting    │
+│                                         │
+│  ┌─ Code ─────────────────────────────┐ │
+│  │  [syntax highlighted code block]   │ │
+│  └────────────────────────────────────┘ │
+└─────────────────────────────────────────┘
+```
 
-6. **Counting Bits & Lookups** (Medium)
-   - Counting set bits: naive, Kernighan, lookup table, `Integer.bitCount()`
-   - Counting bits for all numbers 0 to N (DP approach)
-   - Hamming distance, total Hamming distance
-   - Code: All approaches compared, DP solution for counting bits
+### Changes
 
-7. **Bit Manipulation in Competitive Programming** (Hard)
-   - Maximum XOR subarray (using Trie)
-   - Minimum XOR pair
-   - XOR queries on arrays (prefix XOR)
-   - Bitwise AND/OR of ranges
-   - Code: Trie-based max XOR, prefix XOR queries, range AND
+**1. `src/components/ContentRenderer.tsx`** — Major refactor:
+- Add `classifyTheoryLines()` function that splits `theory[]` into `{ normal, examples, approach }` groups
+- Render normal theory as bullets
+- Render examples in a styled card with green left border, monospace I/O lines, proper `Input:/Output:/Explanation:` formatting
+- Render approach in a highlighted box with purple left border
+- Enforce strict order: Title → Difficulty → Complexity → Theory → Example → Approach → Diagram → Key Points → Note/Tip/Warning → Table → Code → Playground button
 
-8. **Bitmask DP** (Hard)
-   - Subset enumeration with bitmask
-   - Travelling Salesman Problem (TSP) with bitmask DP
-   - Assignment Problem
-   - Iterating over all submasks of a mask
-   - Code: TSP implementation, assignment problem, submask enumeration
+**2. `src/index.css`** — New component classes:
+- `.cr-example-box` — Subtle background, green/teal left border, rounded, monospace-friendly
+- `.cr-approach-box` — Purple left border, slightly different background
+- `.cr-example-label` / `.cr-approach-label` — Small uppercase label badges
+- `.cr-io-line` — Monospace styling for Input/Output lines
+- Light mode variants for all new classes
 
-9. **Advanced Bit Techniques** (Expert)
-   - Gosper's Hack (iterating subsets of size k)
-   - Bit-parallel algorithms
-   - Gray Code generation
-   - Bitboard representation (chess/game programming)
-   - SOS DP (Sum over Subsets)
-   - Code: Gosper's Hack, Gray Code, SOS DP
-
-10. **Practice Problems & Patterns** (Expert)
-    - Comprehensive problem set with solutions
-    - Patterns summary: when to use which technique
-    - Complexity reference table for all bit operations
-    - Code: Selected hard problems with full Java solutions
-
-## Files to Create / Modify
-
-### 1. Create `src/data/bitManipulationContent.ts`
-- Export `bitManipulationContent: ContentSection[]` with all 10 sections
-- Each section uses the existing `ContentSection` interface (id, title, difficulty, theory, keyPoints, code blocks, tables, notes, tips, warnings)
-- Multiple code blocks per section (not one giant block)
-
-### 2. Modify `src/data/topics.ts`
-- Add a new topic entry:
-  - id: `"bits"`
-  - title: `"Bit Manipulation"`
-  - icon: `"⊕"`
-  - color: `"info"` (a new color, or reuse an existing one)
-  - description: `"Bitwise operations & masking"`
-  - subtopics: all 10 subtopic entries with matching IDs
-
-### 3. Modify `src/pages/TopicPage.tsx`
-- Import `bitManipulationContent`
-- Add `bits: bitManipulationContent` to the `contentMap`
-- Add `bits` to `topicColorVars`
-
-### 4. Modify `src/components/AppSidebar.tsx`
-- Add `bits` entry to `topicIcons` and `topicColorVars`
-
-### 5. Modify `src/pages/Index.tsx`
-- Add `bits` to `topicColors` and `topicIcons` maps
-- Update quick stats (Topics: 5, Sections: 45+, Code Examples: 80+)
-- Add "Bit Manipulation" to the roadmap steps
-
-### 6. Modify `src/index.css`
-- Add an `--info` CSS variable color (e.g., a distinct purple/magenta) for the new topic if needed, or assign an existing color
-
-## Approach
-- Follow the exact same `ContentSection` data schema
-- Each subtopic gets its own `id` matching the sidebar entry
-- Code blocks are split by concept (e.g., "Brian Kernighan's Algorithm" is one block, "Toggle Bit" is another)
-- Difficulty progresses: Easy -> Easy -> Medium -> Medium -> Medium -> Medium -> Hard -> Hard -> Expert -> Expert
+**3. Typography & spacing refinements:**
+- Tighter title with difficulty badge inline (not on separate line)
+- Complexity as subtle inline pills
+- Increased spacing between major sections for breathing room
+- Slightly larger theory text for readability
 
