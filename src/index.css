@@ -150,6 +150,12 @@
     scroll-behavior: smooth;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: hsl(var(--primary) / 0.25);
+    color: hsl(var(--foreground));
   }
 
   body {
@@ -208,14 +214,15 @@
   .code-block-wrapper {
     background: hsl(var(--code-bg));
     border: 1px solid hsl(var(--code-border));
-    border-radius: 0.75rem;
+    border-radius: 1rem;
     overflow: hidden;
+    box-shadow: var(--shadow-card);
   }
 
   .code-block-header {
     background: hsl(var(--code-header));
     border-bottom: 1px solid hsl(var(--code-border));
-    @apply flex items-center justify-between px-4 py-3;
+    @apply flex items-center justify-between px-5 py-3.5;
   }
 
   .nav-link-active {
@@ -279,29 +286,29 @@
   }
 
   .section-divider {
-    @apply w-full h-px my-8;
+    @apply w-full h-px my-10;
     background: linear-gradient(90deg, transparent, hsl(var(--border)), transparent);
   }
 
   .highlight-box {
-    background: hsl(var(--primary) / 0.05);
-    border: 1px solid hsl(var(--primary) / 0.12);
+    background: hsl(var(--primary) / 0.04);
+    border: 1px solid hsl(var(--primary) / 0.1);
     border-left: 3px solid hsl(var(--primary));
-    @apply rounded-xl p-5 my-5;
+    @apply rounded-2xl p-6 my-6;
   }
 
   .warning-box {
-    background: hsl(var(--accent) / 0.05);
-    border: 1px solid hsl(var(--accent) / 0.12);
+    background: hsl(var(--accent) / 0.04);
+    border: 1px solid hsl(var(--accent) / 0.1);
     border-left: 3px solid hsl(var(--accent));
-    @apply rounded-xl p-5 my-5;
+    @apply rounded-2xl p-6 my-6;
   }
 
   .tip-box {
-    background: hsl(var(--success) / 0.05);
-    border: 1px solid hsl(var(--success) / 0.12);
+    background: hsl(var(--success) / 0.04);
+    border: 1px solid hsl(var(--success) / 0.1);
     border-left: 3px solid hsl(var(--success));
-    @apply rounded-xl p-5 my-5;
+    @apply rounded-2xl p-6 my-6;
   }
 
   .prose-dark h2 {

@@ -175,7 +175,7 @@ export default function TopicPage() {
           </div>
         </motion.div>
 
-        <div className="max-w-3xl mx-auto px-6 md:px-10 py-12">
+        <div className="max-w-[740px] mx-auto px-6 md:px-10 py-14">
           {content.map((section) => (
             <ContentRenderer key={section.id} section={section} />
           ))}

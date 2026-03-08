@@ -21,9 +21,14 @@ export function CodeBlock({ title, language = "java", code }: CodeBlockProps) {
   };
 
   return (
-    <div className="code-block-wrapper my-6">
+    <div className="code-block-wrapper my-7">
       <div className="code-block-header">
         <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-1.5 mr-2">
+            <span className="w-3 h-3 rounded-full" style={{ background: "hsl(0 70% 55% / 0.7)" }} />
+            <span className="w-3 h-3 rounded-full" style={{ background: "hsl(45 80% 55% / 0.7)" }} />
+            <span className="w-3 h-3 rounded-full" style={{ background: "hsl(130 60% 45% / 0.7)" }} />
+          </div>
           <Code2 size={14} style={{ color: "hsl(var(--primary))" }} />
           {title && (
             <span className="text-xs font-semibold" style={{ color: "hsl(var(--foreground))" }}>
@@ -53,18 +58,19 @@ export function CodeBlock({ title, language = "java", code }: CodeBlockProps) {
         style={theme === "dark" ? vscDarkPlus : vs}
         customStyle={{
           margin: 0,
-          padding: "1.5rem",
+          padding: "1.5rem 1.75rem",
           background: "hsl(var(--code-bg))",
-          fontSize: "0.8rem",
-          lineHeight: "1.7",
+          fontSize: "0.82rem",
+          lineHeight: "1.75",
           borderRadius: 0,
         }}
         showLineNumbers
         lineNumberStyle={{
-          color: "hsl(var(--muted-foreground)/0.3)",
+          color: "hsl(var(--muted-foreground)/0.25)",
           fontSize: "0.7rem",
-          paddingRight: "1.25rem",
+          paddingRight: "1.5rem",
           minWidth: "2.5rem",
+          userSelect: "none",
         }}
       >
         {code.trim()}
