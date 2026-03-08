@@ -5,9 +5,9 @@ import { motion } from "framer-motion";
 import {
   Play, Loader2, Copy, Check, Terminal,
   Code2, RotateCcw, Sun, Moon, Palette,
-  AlignLeft, ChevronDown, Keyboard, Settings, Maximize, Minimize,
+  AlignLeft, ChevronDown, ChevronRight, Keyboard, Settings, Maximize, Minimize,
   FileCode, Plus, Pencil, Trash2, Save, X,
-  BookOpen, ArrowLeft, Download,
+  BookOpen, ArrowLeft, Download, Bug,
 } from "lucide-react";
 import Editor, { OnMount } from "@monaco-editor/react";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
@@ -119,6 +119,62 @@ const SOLARIZED_DARK_THEME = {
   },
 };
 
+/**
+ * Instrument Java code with debug print statements at specified breakpoint lines.
+ * For each breakpoint line, we inject a System.out.println before that line
+ * showing the line number and any visible local variables.
+ */
+function instrumentCodeForDebug(source: string, breakpointLines: Set<number>): string {
+  if (breakpointLines.size === 0) return source;
+
+  const lines = source.split("\n");
+  const result: string[] = [];
+
+  // Track declared variables by scanning the code
+  const declaredVars: string[] = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    const lineNum = i + 1;
+    const line = lines[i];
+    const trimmed = line.trim();
+
+    // Track variable declarations (simple pattern matching)
+    // Match: Type varName = ...; or Type varName;
+    const varDeclMatch = trimmed.match(/^(?:final\s+)?(?:int|long|double|float|char|boolean|byte|short|String|Integer|Long|Double|Float|Character|Boolean)\s+(\w+)\s*[=;]/);
+    if (varDeclMatch) {
+      declaredVars.push(varDeclMatch[1]);
+    }
+    // Match: Type[] varName or Type varName = new ...
+    const arrDeclMatch = trimmed.match(/^(?:final\s+)?(?:\w+(?:<[^>]*>)?(?:\[\])*)\s+(\w+)\s*[=;]/);
+    if (arrDeclMatch && !varDeclMatch) {
+      declaredVars.push(arrDeclMatch[1]);
+    }
+
+    if (breakpointLines.has(lineNum) && !trimmed.startsWith("//") && !trimmed.startsWith("/*") && !trimmed.startsWith("*") && trimmed.length > 0) {
+      // Get indentation of the current line
+      const indent = line.match(/^(\s*)/)?.[1] || "";
+      
+      // Build debug output string
+      let debugParts = [`"[DEBUG L${lineNum}]"`];
+      
+      // Add variable values if we have tracked variables
+      if (declaredVars.length > 0) {
+        const varPrints = declaredVars.slice(-10).map(v => 
+          `" ${v}=" + ${v}`
+        );
+        debugParts = [...debugParts, ...varPrints];
+      }
+
+      // Wrap in try-catch to handle uninitialized variables
+      result.push(`${indent}try { System.out.println(${debugParts.join(" + ")}); } catch(Exception __dbg) { System.out.println("[DEBUG L${lineNum}] (some vars not yet initialized)"); }`);
+    }
+
+    result.push(line);
+  }
+
+  return result.join("\n");
+}
+
 export default function Playground() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -145,8 +201,6 @@ export default function Playground() {
   const [currentTheme, setCurrentTheme] = useState(THEMES[0]);
   const [availableCompilers, setAvailableCompilers] = useState(FALLBACK_JAVA_COMPILERS);
   const [selectedCompiler, setSelectedCompiler] = useState(FALLBACK_JAVA_COMPILERS[0]);
-  const [showThemeMenu, setShowThemeMenu] = useState(false);
-  const [showCompilerMenu, setShowCompilerMenu] = useState(false);
   const [showSettingsMenu, setShowSettingsMenu] = useState(false);
   const [copied, setCopied] = useState(false);
   const [stdin, setStdin] = useState("");
@@ -162,7 +216,17 @@ export default function Playground() {
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [practiceTab, setPracticeTab] = useState<"problem" | "editor">("editor");
   
+  // Debugger state
+  const [breakpoints, setBreakpoints] = useState<Set<number>>(new Set());
+  const [isDebugMode, setIsDebugMode] = useState(false);
+  
+  // Settings sub-section toggles
+  const [settingsCompilerOpen, setSettingsCompilerOpen] = useState(false);
+  const [settingsThemeOpen, setSettingsThemeOpen] = useState(false);
+
   const editorRef = useRef<any>(null);
+  const monacoRef = useRef<any>(null);
+  const decorationsRef = useRef<any[]>([]);
 
   useEffect(() => {
     // Fetch actual available Java compilers from Wandbox
@@ -173,7 +237,6 @@ export default function Playground() {
           .filter((c: any) => c.language === "Java")
           .map((c: any) => {
             const name = c.name as string;
-            // Extract major version from name like "openjdk-jdk-22+36"
             const versionMatch = name.match(/(\d+)[\+\.\-]/);
             const major = versionMatch ? versionMatch[1] : "";
             const label = major ? `JDK ${major}` : name;
@@ -193,9 +256,51 @@ export default function Playground() {
       });
   }, []);
 
+  // Update breakpoint decorations whenever breakpoints change
+  const updateBreakpointDecorations = useCallback(() => {
+    const editor = editorRef.current;
+    const monaco = monacoRef.current;
+    if (!editor || !monaco) return;
+
+    const newDecorations = Array.from(breakpoints).map((line) => ({
+      range: new monaco.Range(line, 1, line, 1),
+      options: {
+        isWholeLine: true,
+        linesDecorationsClassName: "breakpoint-decoration",
+        className: "breakpoint-line-highlight",
+      },
+    }));
+
+    decorationsRef.current = editor.deltaDecorations(decorationsRef.current, newDecorations);
+  }, [breakpoints]);
+
+  useEffect(() => {
+    updateBreakpointDecorations();
+  }, [breakpoints, updateBreakpointDecorations]);
+
   const handleEditorMount: OnMount = (editor, monaco) => {
     editorRef.current = editor;
+    monacoRef.current = monaco;
     monaco.editor.defineTheme("solarized-dark", SOLARIZED_DARK_THEME);
+
+    // Add breakpoint click handler on gutter (line number margin)
+    editor.onMouseDown((e: any) => {
+      if (e.target?.type === monaco.editor.MouseTargetType.GUTTER_LINE_NUMBERS ||
+          e.target?.type === monaco.editor.MouseTargetType.GUTTER_GLYPH_MARGIN) {
+        const lineNumber = e.target.position?.lineNumber;
+        if (lineNumber) {
+          setBreakpoints((prev) => {
+            const next = new Set(prev);
+            if (next.has(lineNumber)) {
+              next.delete(lineNumber);
+            } else {
+              next.add(lineNumber);
+            }
+            return next;
+          });
+        }
+      }
+    });
 
     // Register comprehensive Java auto-completions
     // 1. Dot-notation completions (e.g., Integer.bitCount, Math.max, list.add)
@@ -242,12 +347,9 @@ export default function Playground() {
         }
 
         // Check for instance methods (e.g., list.add, map.put)
-        // Try to infer type from variable declarations in the current model
-        const fullText = model.getValue();
         const instanceMethods = INSTANCE_COMPLETIONS_MAP.get(className);
         
         if (instanceMethods) {
-          // Direct type name match (e.g., "String." or "List.")
           for (const m of instanceMethods) {
             suggestions.push({
               label: m.label,
@@ -263,8 +365,7 @@ export default function Playground() {
         }
 
         if (suggestions.length === 0) {
-          // Try to resolve the variable type from declarations in the code
-          // Patterns: Type varName, Type<...> varName, List<...> varName = new ArrayList
+          const fullText = model.getValue();
           const varName = className;
           const typePatterns = [
             new RegExp(`(\\w+(?:<[^>]*>)?)\\s+${varName}\\s*[=;,)]`),
@@ -277,7 +378,6 @@ export default function Playground() {
           for (const pattern of typePatterns) {
             const match = fullText.match(pattern);
             if (match) {
-              // Extract base type (without generics)
               resolvedType = match[1].replace(/<.*>/, "");
               break;
             }
@@ -301,9 +401,7 @@ export default function Playground() {
             }
           }
 
-          // If still no suggestions, provide all common instance methods
           if (suggestions.length === 0 && className[0] === className[0].toLowerCase()) {
-            // Lowercase first letter = likely a variable, show all instance methods
             for (const m of ALL_INSTANCE_METHODS) {
               suggestions.push({
                 label: m.label,
@@ -334,7 +432,6 @@ export default function Playground() {
           endColumn: word.endColumn,
         };
 
-        // Check if we're in a dot context — if so, skip (handled by dot provider)
         const textUntilPosition = model.getValueInRange({
           startLineNumber: position.lineNumber,
           startColumn: 1,
@@ -347,7 +444,6 @@ export default function Playground() {
 
         const suggestions: any[] = [];
 
-        // Snippet completions
         for (const s of ALL_SNIPPETS) {
           suggestions.push({
             label: s.label,
@@ -362,7 +458,6 @@ export default function Playground() {
           });
         }
 
-        // Keyword completions
         for (const kw of JAVA_KEYWORDS) {
           suggestions.push({
             label: kw,
@@ -374,7 +469,6 @@ export default function Playground() {
           });
         }
 
-        // Type completions
         for (const t of JAVA_TYPES) {
           suggestions.push({
             label: t,
@@ -408,17 +502,14 @@ export default function Playground() {
       let trimmed = line.trim();
       if (!trimmed) { formatted.push(''); continue; }
 
-      // Decrease indent before closing braces
       const closers = (trimmed.match(/^[}\])]/g) || []).length;
       if (closers > 0 && indent > 0) indent--;
 
       formatted.push('    '.repeat(Math.max(indent, 0)) + trimmed);
 
-      // Count openers and closers for next line
       const opens = (trimmed.match(/[{(\[]/g) || []).length;
       const closes = (trimmed.match(/[}\])]/g) || []).length;
       indent += opens - closes;
-      // Re-adjust if we already handled leading closer
       if (closers > 0) indent += closers;
       indent = Math.max(indent, 0);
     }
@@ -430,15 +521,23 @@ export default function Playground() {
     setCode(DEFAULT_CODE);
     setOutput("");
     setStdin("");
+    setBreakpoints(new Set());
+    setIsDebugMode(false);
   }, []);
 
-  const runCode = useCallback(async () => {
+  const runCode = useCallback(async (debugRun = false) => {
     setIsRunning(true);
     setOutput("");
     try {
-      // Wandbox saves code as prog.java, so strip 'public' from class declarations
-      // and inject common Java imports for CP snippets (Scanner, List, Map, etc.)
-      const processedCode = addAutoImports(code).replace(/public\s+class\s+/g, "class ");
+      let sourceCode = code;
+      
+      // If debug mode, instrument the code with print statements at breakpoints
+      if (debugRun && breakpoints.size > 0) {
+        sourceCode = instrumentCodeForDebug(sourceCode, breakpoints);
+        setOutput("🔍 Debug mode: Instrumented " + breakpoints.size + " breakpoint(s)...\n\n");
+      }
+
+      const processedCode = addAutoImports(sourceCode).replace(/public\s+class\s+/g, "class ");
       const res = await fetch(WANDBOX_API, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -454,7 +553,7 @@ export default function Playground() {
 
       if (!res.ok) {
         const errorText = await res.text();
-        setOutput(`⚠ Compile service error (${res.status}): ${errorText || "Unknown error"}`);
+        setOutput((prev) => prev + `⚠ Compile service error (${res.status}): ${errorText || "Unknown error"}`);
         return;
       }
 
@@ -474,13 +573,18 @@ export default function Playground() {
         parts.push(`\n⚠ Runtime Error:\n${data.program_error}`);
       }
 
-      setOutput(parts.join("\n") || "✓ Program executed successfully (no output)");
+      const result = parts.join("\n") || "✓ Program executed successfully (no output)";
+      if (debugRun && breakpoints.size > 0) {
+        setOutput((prev) => prev + result);
+      } else {
+        setOutput(result);
+      }
     } catch (err) {
-      setOutput(`⚠ Could not connect to compiler.\n${err instanceof Error ? err.message : "Unknown error"}`);
+      setOutput((prev) => prev + `⚠ Could not connect to compiler.\n${err instanceof Error ? err.message : "Unknown error"}`);
     } finally {
       setIsRunning(false);
     }
-  }, [code, stdin, selectedCompiler]);
+  }, [code, stdin, selectedCompiler, breakpoints]);
 
   const downloadCode = useCallback(() => {
     const classMatch = code.match(/public\s+class\s+(\w+)/);
@@ -525,7 +629,6 @@ export default function Playground() {
     setTemplateName(tmpl.name);
     setTemplateDesc(override?.description ?? tmpl.description);
     setShowTemplateMenu(false);
-    // Load the current code from editor into the template
     setTemplateDialogOpen(true);
   };
 
@@ -533,7 +636,6 @@ export default function Playground() {
     if (!templateName.trim()) return;
 
     if (editingBuiltinPrefix) {
-      // Save built-in template override
       const updated = {
         ...builtinOverrides,
         [editingBuiltinPrefix]: { code, description: templateDesc.trim() },
@@ -579,8 +681,178 @@ export default function Playground() {
     setDeleteConfirmId(null);
   };
 
+  // Run button component (reusable for both normal and fullscreen)
+  const RunButton = ({ compact = false }: { compact?: boolean }) => (
+    <button
+      onClick={() => runCode(false)}
+      disabled={isRunning || !code.trim()}
+      className="flex items-center gap-1.5 rounded-lg font-bold transition-all disabled:opacity-50"
+      style={{
+        background: "hsl(142 71% 45%)",
+        color: "#fff",
+        padding: compact ? "4px 12px" : "6px 14px",
+        fontSize: "12px",
+      }}
+      title="Run (Ctrl+Enter)"
+    >
+      {isRunning ? (
+        <Loader2 size={14} className="animate-spin" />
+      ) : (
+        <Play size={14} fill="currentColor" strokeWidth={0} />
+      )}
+      {isRunning ? "Running..." : "Run"}
+    </button>
+  );
+
+  // Debug button component
+  const DebugButton = ({ compact = false }: { compact?: boolean }) => (
+    <button
+      onClick={() => runCode(true)}
+      disabled={isRunning || !code.trim() || breakpoints.size === 0}
+      className="flex items-center gap-1.5 rounded-lg font-bold transition-all disabled:opacity-50"
+      style={{
+        background: breakpoints.size > 0 ? "hsl(25 95% 53%)" : "hsl(var(--muted))",
+        color: breakpoints.size > 0 ? "#fff" : "hsl(var(--muted-foreground))",
+        padding: compact ? "4px 10px" : "6px 12px",
+        fontSize: "11px",
+      }}
+      title={breakpoints.size > 0 ? `Debug with ${breakpoints.size} breakpoint(s)` : "Click line numbers to set breakpoints"}
+    >
+      <Bug size={13} />
+      Debug{breakpoints.size > 0 ? ` (${breakpoints.size})` : ""}
+    </button>
+  );
+
+  // Settings dropdown content (reusable)
+  const SettingsDropdownContent = () => (
+    <div
+      className="absolute right-0 top-full mt-1 w-64 rounded-xl overflow-hidden z-50 shadow-xl"
+      style={{ backgroundColor: "hsl(var(--popover))", color: "hsl(var(--popover-foreground))", border: "1px solid hsl(var(--border))" }}
+    >
+      {/* Compiler Section — Collapsible */}
+      <button
+        onClick={() => setSettingsCompilerOpen(!settingsCompilerOpen)}
+        className="w-full flex items-center gap-2 px-3 pt-3 pb-2 text-left"
+      >
+        <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "hsl(var(--muted-foreground))" }}>
+          ☕ Compiler
+        </span>
+        <span className="text-[9px] font-mono ml-1 px-1.5 py-0.5 rounded" style={{ background: "hsl(var(--primary)/0.1)", color: "hsl(var(--primary))" }}>
+          {selectedCompiler.label}
+        </span>
+        {settingsCompilerOpen ? <ChevronDown size={11} className="ml-auto" style={{ color: "hsl(var(--muted-foreground))" }} /> : <ChevronRight size={11} className="ml-auto" style={{ color: "hsl(var(--muted-foreground))" }} />}
+      </button>
+      {settingsCompilerOpen && (
+        <div className="pb-1">
+          {availableCompilers.map((c) => (
+            <button
+              key={c.compiler}
+              onClick={() => { setSelectedCompiler(c); }}
+              className="w-full flex items-center gap-2 px-3 py-1.5 text-left text-[11px] transition-colors hover:bg-muted"
+              style={{
+                color: selectedCompiler.compiler === c.compiler ? "hsl(var(--primary))" : "hsl(var(--foreground))",
+                fontWeight: selectedCompiler.compiler === c.compiler ? 600 : 400,
+                paddingLeft: "24px",
+              }}
+            >
+              {c.label}
+              {selectedCompiler.compiler === c.compiler && <Check size={11} className="ml-auto" />}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <div className="mx-3 my-0.5 border-t" style={{ borderColor: "hsl(var(--border))" }} />
+
+      {/* Editor Theme Section — Collapsible */}
+      <button
+        onClick={() => setSettingsThemeOpen(!settingsThemeOpen)}
+        className="w-full flex items-center gap-2 px-3 pt-2 pb-2 text-left"
+      >
+        <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "hsl(var(--muted-foreground))" }}>
+          🎨 Editor Theme
+        </span>
+        <span className="text-[9px] font-mono ml-1 px-1.5 py-0.5 rounded" style={{ background: "hsl(var(--muted))", color: "hsl(var(--foreground))" }}>
+          {currentTheme.label}
+        </span>
+        {settingsThemeOpen ? <ChevronDown size={11} className="ml-auto" style={{ color: "hsl(var(--muted-foreground))" }} /> : <ChevronRight size={11} className="ml-auto" style={{ color: "hsl(var(--muted-foreground))" }} />}
+      </button>
+      {settingsThemeOpen && (
+        <div className="pb-1">
+          {THEMES.map((t) => (
+            <button
+              key={t.id}
+              onClick={() => { setCurrentTheme(t); }}
+              className="w-full flex items-center gap-2 px-3 py-1.5 text-left text-[11px] transition-colors hover:bg-muted"
+              style={{
+                color: currentTheme.id === t.id ? "hsl(var(--primary))" : "hsl(var(--foreground))",
+                fontWeight: currentTheme.id === t.id ? 600 : 400,
+                paddingLeft: "24px",
+              }}
+            >
+              {t.icon} {t.label}
+              {currentTheme.id === t.id && <Check size={11} className="ml-auto" />}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <div className="mx-3 my-0.5 border-t" style={{ borderColor: "hsl(var(--border))" }} />
+
+      {/* Actions — flat */}
+      <div className="px-3 pt-2 pb-1">
+        <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "hsl(var(--muted-foreground))" }}>
+          Actions
+        </span>
+      </div>
+      <button
+        onClick={() => { copyCode(); }}
+        className="w-full flex items-center gap-2 px-3 py-2 text-left text-[11px] transition-colors hover:bg-muted"
+        style={{ color: "hsl(var(--foreground))" }}
+      >
+        {copied ? <Check size={13} /> : <Copy size={13} />}
+        {copied ? "Copied!" : "Copy Code"}
+      </button>
+      <button
+        onClick={() => { downloadCode(); setShowSettingsMenu(false); }}
+        className="w-full flex items-center gap-2 px-3 py-2 text-left text-[11px] transition-colors hover:bg-muted"
+        style={{ color: "hsl(var(--foreground))" }}
+      >
+        <Download size={13} />
+        Download .java
+      </button>
+      <button
+        onClick={() => { resetCode(); setShowSettingsMenu(false); }}
+        className="w-full flex items-center gap-2 px-3 py-2.5 text-left text-[11px] transition-colors hover:bg-muted"
+        style={{ color: "hsl(var(--foreground))" }}
+      >
+        <RotateCcw size={13} />
+        Reset to Default
+      </button>
+    </div>
+  );
+
   return (
     <div className={`${isFullscreen ? 'fixed inset-0 z-50 h-screen' : 'h-[calc(100vh-3.5rem)]'} flex flex-col`} style={{ background: "hsl(var(--background))" }}>
+      {/* Breakpoint & debug CSS */}
+      <style>{`
+        .breakpoint-decoration {
+          background: hsl(0 72% 51%) !important;
+          width: 8px !important;
+          height: 8px !important;
+          border-radius: 50% !important;
+          margin-left: 4px !important;
+          margin-top: 6px !important;
+          cursor: pointer !important;
+        }
+        .breakpoint-line-highlight {
+          background: hsla(0, 72%, 51%, 0.08) !important;
+        }
+        .monaco-editor .margin {
+          cursor: pointer !important;
+        }
+      `}</style>
+
       {/* Header */}
       {!isFullscreen && (
       <div
@@ -752,28 +1024,6 @@ export default function Playground() {
             )}
           </div>
 
-          {/* Reset */}
-          <button
-            onClick={resetCode}
-            title="Reset to default"
-            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-all hover:bg-muted"
-            style={{ color: "hsl(var(--muted-foreground))", border: "1px solid hsl(var(--border))" }}
-          >
-            <RotateCcw size={13} />
-            Reset
-          </button>
-
-          {/* Download */}
-          <button
-            onClick={downloadCode}
-            title="Download as .java file"
-            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-all hover:bg-muted"
-            style={{ color: "hsl(var(--muted-foreground))", border: "1px solid hsl(var(--border))" }}
-          >
-            <Download size={13} />
-            Download
-          </button>
-
           {/* Format */}
           <button
             onClick={formatCode}
@@ -785,20 +1035,11 @@ export default function Playground() {
             Format
           </button>
 
-          {/* Run */}
-          <button
-            onClick={runCode}
-            disabled={isRunning || !code.trim()}
-            className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-[11px] font-bold transition-all disabled:opacity-50"
-            style={{
-              background: "var(--gradient-primary)",
-              color: "hsl(var(--primary-foreground))",
-              boxShadow: "0 2px 12px hsl(var(--primary)/0.3)",
-            }}
-          >
-            {isRunning ? <Loader2 size={13} className="animate-spin" /> : <Play size={13} />}
-            {isRunning ? "Running..." : "Run ⌘↵"}
-          </button>
+          {/* Debug */}
+          <DebugButton />
+
+          {/* Run — LeetCode style */}
+          <RunButton />
 
           {/* Fullscreen */}
           <button
@@ -808,104 +1049,22 @@ export default function Playground() {
             style={{ color: "hsl(var(--muted-foreground))", border: "1px solid hsl(var(--border))" }}
           >
             <Maximize size={13} />
-            Fullscreen
           </button>
 
           {/* Settings */}
           <div className="relative">
             <button
-              onClick={() => setShowSettingsMenu(!showSettingsMenu)}
+              onClick={() => { setShowSettingsMenu(!showSettingsMenu); setSettingsCompilerOpen(false); setSettingsThemeOpen(false); }}
               className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-all hover:bg-muted"
               style={{ color: "hsl(var(--muted-foreground))", border: "1px solid hsl(var(--border))" }}
             >
               <Settings size={13} />
-              Settings
               <ChevronDown size={11} />
             </button>
             {showSettingsMenu && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setShowSettingsMenu(false)} />
-                <div
-                  className="absolute right-0 top-full mt-1 w-64 rounded-xl overflow-hidden z-50 shadow-xl"
-                  style={{ backgroundColor: "hsl(var(--popover))", color: "hsl(var(--popover-foreground))", border: "1px solid hsl(var(--border))" }}
-                >
-                  {/* Java Compiler Section */}
-                  <div className="px-3 pt-3 pb-1">
-                    <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "hsl(var(--muted-foreground))" }}>
-                      Java Compiler
-                    </span>
-                  </div>
-                  {availableCompilers.map((c) => (
-                    <button
-                      key={c.compiler}
-                      onClick={() => { setSelectedCompiler(c); }}
-                      className="w-full flex items-center gap-2 px-3 py-2 text-left text-[11px] transition-colors hover:bg-muted"
-                      style={{
-                        color: selectedCompiler.compiler === c.compiler ? "hsl(var(--primary))" : "hsl(var(--foreground))",
-                        fontWeight: selectedCompiler.compiler === c.compiler ? 600 : 400,
-                      }}
-                    >
-                      ☕ {c.label}
-                      {selectedCompiler.compiler === c.compiler && <Check size={11} className="ml-auto" />}
-                    </button>
-                  ))}
-
-                  <div className="mx-3 my-1 border-t" style={{ borderColor: "hsl(var(--border))" }} />
-
-                  {/* Editor Theme Section */}
-                  <div className="px-3 pt-2 pb-1">
-                    <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "hsl(var(--muted-foreground))" }}>
-                      Editor Theme
-                    </span>
-                  </div>
-                  {THEMES.map((t) => (
-                    <button
-                      key={t.id}
-                      onClick={() => { setCurrentTheme(t); }}
-                      className="w-full flex items-center gap-2 px-3 py-2 text-left text-[11px] transition-colors hover:bg-muted"
-                      style={{
-                        color: currentTheme.id === t.id ? "hsl(var(--primary))" : "hsl(var(--foreground))",
-                        fontWeight: currentTheme.id === t.id ? 600 : 400,
-                      }}
-                    >
-                      {t.icon} {t.label}
-                      {currentTheme.id === t.id && <Check size={11} className="ml-auto" />}
-                    </button>
-                  ))}
-
-                  <div className="mx-3 my-1 border-t" style={{ borderColor: "hsl(var(--border))" }} />
-
-                  {/* Other Actions */}
-                  <div className="px-3 pt-2 pb-1">
-                    <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "hsl(var(--muted-foreground))" }}>
-                      Actions
-                    </span>
-                  </div>
-                  <button
-                    onClick={() => { copyCode(); }}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-left text-[11px] transition-colors hover:bg-muted"
-                    style={{ color: "hsl(var(--foreground))" }}
-                  >
-                    {copied ? <Check size={13} /> : <Copy size={13} />}
-                    {copied ? "Copied!" : "Copy Code"}
-                  </button>
-                  <button
-                    onClick={() => { downloadCode(); setShowSettingsMenu(false); }}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-left text-[11px] transition-colors hover:bg-muted"
-                    style={{ color: "hsl(var(--foreground))" }}
-                  >
-                    <Download size={13} />
-                    Download .java
-                  </button>
-                  <button
-                    onClick={() => { resetCode(); setShowSettingsMenu(false); }}
-                    className="w-full flex items-center gap-2 px-3 py-2.5 text-left text-[11px] transition-colors hover:bg-muted"
-                    style={{ color: "hsl(var(--foreground))" }}
-                  >
-                    <RotateCcw size={13} />
-                    Reset to Default
-                  </button>
-                </div>
+                <SettingsDropdownContent />
               </>
             )}
           </div>
@@ -921,24 +1080,6 @@ export default function Playground() {
           </span>
           <div className="flex items-center gap-1.5">
             <button
-              onClick={resetCode}
-              title="Reset Code"
-              className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all hover:bg-muted"
-              style={{ color: "hsl(var(--muted-foreground))", border: "1px solid hsl(var(--border))" }}
-            >
-              <RotateCcw size={13} />
-              Reset
-            </button>
-            <button
-              onClick={downloadCode}
-              title="Download as .java file"
-              className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all hover:bg-muted"
-              style={{ color: "hsl(var(--muted-foreground))", border: "1px solid hsl(var(--border))" }}
-            >
-              <Download size={13} />
-              Download
-            </button>
-            <button
               onClick={formatCode}
               title="Format Code"
               className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all hover:bg-muted"
@@ -947,15 +1088,8 @@ export default function Playground() {
               <AlignLeft size={13} />
               Format
             </button>
-            <button
-              onClick={runCode}
-              disabled={isRunning || !code.trim()}
-              className="flex items-center gap-1.5 px-3 py-1 rounded-lg text-[11px] font-bold transition-all disabled:opacity-50"
-              style={{ background: "var(--gradient-primary)", color: "hsl(var(--primary-foreground))" }}
-            >
-              {isRunning ? <Loader2 size={13} className="animate-spin" /> : <Play size={13} />}
-              {isRunning ? "Running..." : "Run ⌘↵"}
-            </button>
+            <DebugButton compact />
+            <RunButton compact />
             <button
               onClick={() => setIsFullscreen(false)}
               className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all hover:bg-muted"
@@ -1005,6 +1139,11 @@ export default function Playground() {
                 <span className="text-[9px] font-mono ml-auto px-2 py-0.5 rounded" style={{ background: "hsl(var(--success)/0.1)", color: "hsl(var(--success))" }}>
                   {selectedCompiler.label}
                 </span>
+                {breakpoints.size > 0 && (
+                  <span className="text-[9px] font-mono ml-1 px-2 py-0.5 rounded" style={{ background: "hsla(0, 72%, 51%, 0.1)", color: "hsl(0 72% 51%)" }}>
+                    {breakpoints.size} BP
+                  </span>
+                )}
                 {practiceData && (
                   <button
                     onClick={() => navigate("/playground")}
@@ -1136,6 +1275,7 @@ export default function Playground() {
                       smoothScrolling: true,
                       cursorBlinking: "smooth",
                       cursorSmoothCaretAnimation: "on",
+                      glyphMargin: true,
                     }}
                   />
                 </div>
@@ -1206,12 +1346,18 @@ export default function Playground() {
                         background: "hsl(var(--card))",
                         color: output.includes("Error") || output.includes("⚠")
                           ? "hsl(var(--accent))"
+                          : output.includes("[DEBUG")
+                          ? "hsl(25 95% 53%)"
                           : "hsl(var(--success))",
                       }}
                     >
                       {output || (
                         <span style={{ color: "hsl(var(--muted-foreground))" }}>
                           Click <strong>Run</strong> or press <kbd className="px-1.5 py-0.5 rounded text-[11px]" style={{ background: "hsl(var(--muted))", border: "1px solid hsl(var(--border))" }}>Ctrl+Enter</kbd> to compile & run...
+                          {"\n\n"}
+                          <span style={{ color: "hsl(var(--muted-foreground)/0.6)" }}>
+                            💡 Click line numbers to set breakpoints, then use <strong>Debug</strong> to trace variable values.
+                          </span>
                         </span>
                       )}
                     </pre>
