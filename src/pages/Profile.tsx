@@ -52,12 +52,15 @@ export default function Profile() {
       return;
     }
 
-    const { data: publicData } = supabase.storage.from("avatars").getPublicUrl(path);
-    const newUrl = `${publicData.publicUrl}?t=${Date.now()}`;
+    const { data: signedData } = await supabase.storage
+      .from("avatars")
+      .createSignedUrl(path, 3600);
+
+    const newUrl = signedData?.signedUrl || null;
 
     await supabase
       .from("profiles")
-      .update({ avatar_url: newUrl })
+      .update({ avatar_url: path })
       .eq("user_id", user.id);
 
     setAvatarUrl(newUrl);
