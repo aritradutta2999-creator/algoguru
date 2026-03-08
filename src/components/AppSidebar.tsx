@@ -1,4 +1,5 @@
 import { useState, useMemo, useRef, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   Sidebar,
@@ -12,11 +13,12 @@ import {
 } from "@/components/ui/sidebar";
 import { topics } from "@/data/topics";
 import { javaTopics } from "@/data/javaTopics";
-import { ChevronDown, Home, BookOpen, Layers, Coffee, Search, X, Code2 } from "lucide-react";
+import { ChevronDown, Home, BookOpen, Layers, Coffee, Search, X, Code2, LogOut } from "lucide-react";
 import { useSettings } from "@/contexts/SettingsContext";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMode, APP_MODES } from "@/contexts/ModeContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 const topicIcons: Record<string, string> = {
   recursion: "↻",
@@ -61,8 +63,25 @@ export function AppSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
   const { currentMode, setMode, modes } = useMode();
+  const { user, signOut } = useAuth();
   const currentPath = location.pathname;
   const currentHash = location.hash.replace("#", "");
+
+  const [profile, setProfile] = useState<{ display_name: string | null; avatar_url: string | null }>({ display_name: null, avatar_url: null });
+
+  useEffect(() => {
+    if (!user) return;
+    supabase.from("profiles").select("display_name, avatar_url").eq("user_id", user.id).single().then(({ data }) => {
+      if (data) setProfile(data);
+    });
+  }, [user]);
+
+  const userName = profile.display_name || user?.email?.split("@")[0] || "User";
+  const isValidUrl = (url: unknown): url is string => {
+    if (typeof url !== "string") return false;
+    try { return new URL(url).protocol === "https:"; } catch { return false; }
+  };
+  const avatarUrl = isValidUrl(profile.avatar_url) ? profile.avatar_url : null;
 
   const activeTopics = currentMode.id === "ds" ? topics : javaTopics;
 
@@ -297,6 +316,34 @@ export function AppSidebar() {
                 )}
               </div>
             )}
+          </div>
+        </div>
+
+        {/* User Footer */}
+        <div className="mt-auto pt-4 mx-1 border-t" style={{ borderColor: "hsl(var(--sidebar-border))" }}>
+          <div className="flex items-center gap-2.5 px-3 py-2.5">
+            {avatarUrl ? (
+              <img src={avatarUrl} alt="" className="w-8 h-8 rounded-full object-cover flex-shrink-0" referrerPolicy="no-referrer" />
+            ) : (
+              <div
+                className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
+                style={{ background: "hsl(var(--primary)/0.15)", color: "hsl(var(--primary))" }}
+              >
+                {userName[0]?.toUpperCase()}
+              </div>
+            )}
+            <div className="flex-1 min-w-0">
+              <div className="text-xs font-semibold truncate" style={{ color: "hsl(var(--sidebar-foreground))" }}>{userName}</div>
+              <div className="text-[10px] truncate" style={{ color: "hsl(var(--muted-foreground))" }}>{user?.email}</div>
+            </div>
+            <button
+              onClick={signOut}
+              title="Sign out"
+              className="p-1.5 rounded-lg transition-colors hover:bg-muted flex-shrink-0"
+              style={{ color: "hsl(var(--muted-foreground))" }}
+            >
+              <LogOut size={14} />
+            </button>
           </div>
         </div>
 

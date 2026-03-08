@@ -12,10 +12,12 @@ import Playground from "./pages/Playground";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
-import { Menu, Sun, Moon, ZoomIn, ZoomOut, Search, X, ChevronRight, LogOut } from "lucide-react";
+import { Menu, Sun, Moon, ZoomIn, ZoomOut, Search, X, ChevronRight } from "lucide-react";
 import { SettingsProvider, useSettings } from "@/contexts/SettingsContext";
 import { ModeProvider, useMode } from "@/contexts/ModeContext";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { UserMenu } from "@/components/UserMenu";
+import Profile from "./pages/Profile";
 import { topics } from "@/data/topics";
 import { javaTopics } from "@/data/javaTopics";
 
@@ -176,41 +178,6 @@ function HeaderControls() {
   );
 }
 
-function isValidHttpsUrl(url: unknown): url is string {
-  if (typeof url !== "string") return false;
-  try { const u = new URL(url); return u.protocol === "https:"; } catch { return false; }
-}
-
-function sanitizeDisplayName(raw: unknown): string {
-  if (typeof raw !== "string") return "User";
-  return raw.replace(/[<>&"'/]/g, "").slice(0, 50) || "User";
-}
-
-function UserMenu() {
-  const { user, signOut } = useAuth();
-  if (!user) return null;
-  const rawName = user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split("@")[0];
-  const name = sanitizeDisplayName(rawName);
-  const rawAvatar = user.user_metadata?.avatar_url || user.user_metadata?.picture;
-  const avatar = isValidHttpsUrl(rawAvatar) ? rawAvatar : null;
-  return (
-    <button
-      onClick={signOut}
-      title="Sign out"
-      className="flex items-center gap-2 px-2 py-1.5 rounded-lg transition-all duration-200 hover:bg-muted"
-      style={{ color: "hsl(var(--muted-foreground))" }}
-    >
-      {avatar ? (
-        <img src={avatar} alt="" className="w-6 h-6 rounded-full" referrerPolicy="no-referrer" />
-      ) : (
-        <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold" style={{ background: "hsl(var(--primary)/0.15)", color: "hsl(var(--primary))" }}>
-          {name[0]?.toUpperCase()}
-        </div>
-      )}
-      <LogOut size={13} />
-    </button>
-  );
-}
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { session, loading } = useAuth();
@@ -282,6 +249,7 @@ const App = () => (
                       <Routes>
                         <Route path="/" element={<Index />} />
                         <Route path="/playground" element={<Playground />} />
+                        <Route path="/profile" element={<Profile />} />
                         <Route path="/:topicId" element={<TopicPage />} />
                         <Route path="*" element={<NotFound />} />
                       </Routes>
