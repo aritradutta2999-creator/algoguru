@@ -147,6 +147,20 @@ export default function Playground() {
           .sort((a, b) => b.major - a.major)
           .map(({ label, compiler }) => ({ label, compiler }));
 
+        // Ensure Java 21 & 17 always appear
+        const existingIds = new Set(parsed.map((c) => c.compiler));
+        for (const fb of FALLBACK_JAVA_COMPILERS) {
+          if (!existingIds.has(fb.compiler)) {
+            parsed.push(fb);
+          }
+        }
+        // Re-sort: highest version first
+        parsed.sort((a, b) => {
+          const majA = Number(a.label.replace("Java ", "")) || 0;
+          const majB = Number(b.label.replace("Java ", "")) || 0;
+          return majB - majA;
+        });
+
         setAvailableCompilers(parsed);
         setSelectedCompiler(parsed[0]);
       } catch {
