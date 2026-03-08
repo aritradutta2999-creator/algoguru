@@ -173,16 +173,16 @@ function instrumentCodeForDebug(source: string, breakpointLines: Set<number>): s
 
     const inMethodBody = braceDepth >= 2 || prevDepth >= 2;
 
-    // Track method parameters when entering a method body
-    // A method signature looks like: ... methodName(Type param1, Type param2) {
-    if (braceDepth >= 2 && prevDepth < 2 || (openBraces > 0 && trimmed.match(/\)\s*\{?\s*$/))) {
-      // Check if the previous non-empty lines form a method signature
-      const fullLine = trimmed;
-      const methodMatch = fullLine.match(/\(([^)]*)\)\s*\{?\s*$/);
-      if (methodMatch && methodMatch[1].trim().length > 0) {
-        const params = methodMatch[1].split(",");
+    // Track method parameters — detect any line that looks like a method signature with params
+    // Matches: accessModifiers returnType methodName(Type param1, Type param2, ...) {
+    if (openBraces > 0) {
+      const methodSigMatch = trimmed.match(/\w+\s*\(([^)]+)\)\s*(?:throws\s+\w+(?:\s*,\s*\w+)*)?\s*\{/);
+      if (methodSigMatch) {
+        const paramStr = methodSigMatch[1];
+        const params = paramStr.split(",");
         for (const param of params) {
-          const paramMatch = param.trim().match(/^(?:final\s+)?(\w+(?:<[^>]*>)?(?:\[\])*)\s+(\w+)$/);
+          const p = param.trim();
+          const paramMatch = p.match(/^(?:final\s+)?(\w+(?:<[^>]*>)?(?:\[\])*)\s+(\w+)$/);
           if (paramMatch) {
             const typePart = paramMatch[1];
             const paramName = paramMatch[2];
