@@ -7,12 +7,15 @@ import { dpContent } from "@/data/dpContent";
 import { graphsContent } from "@/data/graphsContent";
 import { bitManipulationContent } from "@/data/bitManipulationContent";
 import { heapContent } from "@/data/heapContent";
+import { javaContentMap } from "@/data/javaContent";
 import { topics } from "@/data/topics";
+import { javaTopics } from "@/data/javaTopics";
 import { ContentSection } from "@/data/recursionContent";
 import { ChevronRight, ChevronLeft, List, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useMode } from "@/contexts/ModeContext";
 
-const contentMap: Record<string, ContentSection[]> = {
+const dsContentMap: Record<string, ContentSection[]> = {
   recursion: recursionContent,
   backtracking: backtrackingContent,
   dp: dpContent,
@@ -28,17 +31,31 @@ const topicColorVars: Record<string, string> = {
   graphs: "hsl(var(--warning))",
   bits: "hsl(var(--info))",
   heaps: "hsl(var(--heap))",
+  "java-basics": "hsl(var(--primary))",
+  "java-oop": "hsl(var(--accent))",
+  "java-exceptions": "hsl(var(--warning))",
+  "java-collections": "hsl(var(--success))",
+  "java-generics": "hsl(var(--info))",
+  "java-streams": "hsl(var(--heap))",
+  "java-multithreading": "hsl(var(--primary))",
+  "java-io": "hsl(var(--accent))",
+  "java-advanced": "hsl(var(--warning))",
 };
 
 export default function TopicPage() {
   const { topicId } = useParams<{ topicId: string }>();
   const location = useLocation();
   const navigate = useNavigate();
+  const { currentMode } = useMode();
   const [tocOpen, setTocOpen] = useState(false);
   const mainRef = useRef<HTMLDivElement>(null);
   const [activeSection, setActiveSection] = useState<string>("");
 
-  const topic = topics.find((t) => t.id === topicId);
+  const isDSMode = currentMode.id === "ds";
+  const allTopics = isDSMode ? topics : javaTopics;
+  const contentMap = isDSMode ? dsContentMap : javaContentMap;
+
+  const topic = allTopics.find((t) => t.id === topicId);
   const content = topicId ? contentMap[topicId] : null;
 
   useEffect(() => {
@@ -81,7 +98,6 @@ export default function TopicPage() {
     );
   }
 
-  const allTopics = topics;
   const currentIdx = allTopics.findIndex((t) => t.id === topicId);
   const prevTopic = currentIdx > 0 ? allTopics[currentIdx - 1] : null;
   const nextTopic = currentIdx < allTopics.length - 1 ? allTopics[currentIdx + 1] : null;
@@ -89,9 +105,7 @@ export default function TopicPage() {
 
   return (
     <div className="flex min-h-screen relative" ref={mainRef}>
-      {/* Main content */}
       <div className="flex-1 min-w-0">
-        {/* Topic header banner */}
         <motion.div
           className="px-6 md:px-10 py-12 border-b relative overflow-hidden"
           style={{ borderColor: "hsl(var(--border))" }}
@@ -99,17 +113,12 @@ export default function TopicPage() {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
         >
-          {/* Decorative glow */}
           <div className="hero-glow w-80 h-80 -top-20 -right-20 opacity-[0.08]" style={{ background: color }} />
           <div className="absolute inset-0" style={{ background: "var(--gradient-hero)" }} />
 
           <div className="relative z-10 max-w-3xl">
             <div className="flex items-center gap-2 mb-4 text-xs font-medium" style={{ color: "hsl(var(--muted-foreground))" }}>
-              <span
-                className="cursor-pointer hover:underline transition-colors"
-                onClick={() => navigate("/")}
-                style={{ color: "hsl(var(--primary))" }}
-              >
+              <span className="cursor-pointer hover:underline transition-colors" onClick={() => navigate("/")} style={{ color: "hsl(var(--primary))" }}>
                 Home
               </span>
               <ChevronRight size={12} />
@@ -131,7 +140,6 @@ export default function TopicPage() {
                 </p>
               </div>
             </div>
-            {/* Progress dots */}
             <div className="flex items-center gap-1.5 mt-5">
               {content.map((s, i) => (
                 <div
@@ -149,13 +157,11 @@ export default function TopicPage() {
           </div>
         </motion.div>
 
-        {/* Content area */}
         <div className="max-w-3xl mx-auto px-6 md:px-10 py-12">
           {content.map((section) => (
             <ContentRenderer key={section.id} section={section} />
           ))}
 
-          {/* Topic navigation */}
           <div className="flex items-center justify-between mt-10 pt-8" style={{ borderTop: "1px solid hsl(var(--border))" }}>
             {prevTopic ? (
               <motion.button
@@ -200,7 +206,7 @@ export default function TopicPage() {
         </div>
       </div>
 
-      {/* Right TOC panel */}
+      {/* Right TOC */}
       <div className="hidden xl:flex flex-col w-56 flex-shrink-0 border-l sticky top-14 h-[calc(100vh-3.5rem)] overflow-y-auto py-8 px-5"
         style={{ borderColor: "hsl(var(--border))" }}>
         <div className="text-[10px] font-bold uppercase tracking-[0.15em] mb-5 font-mono" style={{ color: "hsl(var(--muted-foreground))" }}>
@@ -228,22 +234,17 @@ export default function TopicPage() {
         </nav>
       </div>
 
-      {/* Mobile TOC toggle */}
+      {/* Mobile TOC */}
       <motion.button
         whileTap={{ scale: 0.95 }}
         onClick={() => setTocOpen(!tocOpen)}
         className="xl:hidden fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-3 rounded-2xl text-xs font-semibold shadow-xl"
-        style={{
-          background: color,
-          color: "hsl(var(--background))",
-          boxShadow: `0 4px 20px ${color}40`,
-        }}
+        style={{ background: color, color: "hsl(var(--background))", boxShadow: `0 4px 20px ${color}40` }}
       >
         {tocOpen ? <X size={14} /> : <List size={14} />}
         {tocOpen ? "Close" : "Contents"}
       </motion.button>
 
-      {/* Mobile TOC panel */}
       <AnimatePresence>
         {tocOpen && (
           <motion.div
