@@ -143,6 +143,11 @@ export function ContentRenderer({ section }: ContentRendererProps) {
         </ul>
       </div>
 
+      {/* Diagram */}
+      {section.diagram && (
+        <DiagramRenderer diagram={section.diagram} />
+      )}
+
       {/* Key points */}
       {section.keyPoints && (
         <div className="highlight-box mb-7">
