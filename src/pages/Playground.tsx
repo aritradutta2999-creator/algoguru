@@ -113,6 +113,7 @@ export default function Playground() {
   const [selectedCompiler, setSelectedCompiler] = useState(FALLBACK_JAVA_COMPILERS[0]);
   const [showThemeMenu, setShowThemeMenu] = useState(false);
   const [showCompilerMenu, setShowCompilerMenu] = useState(false);
+  const [showSettingsMenu, setShowSettingsMenu] = useState(false);
   const [copied, setCopied] = useState(false);
   const [stdin, setStdin] = useState("");
   
