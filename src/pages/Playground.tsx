@@ -417,10 +417,10 @@ export default function Playground() {
           </div>
           <div>
             <h1 className="text-sm font-bold tracking-tight" style={{ color: "hsl(var(--foreground))" }}>
-              Java Playground
+              {practiceData ? `Practice: ${practiceData.title}` : "Java Playground"}
             </h1>
             <p className="text-[10px]" style={{ color: "hsl(var(--muted-foreground))" }}>
-              Write · Compile · Run
+              {practiceData ? practiceData.difficulty || "Practice Mode" : "Write · Compile · Run"}
             </p>
           </div>
         </div>
