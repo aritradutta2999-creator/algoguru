@@ -481,6 +481,15 @@
     background: hsl(var(--success) / 0.14);
   }
 
+  .cr-group-header {
+    @apply flex items-center gap-3 mt-14 mb-6 pb-3;
+    border-bottom: 1px solid hsl(var(--border));
+  }
+
+  .cr-group-header:first-child {
+    @apply mt-0;
+  }
+
   /* Legacy compat */
   .highlight-box {
     background: hsl(var(--primary) / 0.04);
