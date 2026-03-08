@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { topics } from "@/data/topics";
 import { javaTopics } from "@/data/javaTopics";
+import { practiceTopics } from "@/data/practiceTopics";
 import { motion } from "framer-motion";
 import { ChevronRight, Zap, GitBranch, LayoutGrid, Terminal, Sparkles, ArrowRight, Coffee, Layers, Code2, BookOpen, Trophy, Flame, Star, Mail, Send, Bug } from "lucide-react";
 import { useMode } from "@/contexts/ModeContext";
@@ -27,6 +28,15 @@ const topicColors: Record<string, { color: string; bg: string; border: string }>
   "java-multithreading": { color: "hsl(var(--primary))", bg: "hsl(var(--primary)/0.06)", border: "hsl(var(--primary)/0.15)" },
   "java-io": { color: "hsl(var(--accent))", bg: "hsl(var(--accent)/0.06)", border: "hsl(var(--accent)/0.15)" },
   "java-advanced": { color: "hsl(var(--warning))", bg: "hsl(var(--warning)/0.06)", border: "hsl(var(--warning)/0.15)" },
+  // Practice topic colors
+  "practice-warmup": { color: "hsl(var(--primary))", bg: "hsl(var(--primary)/0.06)", border: "hsl(var(--primary)/0.15)" },
+  "practice-arrays": { color: "hsl(var(--accent))", bg: "hsl(var(--accent)/0.06)", border: "hsl(var(--accent)/0.15)" },
+  "practice-strings": { color: "hsl(var(--success))", bg: "hsl(var(--success)/0.06)", border: "hsl(var(--success)/0.15)" },
+  "practice-recursion": { color: "hsl(var(--warning))", bg: "hsl(var(--warning)/0.06)", border: "hsl(var(--warning)/0.15)" },
+  "practice-dp": { color: "hsl(var(--info))", bg: "hsl(var(--info)/0.06)", border: "hsl(var(--info)/0.15)" },
+  "practice-graphs": { color: "hsl(var(--heap))", bg: "hsl(var(--heap)/0.06)", border: "hsl(var(--heap)/0.15)" },
+  "practice-trees": { color: "hsl(var(--primary))", bg: "hsl(var(--primary)/0.06)", border: "hsl(var(--primary)/0.15)" },
+  "practice-greedy": { color: "hsl(var(--accent))", bg: "hsl(var(--accent)/0.06)", border: "hsl(var(--accent)/0.15)" },
 };
 
 const container = {
@@ -43,7 +53,8 @@ export default function Index() {
   const navigate = useNavigate();
   const { currentMode, setMode, modes } = useMode();
   const isDSMode = currentMode.id === "ds";
-  const activeTopics = isDSMode ? topics : javaTopics;
+  const isPracticeMode = currentMode.id === "practice";
+  const activeTopics = isDSMode ? topics : isPracticeMode ? practiceTopics : javaTopics;
 
   const dsStats = [
     { label: "Topics", value: "12", icon: LayoutGrid },
@@ -59,7 +70,14 @@ export default function Index() {
     { label: "Concepts", value: "150+", icon: Zap },
   ];
 
-  const quickStats = isDSMode ? dsStats : javaStats;
+  const practiceStats = [
+    { label: "Categories", value: "8", icon: LayoutGrid },
+    { label: "Problems", value: "50+", icon: GitBranch },
+    { label: "Solutions", value: "50+", icon: Terminal },
+    { label: "Difficulty Levels", value: "3", icon: Zap },
+  ];
+
+  const quickStats = isDSMode ? dsStats : isPracticeMode ? practiceStats : javaStats;
 
   return (
     <div className="min-h-screen">
@@ -95,7 +113,7 @@ export default function Index() {
               }}
             >
               <Sparkles size={12} />
-              {isDSMode ? "Competitive Programming · Java Edition" : "Core & Advanced Java · Complete Guide"}
+              {isDSMode ? "Competitive Programming · Java Edition" : isPracticeMode ? "Curated Practice Problems · All Levels" : "Core & Advanced Java · Complete Guide"}
             </div>
           </motion.div>
 
@@ -108,6 +126,13 @@ export default function Index() {
                   <span className="text-primary-glow">Algorithms</span>
                   <br />
                   <span className="text-accent-glow">From Zero to Expert</span>
+                </>
+              ) : isPracticeMode ? (
+                <>
+                  Solve{" "}
+                  <span className="text-primary-glow">Problems</span>
+                  <br />
+                  <span className="text-accent-glow">Build Real Skills</span>
                 </>
               ) : (
                 <>
@@ -143,7 +168,7 @@ export default function Index() {
                       boxShadow: isActive ? "var(--shadow-card)" : "none",
                     }}
                   >
-                    {isDS ? <Layers size={15} /> : <Coffee size={15} />}
+                    {mode.id === "ds" ? <Layers size={15} /> : mode.id === "practice" ? <Trophy size={15} /> : <Coffee size={15} />}
                     {mode.label}
                   </button>
                 );
@@ -216,7 +241,7 @@ export default function Index() {
                 </span>
               </div>
               <h2 className="text-xl md:text-2xl font-bold tracking-tight" style={{ color: "hsl(var(--foreground))" }}>
-                {isDSMode ? "Begin Your DSA Journey" : "Start Learning Java"}
+                {isDSMode ? "Begin Your DSA Journey" : isPracticeMode ? "Start Practicing" : "Start Learning Java"}
               </h2>
             </div>
             <button
@@ -298,7 +323,7 @@ export default function Index() {
           <motion.div className="flex items-center gap-2 mb-8" initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
             <BookOpen size={16} style={{ color: "hsl(var(--primary))" }} />
             <h2 className="text-lg md:text-xl font-bold tracking-tight" style={{ color: "hsl(var(--foreground))" }}>
-              All {isDSMode ? "Topics" : "Modules"}
+              All {isDSMode ? "Topics" : isPracticeMode ? "Categories" : "Modules"}
             </h2>
             <span className="text-[10px] font-mono px-2 py-0.5 rounded-full" style={{ background: "hsl(var(--muted))", color: "hsl(var(--muted-foreground))" }}>
               {activeTopics.length}

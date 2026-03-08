@@ -16,6 +16,8 @@ import { advancedTopicsContent } from "@/data/advancedTopicsContent";
 import { javaContentMap } from "@/data/javaContent";
 import { topics } from "@/data/topics";
 import { javaTopics } from "@/data/javaTopics";
+import { practiceTopics } from "@/data/practiceTopics";
+import { practiceContentMap } from "@/data/practiceContent";
 import { ContentSection } from "@/data/recursionContent";
 import { ChevronRight, ChevronLeft, List, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -58,6 +60,15 @@ const topicColorVars: Record<string, string> = {
   "java-multithreading": "hsl(var(--primary))",
   "java-io": "hsl(var(--accent))",
   "java-advanced": "hsl(var(--warning))",
+  // Practice topic colors
+  "practice-warmup": "hsl(var(--primary))",
+  "practice-arrays": "hsl(var(--accent))",
+  "practice-strings": "hsl(var(--success))",
+  "practice-recursion": "hsl(var(--warning))",
+  "practice-dp": "hsl(var(--info))",
+  "practice-graphs": "hsl(var(--heap))",
+  "practice-trees": "hsl(var(--primary))",
+  "practice-greedy": "hsl(var(--accent))",
 };
 
 export default function TopicPage() {
@@ -70,8 +81,9 @@ export default function TopicPage() {
   const [activeSection, setActiveSection] = useState<string>("");
 
   const isDSMode = currentMode.id === "ds";
-  const allTopics = isDSMode ? topics : javaTopics;
-  const contentMap = isDSMode ? dsContentMap : javaContentMap;
+  const isPracticeMode = currentMode.id === "practice";
+  const allTopics = isDSMode ? topics : isPracticeMode ? practiceTopics : javaTopics;
+  const contentMap = isDSMode ? dsContentMap : isPracticeMode ? practiceContentMap : javaContentMap;
 
   const topic = allTopics.find((t) => t.id === topicId);
   const content = topicId ? contentMap[topicId] : null;
