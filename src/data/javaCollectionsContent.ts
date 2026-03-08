@@ -13,7 +13,9 @@ export const javaCollectionsContent: ContentSection[] = [
       "**Map<K,V>** is separate — it does NOT extend Collection, but is part of the framework",
       "**Why use Collections?** Arrays have fixed size, no built-in search/sort. Collections are dynamic, type-safe with generics, and come with powerful utility methods",
       "**Key interfaces:** List (ArrayList, LinkedList), Set (HashSet, TreeSet), Queue (PriorityQueue, ArrayDeque), Map (HashMap, TreeMap)",
-      "All collections store **references** (objects), not primitives. Use wrapper classes (Integer, Double, etc.) for primitives"
+      "All collections store **references** (objects), not primitives. Use wrapper classes (Integer, Double, etc.) for primitives",
+      "**Fail-fast iterators:** Most collections throw `ConcurrentModificationException` if modified during iteration (except via iterator's own methods)",
+      "**Fail-safe iterators:** Concurrent collections (ConcurrentHashMap, CopyOnWriteArrayList) allow modification during iteration"
     ],
     diagram: {
       type: "hierarchy",
@@ -42,7 +44,7 @@ export const javaCollectionsContent: ContentSection[] = [
                   children: [
                     { label: "HashSet", color: "success" },
                     { label: "LinkedHashSet", color: "success" },
-                    { label: "TreeSet (SortedSet)", color: "success" }
+                    { label: "TreeSet (SortedSet → NavigableSet)", color: "success" }
                   ]
                 },
                 {
@@ -64,8 +66,9 @@ export const javaCollectionsContent: ContentSection[] = [
           children: [
             { label: "HashMap", color: "warning" },
             { label: "LinkedHashMap", color: "warning" },
-            { label: "TreeMap (SortedMap)", color: "warning" },
-            { label: "Hashtable → Properties", color: "warning" }
+            { label: "TreeMap (SortedMap → NavigableMap)", color: "warning" },
+            { label: "Hashtable → Properties", color: "warning" },
+            { label: "EnumMap", color: "warning" }
           ]
         }
       ]
@@ -111,6 +114,42 @@ public class CollectionsDemo {
         System.out.println("Poll: " + queue.poll()); // First
     }
 }`
+      },
+      {
+        title: "Collection Interface — Common Methods",
+        language: "java",
+        content: `import java.util.*;
+
+public class CollectionMethods {
+    public static void main(String[] args) {
+        Collection<Integer> col = new ArrayList<>(Arrays.asList(1, 2, 3, 4, 5));
+        
+        // Size & empty check
+        System.out.println("Size: " + col.size());        // 5
+        System.out.println("Empty: " + col.isEmpty());    // false
+        
+        // Contains
+        System.out.println("Has 3: " + col.contains(3));  // true
+        System.out.println("Has all [1,2]: " + col.containsAll(Arrays.asList(1, 2))); // true
+        
+        // Add & Remove
+        col.add(6);                            // [1,2,3,4,5,6]
+        col.remove(3);                         // removes first occurrence of 3
+        col.removeAll(Arrays.asList(4, 5));    // removes 4 and 5
+        col.retainAll(Arrays.asList(1, 2, 6)); // keeps only 1, 2, 6
+        
+        // Convert to array
+        Object[] arr = col.toArray();
+        Integer[] typed = col.toArray(new Integer[0]);
+        
+        // Stream (Java 8+)
+        col.stream().filter(n -> n > 1).forEach(System.out::println);
+        
+        // Clear
+        col.clear();
+        System.out.println("After clear: " + col); // []
+    }
+}`
       }
     ],
     tip: "When in doubt: **ArrayList** for lists, **HashSet** for unique elements, **HashMap** for key-value, **ArrayDeque** for stacks/queues."
@@ -127,6 +166,8 @@ public class CollectionsDemo {
       "**LinkedList** also implements **Deque**, so it can be used as a stack or queue",
       "**When to use ArrayList:** Most of the time! Random access, iteration, and appending at end are all fast",
       "**When to use LinkedList:** Frequent insertions/deletions at the beginning or middle, or when you need Deque functionality",
+      "**Memory:** ArrayList uses ~40% less memory — LinkedList stores two extra pointers (prev, next) per node plus object overhead",
+      "**Cache locality:** ArrayList elements are contiguous in memory → CPU cache-friendly → faster iteration",
       "In competitive programming, **ArrayList** is almost always preferred over LinkedList"
     ],
     code: [
@@ -160,12 +201,17 @@ public class ArrayListDemo {
         
         // Sort
         Collections.sort(list);       // [1, 2, 3, 20]
+        list.sort(Comparator.reverseOrder()); // [20, 3, 2, 1]
         
         // Iterate
         for (int x : list) System.out.print(x + " ");
         
         // Convert to array
         Integer[] arr = list.toArray(new Integer[0]);
+        
+        // SubList (returns a VIEW, not a copy)
+        List<Integer> sub = list.subList(0, 2); // [20, 3]
+        // sub modifications reflect in original list!
     }
 }`
       },
@@ -202,7 +248,52 @@ public class LinkedListDemo {
         ll.offer("Y");      // [B, C, Y]
         String head = ll.poll(); // B, list = [C, Y]
         
+        // Descending iterator
+        Iterator<String> desc = ll.descendingIterator();
+        while (desc.hasNext()) System.out.print(desc.next() + " "); // Y C
+        
         System.out.println(ll); // [C, Y]
+    }
+}`
+      },
+      {
+        title: "ArrayList Internals — Capacity & Growth",
+        language: "java",
+        content: `import java.util.*;
+
+public class ArrayListInternals {
+    public static void main(String[] args) {
+        // Default capacity = 10
+        ArrayList<Integer> list = new ArrayList<>();
+        
+        // Pre-allocate capacity (avoids resizing)
+        ArrayList<Integer> optimized = new ArrayList<>(1000);
+        
+        // When size > capacity:
+        // 1. New capacity = old * 1.5 (roughly)
+        // 2. Arrays.copyOf() copies all elements to new array
+        // 3. Old array becomes garbage
+        
+        // Tip: If you know the size, pre-allocate!
+        int n = 100000;
+        List<Integer> fast = new ArrayList<>(n);
+        for (int i = 0; i < n; i++) fast.add(i);
+        
+        // Trim to exact size (frees unused capacity)
+        ((ArrayList<Integer>) fast).trimToSize();
+        
+        // ensureCapacity — pre-grow before bulk add
+        ArrayList<Integer> bulk = new ArrayList<>();
+        bulk.ensureCapacity(50000);
+        
+        // Arrays.asList returns FIXED-SIZE list (backed by array)
+        List<String> fixed = Arrays.asList("A", "B", "C");
+        fixed.set(0, "X");    // OK — modifies underlying array
+        // fixed.add("D");    // ❌ UnsupportedOperationException
+        
+        // To get a modifiable list:
+        List<String> mutable = new ArrayList<>(Arrays.asList("A", "B", "C"));
+        mutable.add("D"); // ✅ works
     }
 }`
       }
@@ -220,8 +311,10 @@ public class LinkedListDemo {
       "**TreeSet** — backed by Red-Black Tree, elements stored in **sorted order**, O(log n) operations",
       "HashSet uses **hashCode()** and **equals()** to detect duplicates",
       "TreeSet requires elements to be **Comparable** or provide a **Comparator**",
-      "**When to use:** HashSet for fastest lookups, LinkedHashSet to preserve order, TreeSet when you need sorted iteration",
-      "Sets are perfect for: removing duplicates, membership testing, set operations (union, intersection)"
+      "**EnumSet** — specialized Set for enum types. Uses bit vector internally — **extremely fast** and memory efficient",
+      "**When to use:** HashSet for fastest lookups, LinkedHashSet to preserve order, TreeSet when you need sorted iteration, EnumSet for enums",
+      "Sets are perfect for: removing duplicates, membership testing, set operations (union, intersection)",
+      "**TreeSet navigation:** `first()`, `last()`, `floor()`, `ceiling()`, `lower()`, `higher()`, `subSet()`, `headSet()`, `tailSet()`"
     ],
     code: [
       {
@@ -277,9 +370,99 @@ public class SetOperations {
         difference.removeAll(b);
         System.out.println("Difference: " + difference); // [1, 2]
 
+        // Symmetric Difference (A △ B) — in one but not both
+        Set<Integer> symDiff = new HashSet<>(a);
+        symDiff.addAll(b);
+        Set<Integer> common = new HashSet<>(a);
+        common.retainAll(b);
+        symDiff.removeAll(common);
+        System.out.println("Symmetric Diff: " + symDiff); // [1, 2, 5, 6]
+
         // Check subset
         Set<Integer> sub = new HashSet<>(Arrays.asList(1, 2));
         System.out.println("Is subset? " + a.containsAll(sub)); // true
+        
+        // Check disjoint (no common elements)
+        System.out.println("Disjoint? " + Collections.disjoint(a, Set.of(7, 8))); // true
+    }
+}`
+      },
+      {
+        title: "TreeSet — NavigableSet Operations",
+        language: "java",
+        content: `import java.util.*;
+
+public class TreeSetNav {
+    public static void main(String[] args) {
+        TreeSet<Integer> ts = new TreeSet<>(Arrays.asList(10, 20, 30, 40, 50, 60));
+        
+        // Navigation
+        System.out.println("First: " + ts.first());          // 10
+        System.out.println("Last: " + ts.last());            // 60
+        System.out.println("Floor(35): " + ts.floor(35));    // 30 (≤ 35)
+        System.out.println("Ceiling(35): " + ts.ceiling(35)); // 40 (≥ 35)
+        System.out.println("Lower(30): " + ts.lower(30));    // 20 (< 30)
+        System.out.println("Higher(30): " + ts.higher(30));  // 40 (> 30)
+        
+        // Sub views
+        System.out.println("HeadSet(<30): " + ts.headSet(30));        // [10, 20]
+        System.out.println("TailSet(>=30): " + ts.tailSet(30));       // [30, 40, 50, 60]
+        System.out.println("SubSet[20,50): " + ts.subSet(20, 50));    // [20, 30, 40]
+        System.out.println("SubSet[20,50]: " + ts.subSet(20, true, 50, true)); // [20,30,40,50]
+        
+        // Poll (retrieve and remove)
+        System.out.println("PollFirst: " + ts.pollFirst()); // 10
+        System.out.println("PollLast: " + ts.pollLast());   // 60
+        
+        // Descending
+        NavigableSet<Integer> desc = ts.descendingSet();
+        System.out.println("Descending: " + desc); // [50, 40, 30, 20]
+        
+        // Custom comparator TreeSet
+        TreeSet<String> byLen = new TreeSet<>(
+            Comparator.comparingInt(String::length).thenComparing(Comparator.naturalOrder())
+        );
+        byLen.addAll(Arrays.asList("cat", "elephant", "dog", "ant"));
+        System.out.println(byLen); // [ant, cat, dog, elephant]
+    }
+}`
+      },
+      {
+        title: "EnumSet — Ultra-Fast Enum Collections",
+        language: "java",
+        content: `import java.util.*;
+
+public class EnumSetDemo {
+    enum Day { MON, TUE, WED, THU, FRI, SAT, SUN }
+    enum Permission { READ, WRITE, EXECUTE, DELETE }
+    
+    public static void main(String[] args) {
+        // EnumSet — backed by bit vector, blazing fast
+        EnumSet<Day> weekdays = EnumSet.of(Day.MON, Day.TUE, Day.WED, Day.THU, Day.FRI);
+        EnumSet<Day> weekend = EnumSet.complementOf(weekdays);
+        EnumSet<Day> allDays = EnumSet.allOf(Day.class);
+        EnumSet<Day> noDays = EnumSet.noneOf(Day.class);
+        EnumSet<Day> range = EnumSet.range(Day.TUE, Day.THU); // [TUE, WED, THU]
+        
+        System.out.println("Weekdays: " + weekdays);
+        System.out.println("Weekend: " + weekend); // [SAT, SUN]
+        
+        // Permission flags — classic use case
+        EnumSet<Permission> userPerms = EnumSet.of(Permission.READ, Permission.WRITE);
+        EnumSet<Permission> adminPerms = EnumSet.allOf(Permission.class);
+        
+        if (userPerms.contains(Permission.DELETE)) {
+            System.out.println("Can delete");
+        } else {
+            System.out.println("No delete permission");
+        }
+        
+        // EnumMap — optimized Map for enum keys
+        EnumMap<Day, String> schedule = new EnumMap<>(Day.class);
+        schedule.put(Day.MON, "Math");
+        schedule.put(Day.TUE, "Physics");
+        schedule.put(Day.WED, "Chemistry");
+        System.out.println(schedule); // maintains enum declaration order
     }
 }`
       }
@@ -298,7 +481,9 @@ public class SetOperations {
       "HashMap uses **hashing** — key.hashCode() determines the bucket, equals() resolves collisions",
       "**Load factor** (default 0.75) — when 75% full, HashMap doubles its capacity and rehashes",
       "**Collision handling:** Java 8+ uses linked list for ≤8 collisions, converts to **Red-Black Tree** for >8",
-      "**getOrDefault**, **putIfAbsent**, **compute**, **merge** are powerful Java 8+ methods"
+      "**getOrDefault**, **putIfAbsent**, **compute**, **merge** are powerful Java 8+ methods",
+      "**LinkedHashMap with access order** can be used to implement an **LRU Cache** — override `removeEldestEntry()`",
+      "**TreeMap** implements **NavigableMap** — supports `floorKey`, `ceilingKey`, `subMap`, `headMap`, `tailMap`"
     ],
     code: [
       {
@@ -329,11 +514,19 @@ public class HashMapDemo {
         
         // Remove
         map.remove("Charlie");
+        map.remove("Bob", 999);    // conditional — only if value matches (no-op here)
+        
+        // Replace
+        map.replace("Alice", 95, 100);  // conditional replace
+        map.replaceAll((k, v) -> v + 5); // transform all values
         
         // Iterate
         for (Map.Entry<String, Integer> entry : map.entrySet()) {
             System.out.println(entry.getKey() + " = " + entry.getValue());
         }
+        
+        // forEach (Java 8+)
+        map.forEach((k, v) -> System.out.println(k + " -> " + v));
         
         // Keys and values
         Set<String> keys = map.keySet();
@@ -356,7 +549,7 @@ public class FrequencyCount {
             freq.put(n, freq.getOrDefault(n, 0) + 1);
         }
         
-        // Method 2: merge (Java 8+)
+        // Method 2: merge (Java 8+) — most elegant
         Map<Integer, Integer> freq2 = new HashMap<>();
         for (int n : nums) {
             freq2.merge(n, 1, Integer::sum);
@@ -374,6 +567,12 @@ public class FrequencyCount {
         int maxKey = Collections.max(freq.entrySet(), 
             Map.Entry.comparingByValue()).getKey();
         System.out.println("Most frequent: " + maxKey); // 3
+        
+        // Group by frequency
+        Map<Integer, List<Integer>> byFreq = new HashMap<>();
+        freq.forEach((num, count) -> 
+            byFreq.computeIfAbsent(count, k -> new ArrayList<>()).add(num));
+        System.out.println("By frequency: " + byFreq);
     }
 }`
       },
@@ -397,14 +596,252 @@ public class TreeMapDemo {
         System.out.println("Lower(20): " + map.lowerKey(20));    // 10 (< 20)
         System.out.println("Higher(20): " + map.higherKey(20));  // 30 (> 20)
         
+        // First/Last Entry
+        Map.Entry<Integer, String> first = map.firstEntry();  // 10=A
+        Map.Entry<Integer, String> last = map.lastEntry();    // 40=D
+        
+        // Poll (retrieve + remove)
+        Map.Entry<Integer, String> polled = map.pollFirstEntry(); // removes 10=A
+        
         // Submaps
         SortedMap<Integer, String> sub = map.subMap(15, 35);
         System.out.println("SubMap [15,35): " + sub); // {20=B, 30=C}
+        
+        // Descending
+        NavigableMap<Integer, String> desc = map.descendingMap();
+        System.out.println("Descending: " + desc);
+    }
+}`
+      },
+      {
+        title: "LinkedHashMap — LRU Cache Implementation",
+        language: "java",
+        content: `import java.util.*;
+
+// LRU Cache using LinkedHashMap with access order
+class LRUCache<K, V> extends LinkedHashMap<K, V> {
+    private final int capacity;
+    
+    public LRUCache(int capacity) {
+        // accessOrder=true → most recently accessed moves to end
+        super(capacity, 0.75f, true);
+        this.capacity = capacity;
+    }
+    
+    @Override
+    protected boolean removeEldestEntry(Map.Entry<K, V> eldest) {
+        return size() > capacity; // remove oldest when over capacity
+    }
+}
+
+public class LRUDemo {
+    public static void main(String[] args) {
+        LRUCache<String, Integer> cache = new LRUCache<>(3);
+        
+        cache.put("A", 1);
+        cache.put("B", 2);
+        cache.put("C", 3);
+        System.out.println(cache); // {A=1, B=2, C=3}
+        
+        cache.get("A"); // access A → moves to end
+        System.out.println(cache); // {B=2, C=3, A=1}
+        
+        cache.put("D", 4); // exceeds capacity → evicts B (eldest)
+        System.out.println(cache); // {C=3, A=1, D=4}
+        
+        cache.put("E", 5); // evicts C
+        System.out.println(cache); // {A=1, D=4, E=5}
+        
+        // Useful for: caching API responses, database queries,
+        // memoization in algorithms, session management
     }
 }`
       }
     ],
     warning: "Never modify a map while iterating with a for-each loop — use **Iterator.remove()** or **removeIf()** instead."
+  },
+  {
+    id: "col-hashmap-internals",
+    title: "HashMap Internals — How Hashing Works",
+    difficulty: "Hard",
+    theory: [
+      "**HashMap** internally uses an **array of buckets** (called `table`). Each bucket is a linked list or tree",
+      "**Hashing process:** `hashCode()` → perturbed hash → `hash & (n-1)` to find bucket index",
+      "Java applies a **perturbation function:** `h ^ (h >>> 16)` to spread bits and reduce collisions",
+      "**Default initial capacity** is 16, **load factor** is 0.75 → rehash when size > 12",
+      "**Rehashing (resize):** capacity doubles, ALL entries are re-bucketed — O(n) operation",
+      "**Collision chain:** bucket stores a linked list. Java 8+ converts to **Red-Black Tree** when chain length ≥ 8 (TREEIFY_THRESHOLD)",
+      "Tree reverts to linked list when chain shrinks to ≤ 6 (UNTREEIFY_THRESHOLD)",
+      "**hashCode() contract:** equal objects MUST have equal hash codes. Unequal objects SHOULD have different hash codes for performance",
+      "**Worst case:** all keys hash to same bucket → O(n) with linked list, O(log n) with tree (Java 8+)",
+      "**Immutable keys are best:** if a key's hashCode changes after insertion, the entry becomes unreachable (memory leak!)",
+      "**HashMap allows 1 null key** (stored in bucket 0) and multiple null values. TreeMap does NOT allow null keys"
+    ],
+    diagram: {
+      type: "flow",
+      title: "HashMap Internal Structure",
+      steps: [
+        "key.hashCode() → compute hash",
+        "hash ^ (hash >>> 16) → perturbation",
+        "hash & (capacity - 1) → bucket index",
+        "Bucket empty? → insert new Node",
+        "Bucket has entries → check equals()",
+        "Key matches → update value",
+        "Key doesn't match → chain (list/tree)",
+        "Chain length ≥ 8 → treeify to Red-Black Tree"
+      ]
+    },
+    code: [
+      {
+        title: "Understanding hashCode & equals Contract",
+        language: "java",
+        content: `import java.util.*;
+
+class Employee {
+    String name;
+    int id;
+    
+    Employee(String name, int id) {
+        this.name = name;
+        this.id = id;
+    }
+    
+    // ✅ MUST override both hashCode and equals together
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Employee emp = (Employee) o;
+        return id == emp.id && Objects.equals(name, emp.name);
+    }
+    
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, id); // consistent with equals
+    }
+    
+    @Override
+    public String toString() { return name + "#" + id; }
+}
+
+public class HashCodeDemo {
+    public static void main(String[] args) {
+        Employee e1 = new Employee("Alice", 101);
+        Employee e2 = new Employee("Alice", 101);
+        
+        System.out.println("equals: " + e1.equals(e2));         // true
+        System.out.println("hashCode same: " + (e1.hashCode() == e2.hashCode())); // true
+        
+        // Without hashCode override, HashMap treats them as different keys!
+        Map<Employee, String> map = new HashMap<>();
+        map.put(e1, "Engineering");
+        System.out.println(map.get(e2)); // "Engineering" — works because hashCode+equals
+        
+        Set<Employee> set = new HashSet<>();
+        set.add(e1);
+        set.add(e2); // duplicate — ignored
+        System.out.println("Set size: " + set.size()); // 1
+    }
+}`
+      },
+      {
+        title: "HashMap Performance — Capacity & Load Factor",
+        language: "java",
+        content: `import java.util.*;
+
+public class HashMapPerformance {
+    public static void main(String[] args) {
+        // Default: capacity=16, loadFactor=0.75
+        // Rehash when size > 16 * 0.75 = 12
+        Map<Integer, String> defaultMap = new HashMap<>();
+        
+        // Pre-size for known number of entries
+        // Formula: expectedSize / loadFactor + 1
+        int expected = 1000;
+        Map<Integer, String> preSized = new HashMap<>(
+            (int) (expected / 0.75f) + 1
+        );
+        
+        // Custom load factor (higher = more memory efficient, more collisions)
+        Map<Integer, String> denseMap = new HashMap<>(16, 0.9f);
+        
+        // Custom load factor (lower = less collisions, more memory)
+        Map<Integer, String> sparseMap = new HashMap<>(16, 0.5f);
+        
+        // Benchmark: pre-sized vs default for 100K entries
+        long start = System.nanoTime();
+        Map<Integer, Integer> m1 = new HashMap<>();
+        for (int i = 0; i < 100_000; i++) m1.put(i, i);
+        long t1 = System.nanoTime() - start;
+        
+        start = System.nanoTime();
+        Map<Integer, Integer> m2 = new HashMap<>(150_000);
+        for (int i = 0; i < 100_000; i++) m2.put(i, i);
+        long t2 = System.nanoTime() - start;
+        
+        System.out.println("Default: " + t1 / 1_000_000 + "ms");
+        System.out.println("Pre-sized: " + t2 / 1_000_000 + "ms");
+        // Pre-sized is faster — no rehashing!
+    }
+}`
+      },
+      {
+        title: "Bad hashCode — Demonstrating Collisions",
+        language: "java",
+        content: `import java.util.*;
+
+class BadKey {
+    int value;
+    BadKey(int v) { this.value = v; }
+    
+    // ❌ TERRIBLE hashCode — all keys go to same bucket!
+    @Override
+    public int hashCode() { return 1; }
+    
+    @Override
+    public boolean equals(Object o) {
+        return o instanceof BadKey && ((BadKey)o).value == value;
+    }
+}
+
+class GoodKey {
+    int value;
+    GoodKey(int v) { this.value = v; }
+    
+    // ✅ GOOD hashCode — well-distributed
+    @Override
+    public int hashCode() { return Integer.hashCode(value); }
+    
+    @Override
+    public boolean equals(Object o) {
+        return o instanceof GoodKey && ((GoodKey)o).value == value;
+    }
+}
+
+public class CollisionDemo {
+    public static void main(String[] args) {
+        int n = 10000;
+        
+        // Bad: all entries in one bucket → O(n) per operation
+        long start = System.nanoTime();
+        Map<BadKey, Integer> bad = new HashMap<>();
+        for (int i = 0; i < n; i++) bad.put(new BadKey(i), i);
+        long tBad = System.nanoTime() - start;
+        
+        // Good: evenly distributed → O(1) per operation
+        start = System.nanoTime();
+        Map<GoodKey, Integer> good = new HashMap<>();
+        for (int i = 0; i < n; i++) good.put(new GoodKey(i), i);
+        long tGood = System.nanoTime() - start;
+        
+        System.out.println("Bad hashCode: " + tBad / 1_000_000 + "ms");
+        System.out.println("Good hashCode: " + tGood / 1_000_000 + "ms");
+        // Bad is dramatically slower!
+    }
+}`
+      }
+    ],
+    tip: "**Rule of thumb:** When creating HashMap for N known entries, initialize with capacity `N * 4 / 3 + 1` to avoid rehashing."
   },
   {
     id: "col-queue",
@@ -418,7 +855,9 @@ public class TreeMapDemo {
       "offer/poll/peek return null on failure. add/remove/element throw exceptions",
       "**PriorityQueue** gives you the **smallest** element first (natural ordering)",
       "For **max-heap**, use `new PriorityQueue<>(Collections.reverseOrder())`",
-      "PriorityQueue is essential in competitive programming — Dijkstra, K-th largest, merge K lists"
+      "**PriorityQueue internal:** backed by a binary heap (array-based). offer/poll are O(log n), peek is O(1)",
+      "PriorityQueue does NOT guarantee sorted iteration — only `poll()` order is sorted",
+      "PriorityQueue is essential in competitive programming — Dijkstra, K-th largest, merge K lists, scheduling"
     ],
     code: [
       {
@@ -445,6 +884,11 @@ public class QueueDemo {
         System.out.println(deque.pollFirst()); // 0
         System.out.println(deque.pollLast());  // 2
         System.out.println(deque.peekFirst()); // 1
+        
+        // Queue vs throwing methods:
+        // offer → returns false on failure | add → throws IllegalStateException
+        // poll → returns null on empty     | remove → throws NoSuchElementException
+        // peek → returns null on empty     | element → throws NoSuchElementException
     }
 }`
       },
@@ -467,19 +911,78 @@ public class PQDemo {
         System.out.println(maxHeap.poll()); // 30 (largest first)
         
         // Custom comparator — sort by string length
-        PriorityQueue<String> pq = new PriorityQueue<>((a, b) -> a.length() - b.length());
+        PriorityQueue<String> pq = new PriorityQueue<>(Comparator.comparingInt(String::length));
         pq.offer("banana"); pq.offer("fig"); pq.offer("apple");
         System.out.println(pq.poll()); // fig (shortest)
         
-        // K-th Largest Element
+        // K-th Largest Element — O(n log k)
         int[] nums = {3, 1, 4, 1, 5, 9, 2, 6};
         int k = 3;
         PriorityQueue<Integer> kHeap = new PriorityQueue<>();
         for (int n : nums) {
             kHeap.offer(n);
-            if (kHeap.size() > k) kHeap.poll();
+            if (kHeap.size() > k) kHeap.poll(); // remove smallest
         }
         System.out.println("K-th largest: " + kHeap.peek()); // 5
+    }
+}`
+      },
+      {
+        title: "PriorityQueue — Advanced CP Patterns",
+        language: "java",
+        content: `import java.util.*;
+
+public class PQAdvanced {
+    // Merge K Sorted Arrays
+    static List<Integer> mergeKSorted(int[][] arrays) {
+        List<Integer> result = new ArrayList<>();
+        // {value, arrayIndex, elementIndex}
+        PriorityQueue<int[]> pq = new PriorityQueue<>((a, b) -> a[0] - b[0]);
+        
+        for (int i = 0; i < arrays.length; i++) {
+            if (arrays[i].length > 0) {
+                pq.offer(new int[]{arrays[i][0], i, 0});
+            }
+        }
+        
+        while (!pq.isEmpty()) {
+            int[] curr = pq.poll();
+            result.add(curr[0]);
+            int nextIdx = curr[2] + 1;
+            if (nextIdx < arrays[curr[1]].length) {
+                pq.offer(new int[]{arrays[curr[1]][nextIdx], curr[1], nextIdx});
+            }
+        }
+        return result;
+    }
+    
+    // Running Median using two heaps
+    static PriorityQueue<Integer> maxLeft = new PriorityQueue<>(Collections.reverseOrder());
+    static PriorityQueue<Integer> minRight = new PriorityQueue<>();
+    
+    static void addNum(int num) {
+        maxLeft.offer(num);
+        minRight.offer(maxLeft.poll());
+        if (minRight.size() > maxLeft.size()) {
+            maxLeft.offer(minRight.poll());
+        }
+    }
+    
+    static double getMedian() {
+        if (maxLeft.size() > minRight.size()) return maxLeft.peek();
+        return (maxLeft.peek() + minRight.peek()) / 2.0;
+    }
+    
+    public static void main(String[] args) {
+        // Merge K sorted
+        int[][] arrays = {{1, 4, 7}, {2, 5, 8}, {3, 6, 9}};
+        System.out.println(mergeKSorted(arrays)); // [1,2,3,4,5,6,7,8,9]
+        
+        // Running median
+        for (int n : new int[]{5, 15, 1, 3}) {
+            addNum(n);
+            System.out.println("Median after " + n + ": " + getMedian());
+        }
     }
 }`
       }
@@ -495,8 +998,9 @@ public class PQDemo {
       "Use **ArrayDeque** as a stack instead — it's faster and not synchronized",
       "**Stack operations:** push(e) → addFirst(e), pop() → removeFirst(), peek() → peekFirst()",
       "ArrayDeque is backed by a **resizable circular array** — very cache-friendly",
-      "Common stack problems: balanced parentheses, next greater element, expression evaluation, undo operations",
-      "Stack is LIFO — Last In, First Out"
+      "Common stack problems: balanced parentheses, next greater element, expression evaluation, undo operations, monotonic stack",
+      "Stack is LIFO — Last In, First Out",
+      "**ArrayDeque** has no capacity limit (auto-resizes). Initial capacity is 16 by default"
     ],
     code: [
       {
@@ -548,6 +1052,57 @@ public class StackDemo {
         System.out.println(isValid("(("));      // false
     }
 }`
+      },
+      {
+        title: "Monotonic Stack — Next Greater Element",
+        language: "java",
+        content: `import java.util.*;
+
+public class MonotonicStack {
+    // Find next greater element for each position
+    public static int[] nextGreater(int[] nums) {
+        int n = nums.length;
+        int[] result = new int[n];
+        Arrays.fill(result, -1);
+        
+        Deque<Integer> stack = new ArrayDeque<>(); // stores indices
+        
+        for (int i = 0; i < n; i++) {
+            // Pop all elements smaller than current
+            while (!stack.isEmpty() && nums[stack.peek()] < nums[i]) {
+                result[stack.pop()] = nums[i];
+            }
+            stack.push(i);
+        }
+        return result;
+    }
+    
+    // Evaluate Reverse Polish Notation (postfix)
+    public static int evalRPN(String[] tokens) {
+        Deque<Integer> stack = new ArrayDeque<>();
+        for (String t : tokens) {
+            switch (t) {
+                case "+": stack.push(stack.pop() + stack.pop()); break;
+                case "-": int b = stack.pop(), a = stack.pop();
+                          stack.push(a - b); break;
+                case "*": stack.push(stack.pop() * stack.pop()); break;
+                case "/": int d = stack.pop(), c = stack.pop();
+                          stack.push(c / d); break;
+                default:  stack.push(Integer.parseInt(t));
+            }
+        }
+        return stack.pop();
+    }
+    
+    public static void main(String[] args) {
+        int[] arr = {4, 5, 2, 25, 7, 8};
+        System.out.println(Arrays.toString(nextGreater(arr)));
+        // [5, 25, 25, -1, 8, -1]
+        
+        String[] rpn = {"2", "1", "+", "3", "*"};
+        System.out.println(evalRPN(rpn)); // 9 = (2+1)*3
+    }
+}`
       }
     ],
     note: "In competitive programming, ArrayDeque is the go-to for both stack and queue operations."
@@ -563,7 +1118,8 @@ public class StackDemo {
       "ListIterator adds: **hasPrevious()**, **previous()**, **add()**, **set()**, **nextIndex()**, **previousIndex()**",
       "**ConcurrentModificationException** — thrown if you modify a collection while iterating with for-each",
       "Safe removal during iteration: use **iterator.remove()** or **collection.removeIf()**",
-      "The **for-each loop** internally uses an Iterator — it's syntactic sugar"
+      "The **for-each loop** internally uses an Iterator — it's syntactic sugar",
+      "**Spliterator** (Java 8+) — splits a collection for parallel processing, used internally by streams"
     ],
     code: [
       {
@@ -635,6 +1191,16 @@ public class ListIteratorDemo {
             lit.set(val.toLowerCase()); // replace current
         }
         System.out.println(list); // [a, b, c, d]
+        
+        // Add during iteration
+        lit = list.listIterator();
+        while (lit.hasNext()) {
+            String val = lit.next();
+            if (val.equals("b")) {
+                lit.add("b2"); // inserts after "b"
+            }
+        }
+        System.out.println(list); // [a, b, b2, c, d]
     }
 }`
       }
@@ -652,7 +1218,9 @@ public class ListIteratorDemo {
       "**Comparable** = single default sorting. **Comparator** = multiple different sortings",
       "Java 8 Comparator helpers: `Comparator.comparing()`, `thenComparing()`, `reversed()`",
       "TreeSet, TreeMap, PriorityQueue, Collections.sort, Arrays.sort all use Comparable/Comparator",
-      "If your class implements Comparable, it works with all sorted collections automatically"
+      "If your class implements Comparable, it works with all sorted collections automatically",
+      "**Important:** `compareTo` should be consistent with `equals` — if `a.equals(b)` then `a.compareTo(b) == 0`",
+      "Avoid `a - b` for compareTo with integers — can **overflow**! Use `Integer.compare(a, b)` instead"
     ],
     code: [
       {
@@ -671,8 +1239,11 @@ class Student implements Comparable<Student> {
     
     @Override
     public int compareTo(Student other) {
-        // Sort by grade ascending
+        // ✅ Safe — no overflow risk
         return Integer.compare(this.grade, other.grade);
+        
+        // ❌ DANGEROUS — can overflow for extreme values!
+        // return this.grade - other.grade;
     }
     
     @Override
@@ -722,15 +1293,60 @@ public class ComparatorDemo {
         // Complex: sort int[][] by first element desc, then second asc
         int[][] intervals = {{3,5}, {1,4}, {3,2}, {1,7}};
         Arrays.sort(intervals, (a, b) -> {
-            if (a[0] != b[0]) return b[0] - a[0]; // desc by first
-            return a[1] - b[1];                     // asc by second
+            if (a[0] != b[0]) return Integer.compare(b[0], a[0]); // desc
+            return Integer.compare(a[1], b[1]);                     // asc
         });
-        // [[3,2], [3,5], [1,4], [1,7]]
         
         // Null-safe comparator
         List<String> withNulls = Arrays.asList("B", null, "A", null, "C");
         withNulls.sort(Comparator.nullsLast(Comparator.naturalOrder()));
         System.out.println(withNulls); // [A, B, C, null, null]
+        
+        // Comparing by extracted key
+        // Comparator.comparing(Student::getName)
+        //           .thenComparingInt(Student::getGrade)
+        //           .reversed()
+    }
+}`
+      },
+      {
+        title: "Comparator — CP Contest Patterns",
+        language: "java",
+        content: `import java.util.*;
+
+public class ComparatorCP {
+    public static void main(String[] args) {
+        // Sort 2D array — intervals by start, then by end
+        int[][] intervals = {{1,3}, {2,4}, {1,2}, {3,5}};
+        Arrays.sort(intervals, (a, b) -> 
+            a[0] != b[0] ? a[0] - b[0] : a[1] - b[1]
+        );
+        // [[1,2], [1,3], [2,4], [3,5]]
+        
+        // Sort strings: by length desc, then lexicographic
+        String[] words = {"apple", "fig", "banana", "kiwi"};
+        Arrays.sort(words, (a, b) -> 
+            a.length() != b.length() ? b.length() - a.length() : a.compareTo(b)
+        );
+        // [banana, apple, fig, kiwi] → wait, kiwi is 4 chars
+        // Actually: [banana, apple, kiwi, fig]
+        
+        // Custom object sorting with multiple criteria
+        int[][] people = {{7,0}, {4,4}, {7,1}, {5,0}, {6,1}, {5,2}};
+        // Sort by height desc, then by k asc
+        Arrays.sort(people, (a, b) -> 
+            a[0] != b[0] ? b[0] - a[0] : a[1] - b[1]
+        );
+        
+        // PriorityQueue with custom comparator
+        PriorityQueue<int[]> pq = new PriorityQueue<>(
+            Comparator.comparingInt((int[] a) -> a[0])
+                      .thenComparingInt(a -> a[1])
+        );
+        pq.offer(new int[]{3, 1});
+        pq.offer(new int[]{1, 5});
+        pq.offer(new int[]{3, 0});
+        // Polls: [1,5], [3,0], [3,1]
     }
 }`
       }
@@ -749,7 +1365,9 @@ public class ComparatorDemo {
       "**Unmodifiable:** `unmodifiableList()`, `unmodifiableMap()` — returns read-only view",
       "**Synchronized:** `synchronizedList()`, `synchronizedMap()` — thread-safe wrappers",
       "**Fill/Copy/Swap:** `fill()`, `copy()`, `swap()`, `rotate()`, `frequency()`",
-      "Java 9+: `List.of()`, `Set.of()`, `Map.of()` create immutable collections directly"
+      "Java 9+: `List.of()`, `Set.of()`, `Map.of()` create immutable collections directly",
+      "Java 10+: `List.copyOf()`, `Set.copyOf()`, `Map.copyOf()` create immutable copies",
+      "**singletonList**, **emptyList**, **nCopies** — factory methods for special collections"
     ],
     code: [
       {
@@ -784,18 +1402,394 @@ public class CollectionsUtilDemo {
         Collections.shuffle(list);
         System.out.println("Shuffled: " + list);
         
-        // Fill & Swap
-        Collections.fill(list, 0);
-        System.out.println("Filled: " + list); // [0, 0, 0, 0, 0, 0]
+        // Rotate
+        List<Integer> r = new ArrayList<>(Arrays.asList(1, 2, 3, 4, 5));
+        Collections.rotate(r, 2);
+        System.out.println("Rotated by 2: " + r); // [4, 5, 1, 2, 3]
         
-        // Immutable collections (Java 9+)
-        List<String> immutable = List.of("A", "B", "C");
-        // immutable.add("D"); // throws UnsupportedOperationException
+        // Swap
+        Collections.swap(r, 0, 4);
+        
+        // Fill
+        Collections.fill(r, 0);
+        System.out.println("Filled: " + r); // [0, 0, 0, 0, 0]
+        
+        // nCopies — immutable list of N same elements
+        List<String> fiveHellos = Collections.nCopies(5, "Hello");
+        System.out.println(fiveHellos); // [Hello, Hello, Hello, Hello, Hello]
+    }
+}`
+      },
+      {
+        title: "Immutable Collections — Java 9+ Factory Methods",
+        language: "java",
+        content: `import java.util.*;
+
+public class ImmutableCollections {
+    public static void main(String[] args) {
+        // ✅ Java 9+: Immutable factories
+        List<String> list = List.of("A", "B", "C");
+        Set<Integer> set = Set.of(1, 2, 3);
+        Map<String, Integer> map = Map.of("x", 1, "y", 2);
+        
+        // All throw UnsupportedOperationException on modification
+        // list.add("D"); ❌
+        // set.remove(1);  ❌
+        // map.put("z", 3); ❌
+        
+        // Map.ofEntries for >10 entries
+        Map<String, Integer> bigMap = Map.ofEntries(
+            Map.entry("a", 1),
+            Map.entry("b", 2),
+            Map.entry("c", 3)
+        );
+        
+        // ✅ Java 10+: copyOf — immutable copy
+        List<String> mutable = new ArrayList<>(Arrays.asList("X", "Y"));
+        List<String> immCopy = List.copyOf(mutable);
+        mutable.add("Z"); // original changes
+        System.out.println(immCopy); // [X, Y] — copy unchanged
+        
+        // ❌ These do NOT allow null elements
+        // List.of(null); → NullPointerException
+        // Set.of(null);  → NullPointerException
+        
+        // For null-friendly unmodifiable, use:
+        List<String> withNull = Collections.unmodifiableList(
+            Arrays.asList("A", null, "B")
+        );
     }
 }`
       }
     ],
     note: "**Collections.unmodifiableList()** returns a view — changes to the original list are reflected. For a true copy, use `List.copyOf()` (Java 10+)."
+  },
+  {
+    id: "col-performance",
+    title: "Performance Comparison & When to Use What",
+    difficulty: "Medium",
+    theory: [
+      "**Choosing the right collection** is one of the most impactful decisions for performance",
+      "**ArrayList** vs **LinkedList:** ArrayList wins in almost every scenario except frequent head insertions",
+      "**HashSet** vs **TreeSet:** HashSet O(1) for contains, TreeSet O(log n) but keeps elements sorted",
+      "**HashMap** vs **TreeMap:** HashMap O(1) lookup, TreeMap O(log n) but supports range queries",
+      "**ArrayDeque** vs **LinkedList:** ArrayDeque is faster for both stack and queue operations (cache-friendly)",
+      "**PriorityQueue:** O(log n) insert/remove, O(1) peek — best for scheduling and top-K problems",
+      "**Memory overhead:** ArrayList < ArrayDeque < HashSet < LinkedList < TreeSet < LinkedHashSet",
+      "**Thread safety:** None of the standard collections are thread-safe. Use ConcurrentHashMap, CopyOnWriteArrayList, etc.",
+      "**Rule:** Start with ArrayList/HashMap/HashSet. Switch only when you need specific properties (ordering, navigation, thread-safety)"
+    ],
+    diagram: {
+      type: "table",
+      title: "Collection Performance Cheat Sheet",
+      headers: ["Collection", "Add", "Remove", "Get/Contains", "Ordered?", "Best For"],
+      rows: [
+        ["ArrayList", "O(1)*", "O(n)", "O(1) / O(n)", "Insertion", "General purpose list"],
+        ["LinkedList", "O(1)", "O(1)**", "O(n)", "Insertion", "Deque operations"],
+        ["ArrayDeque", "O(1)", "O(1)", "O(n)", "LIFO/FIFO", "Stack & Queue"],
+        ["HashSet", "O(1)", "O(1)", "O(1)", "No", "Unique elements, lookups"],
+        ["LinkedHashSet", "O(1)", "O(1)", "O(1)", "Insertion", "Unique + order"],
+        ["TreeSet", "O(log n)", "O(log n)", "O(log n)", "Sorted", "Sorted unique, ranges"],
+        ["HashMap", "O(1)", "O(1)", "O(1)", "No", "Key-value lookups"],
+        ["LinkedHashMap", "O(1)", "O(1)", "O(1)", "Insertion", "LRU cache, ordered map"],
+        ["TreeMap", "O(log n)", "O(log n)", "O(log n)", "Sorted", "Sorted keys, ranges"],
+        ["PriorityQueue", "O(log n)", "O(log n)", "O(n)", "Priority", "Top-K, scheduling"]
+      ]
+    },
+    code: [
+      {
+        title: "Choosing the Right Collection — Decision Guide",
+        language: "java",
+        content: `import java.util.*;
+
+public class CollectionChoice {
+    public static void main(String[] args) {
+        // QUESTION: Do you need key-value pairs?
+        // YES → Map
+        //   Need sorted keys? → TreeMap
+        //   Need insertion order? → LinkedHashMap
+        //   Need LRU eviction? → LinkedHashMap(accessOrder=true)
+        //   Default? → HashMap
+        
+        // QUESTION: Do you need unique elements only?
+        // YES → Set
+        //   Need sorted? → TreeSet
+        //   Need insertion order? → LinkedHashSet
+        //   Using enums? → EnumSet
+        //   Default? → HashSet
+        
+        // QUESTION: Do you need a queue?
+        // YES →
+        //   Priority-based? → PriorityQueue
+        //   FIFO? → ArrayDeque
+        //   LIFO (stack)? → ArrayDeque
+        //   Thread-safe? → ConcurrentLinkedQueue / BlockingQueue
+        
+        // QUESTION: Ordered sequence with duplicates?
+        // YES → List
+        //   Need random access? → ArrayList
+        //   Frequent head insertions? → LinkedList (rare!)
+        //   Default? → ArrayList
+        
+        // ===== COMMON MISTAKES =====
+        
+        // ❌ Using LinkedList as a general-purpose list
+        // ✅ ArrayList is almost always faster
+        
+        // ❌ Using Vector/Stack (legacy, synchronized)
+        // ✅ ArrayList + ArrayDeque
+        
+        // ❌ Using Hashtable (legacy, synchronized)
+        // ✅ HashMap or ConcurrentHashMap
+        
+        // ❌ Sorting a list then using indexOf to search
+        // ✅ Use HashSet.contains() — O(1) vs O(n)
+        
+        // ❌ Using HashMap when you need sorted iteration
+        // ✅ Use TreeMap
+        
+        System.out.println("Choose wisely!");
+    }
+}`
+      },
+      {
+        title: "Performance Benchmark — ArrayList vs LinkedList vs ArrayDeque",
+        language: "java",
+        content: `import java.util.*;
+
+public class PerfBenchmark {
+    static final int N = 100_000;
+    
+    public static void main(String[] args) {
+        // 1. Sequential add
+        long t1 = bench(() -> {
+            List<Integer> list = new ArrayList<>();
+            for (int i = 0; i < N; i++) list.add(i);
+        });
+        long t2 = bench(() -> {
+            List<Integer> list = new LinkedList<>();
+            for (int i = 0; i < N; i++) list.add(i);
+        });
+        System.out.println("Sequential add — AL: " + t1 + "ms, LL: " + t2 + "ms");
+        
+        // 2. Random access
+        List<Integer> al = new ArrayList<>();
+        List<Integer> ll = new LinkedList<>();
+        for (int i = 0; i < N; i++) { al.add(i); ll.add(i); }
+        
+        t1 = bench(() -> { for (int i = 0; i < 1000; i++) al.get(N/2); });
+        t2 = bench(() -> { for (int i = 0; i < 1000; i++) ll.get(N/2); });
+        System.out.println("Random access — AL: " + t1 + "ms, LL: " + t2 + "ms");
+        // ArrayList is DRAMATICALLY faster for random access
+        
+        // 3. Stack operations — ArrayDeque vs Stack
+        t1 = bench(() -> {
+            Deque<Integer> stack = new ArrayDeque<>();
+            for (int i = 0; i < N; i++) stack.push(i);
+            while (!stack.isEmpty()) stack.pop();
+        });
+        t2 = bench(() -> {
+            Stack<Integer> stack = new Stack<>();
+            for (int i = 0; i < N; i++) stack.push(i);
+            while (!stack.isEmpty()) stack.pop();
+        });
+        System.out.println("Stack ops — ArrayDeque: " + t1 + "ms, Stack: " + t2 + "ms");
+    }
+    
+    static long bench(Runnable task) {
+        long start = System.currentTimeMillis();
+        task.run();
+        return System.currentTimeMillis() - start;
+    }
+}`
+      }
+    ],
+    tip: "**Interview tip:** When asked 'which collection would you use?', always explain the **why** — time complexity, ordering needs, thread-safety, and memory."
+  },
+  {
+    id: "col-cp-patterns",
+    title: "Collections in Competitive Programming",
+    difficulty: "Hard",
+    theory: [
+      "**Frequency map** — the most common pattern: count occurrences with `HashMap<T, Integer>`",
+      "**Two-sum pattern** — use HashMap to find complement in O(1): `map.containsKey(target - num)`",
+      "**Sliding window + HashMap** — track element counts in a moving window",
+      "**Coordinate compression** — use TreeSet + HashMap to compress large coordinates to [0, n)",
+      "**Ordered set tricks** — TreeSet's `floor/ceiling` for finding nearest elements",
+      "**Multi-map pattern** — `HashMap<K, List<V>>` for grouping, use `computeIfAbsent`",
+      "**Stack-based patterns** — monotonic stack for next greater/smaller element, histogram problems",
+      "**Two heaps** — max-heap + min-heap for running median",
+      "**Sweep line + TreeMap** — process events in sorted order, track active intervals",
+      "**Deque for sliding window max/min** — maintain a monotonic deque for O(1) window queries"
+    ],
+    code: [
+      {
+        title: "Two Sum & Subarray Sum — HashMap Patterns",
+        language: "java",
+        content: `import java.util.*;
+
+public class HashMapPatterns {
+    // Two Sum — O(n)
+    static int[] twoSum(int[] nums, int target) {
+        Map<Integer, Integer> map = new HashMap<>(); // value → index
+        for (int i = 0; i < nums.length; i++) {
+            int complement = target - nums[i];
+            if (map.containsKey(complement)) {
+                return new int[]{map.get(complement), i};
+            }
+            map.put(nums[i], i);
+        }
+        return new int[]{-1, -1};
+    }
+    
+    // Count subarrays with sum = k using prefix sum + HashMap
+    static int subarraySum(int[] nums, int k) {
+        Map<Integer, Integer> prefixCount = new HashMap<>();
+        prefixCount.put(0, 1); // empty prefix
+        int sum = 0, count = 0;
+        for (int n : nums) {
+            sum += n;
+            count += prefixCount.getOrDefault(sum - k, 0);
+            prefixCount.merge(sum, 1, Integer::sum);
+        }
+        return count;
+    }
+    
+    // Group anagrams — HashMap<sorted_key, list>
+    static List<List<String>> groupAnagrams(String[] strs) {
+        Map<String, List<String>> map = new HashMap<>();
+        for (String s : strs) {
+            char[] chars = s.toCharArray();
+            Arrays.sort(chars);
+            String key = new String(chars);
+            map.computeIfAbsent(key, k -> new ArrayList<>()).add(s);
+        }
+        return new ArrayList<>(map.values());
+    }
+    
+    public static void main(String[] args) {
+        System.out.println(Arrays.toString(twoSum(new int[]{2,7,11,15}, 9))); // [0,1]
+        System.out.println(subarraySum(new int[]{1,1,1}, 2)); // 2
+        System.out.println(groupAnagrams(new String[]{"eat","tea","tan","ate","nat","bat"}));
+    }
+}`
+      },
+      {
+        title: "Sliding Window Max — Monotonic Deque",
+        language: "java",
+        content: `import java.util.*;
+
+public class SlidingWindowMax {
+    // Find maximum in every window of size k — O(n)
+    static int[] maxSlidingWindow(int[] nums, int k) {
+        int n = nums.length;
+        int[] result = new int[n - k + 1];
+        Deque<Integer> deque = new ArrayDeque<>(); // stores indices
+        
+        for (int i = 0; i < n; i++) {
+            // Remove elements outside window
+            while (!deque.isEmpty() && deque.peekFirst() < i - k + 1) {
+                deque.pollFirst();
+            }
+            
+            // Remove smaller elements (maintain decreasing order)
+            while (!deque.isEmpty() && nums[deque.peekLast()] < nums[i]) {
+                deque.pollLast();
+            }
+            
+            deque.offerLast(i);
+            
+            // Window is complete
+            if (i >= k - 1) {
+                result[i - k + 1] = nums[deque.peekFirst()];
+            }
+        }
+        return result;
+    }
+    
+    // Sliding window with HashMap — longest substring with at most K distinct
+    static int longestKDistinct(String s, int k) {
+        Map<Character, Integer> freq = new HashMap<>();
+        int left = 0, maxLen = 0;
+        
+        for (int right = 0; right < s.length(); right++) {
+            freq.merge(s.charAt(right), 1, Integer::sum);
+            
+            while (freq.size() > k) {
+                char c = s.charAt(left);
+                freq.merge(c, -1, Integer::sum);
+                if (freq.get(c) == 0) freq.remove(c);
+                left++;
+            }
+            maxLen = Math.max(maxLen, right - left + 1);
+        }
+        return maxLen;
+    }
+    
+    public static void main(String[] args) {
+        int[] nums = {1, 3, -1, -3, 5, 3, 6, 7};
+        System.out.println(Arrays.toString(maxSlidingWindow(nums, 3)));
+        // [3, 3, 5, 5, 6, 7]
+        
+        System.out.println(longestKDistinct("eceba", 2)); // 3 ("ece")
+    }
+}`
+      },
+      {
+        title: "TreeMap/TreeSet — Sweep Line & Ordered Queries",
+        language: "java",
+        content: `import java.util.*;
+
+public class OrderedPatterns {
+    // Count overlapping intervals at any point (sweep line)
+    static int maxOverlap(int[][] intervals) {
+        TreeMap<Integer, Integer> events = new TreeMap<>();
+        for (int[] iv : intervals) {
+            events.merge(iv[0], 1, Integer::sum);   // interval start
+            events.merge(iv[1], -1, Integer::sum);  // interval end
+        }
+        int max = 0, active = 0;
+        for (int delta : events.values()) {
+            active += delta;
+            max = Math.max(max, active);
+        }
+        return max;
+    }
+    
+    // Find closest value in a sorted set
+    static int closestValue(TreeSet<Integer> set, int target) {
+        Integer floor = set.floor(target);
+        Integer ceil = set.ceiling(target);
+        if (floor == null) return ceil;
+        if (ceil == null) return floor;
+        return (target - floor <= ceil - target) ? floor : ceil;
+    }
+    
+    // Coordinate compression
+    static Map<Integer, Integer> compress(int[] coords) {
+        TreeSet<Integer> sorted = new TreeSet<>();
+        for (int c : coords) sorted.add(c);
+        Map<Integer, Integer> map = new HashMap<>();
+        int idx = 0;
+        for (int c : sorted) map.put(c, idx++);
+        return map;
+    }
+    
+    public static void main(String[] args) {
+        int[][] intervals = {{1,4}, {2,5}, {3,6}, {5,8}};
+        System.out.println("Max overlap: " + maxOverlap(intervals)); // 3
+        
+        TreeSet<Integer> set = new TreeSet<>(Arrays.asList(1, 5, 10, 15, 20));
+        System.out.println("Closest to 12: " + closestValue(set, 12)); // 10
+        
+        int[] coords = {100, 500, 200, 100, 300};
+        System.out.println("Compressed: " + compress(coords));
+        // {100=0, 200=1, 300=2, 500=3}
+    }
+}`
+      }
+    ],
+    warning: "In contests, always use **HashMap** over **TreeMap** unless you explicitly need sorted keys — HashMap is 5-10x faster."
   },
   {
     id: "col-concurrent",
