@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { topics } from "@/data/topics";
 import { javaTopics } from "@/data/javaTopics";
 import { motion } from "framer-motion";
-import { ChevronRight, Zap, GitBranch, LayoutGrid, Terminal, Sparkles, ArrowRight, Coffee, Layers, Code2, BookOpen, Trophy, Flame, Star } from "lucide-react";
+import { ChevronRight, Zap, GitBranch, LayoutGrid, Terminal, Sparkles, ArrowRight, Coffee, Layers, Code2, BookOpen, Trophy, Flame, Star, Mail, Send, Bug } from "lucide-react";
 import { useMode } from "@/contexts/ModeContext";
 
 const topicColors: Record<string, { color: string; bg: string; border: string }> = {
@@ -444,18 +444,41 @@ export default function Index() {
         </motion.div>
       </section>
 
-      <footer className="px-6 md:px-10 py-8 border-t text-center" style={{ borderColor: "hsl(var(--border))" }}>
-        <div className="flex items-center justify-center gap-1.5 text-[11px] font-medium" style={{ color: "hsl(var(--muted-foreground))" }}>
-          Made with <span style={{ color: "hsl(var(--destructive))" }}>❤</span> by{" "}
-          <a
-            href="https://portfolio-aritra-pearl.vercel.app/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-semibold underline underline-offset-2 transition-colors hover:text-[hsl(var(--primary))]"
-            style={{ color: "hsl(var(--foreground))" }}
-          >
-            Aritra
-          </a>
+      <footer className="px-6 md:px-10 py-8 border-t" style={{ borderColor: "hsl(var(--border))" }}>
+        <div className="max-w-md mx-auto flex flex-col items-center gap-4">
+          <div className="flex items-center justify-center gap-1.5 text-[11px] font-medium" style={{ color: "hsl(var(--muted-foreground))" }}>
+            Made with <span style={{ color: "hsl(var(--destructive))" }}>❤</span> by{" "}
+            <a
+              href="https://portfolio-aritra-pearl.vercel.app/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold underline underline-offset-2 transition-colors hover:text-[hsl(var(--primary))]"
+              style={{ color: "hsl(var(--foreground))" }}
+            >
+              Aritra
+            </a>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider" style={{ color: "hsl(var(--muted-foreground))" }}>
+              <Bug size={11} /> Report a Bug
+            </span>
+            <a
+              href="mailto:officialjobs.aritra2001@gmail.com?subject=Bug%20Report%20-%20AlgoGuru"
+              className="flex items-center gap-1.5 text-[11px] font-medium px-3 py-1.5 rounded-lg transition-colors hover:bg-muted/50"
+              style={{ color: "hsl(var(--muted-foreground))", border: "1px solid hsl(var(--border))" }}
+            >
+              <Mail size={12} /> Email
+            </a>
+            <a
+              href="https://t.me/aritra0109"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 text-[11px] font-medium px-3 py-1.5 rounded-lg transition-colors hover:bg-muted/50"
+              style={{ color: "hsl(var(--muted-foreground))", border: "1px solid hsl(var(--border))" }}
+            >
+              <Send size={12} /> Telegram
+            </a>
+          </div>
         </div>
       </footer>
     </div>

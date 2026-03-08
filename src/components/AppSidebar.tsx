@@ -300,32 +300,6 @@ export function AppSidebar() {
           </div>
         </div>
 
-        {/* Report a Bug / Contact */}
-        <div className="mt-auto mx-1 mb-4">
-          <div className="px-3.5 py-2 text-[10px] font-bold uppercase tracking-[0.15em] font-mono" style={{ color: "hsl(var(--muted-foreground))" }}>
-            Report a Bug
-          </div>
-          <div className="flex flex-col gap-1">
-            <a
-              href="mailto:officialjobs.aritra2001@gmail.com?subject=Bug%20Report%20-%20AlgoGuru"
-              className="flex items-center gap-2.5 px-3.5 py-2 rounded-xl text-xs font-medium transition-all duration-200 hover:bg-muted/50"
-              style={{ color: "hsl(var(--muted-foreground))" }}
-            >
-              <Mail size={14} />
-              <span>Email Admin</span>
-            </a>
-            <a
-              href="https://t.me/aritra0109"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2.5 px-3.5 py-2 rounded-xl text-xs font-medium transition-all duration-200 hover:bg-muted/50"
-              style={{ color: "hsl(var(--muted-foreground))" }}
-            >
-              <Send size={14} />
-              <span>Telegram @aritra0109</span>
-            </a>
-          </div>
-        </div>
       </SidebarContent>
     </Sidebar>
   );
