@@ -541,360 +541,1208 @@ public class InputDemo {
   }
 ];
 
-// OOP content
+// OOP content — comprehensive and in-depth
 export const javaOOPContent: ContentSection[] = [
   {
     id: "oop-classes",
     title: "Classes & Objects",
     difficulty: "Easy",
     theory: [
-      "A **class** is a blueprint for creating objects. An **object** is an instance of a class that holds its own copy of instance variables.",
-      "By default, `equals()` compares references. Override it (along with `hashCode()`) for meaningful content-based equality."
+      "A **class** is a blueprint/template that defines the structure (fields) and behavior (methods) of objects",
+      "An **object** is a concrete instance of a class — it occupies memory on the **heap**",
+      "A class can contain: **fields** (instance variables), **methods**, **constructors**, **nested classes**, and **static members**",
+      "When you write `Student s = new Student()`, three things happen: memory is allocated on the heap, the constructor runs, and the reference is stored in `s` on the stack",
+      "The **reference variable** (like `s`) lives on the **stack** and points to the actual object on the **heap**",
+      "If two references point to the same object, modifying through one affects the other — they share the same memory",
+      "By default, `equals()` compares **references** (same as `==`). Override it along with `hashCode()` for meaningful content-based comparison",
+      "Every class implicitly extends **Object** — so every object has `toString()`, `equals()`, `hashCode()`, `getClass()`, `clone()`, etc.",
+      "The `toString()` method is called automatically when you print an object — always override it for readable output"
     ],
-    code: [{
-      title: "Defining & Using Classes",
-      language: "java",
-      content: `public class Student {
+    keyPoints: [
+      "Objects live on the heap; references live on the stack",
+      "Always override toString(), equals(), and hashCode() in data classes",
+      "new keyword = allocate memory + call constructor + return reference"
+    ],
+    code: [
+      {
+        title: "Defining & Using Classes",
+        language: "java",
+        content: `public class Student {
+    // Fields (instance variables)
     String name;
     int age;
     double gpa;
 
+    // Constructor — initializes the object
     public Student(String name, int age, double gpa) {
-        this.name = name;
+        this.name = name;  // 'this' refers to current object
         this.age = age;
         this.gpa = gpa;
     }
 
+    // Instance method
     public void display() {
         System.out.println(name + " | Age: " + age + " | GPA: " + gpa);
     }
 
+    // Always override toString() for readable output
     @Override
     public String toString() {
         return "Student{name='" + name + "', age=" + age + ", gpa=" + gpa + "}";
+    }
+
+    // Override equals for content-based comparison
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Student student = (Student) o;
+        return age == student.age && name.equals(student.name);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, age);
     }
 
     public static void main(String[] args) {
         Student s1 = new Student("Alice", 20, 3.8);
         Student s2 = new Student("Bob", 22, 3.5);
         s1.display();
-        System.out.println(s2);
+        System.out.println(s2);          // calls toString()
+        System.out.println(s1.equals(s2)); // false — different content
     }
 }`
-    }]
+      },
+      {
+        title: "References vs Objects — Memory Model",
+        language: "java",
+        content: `public class ReferenceDemo {
+    public static void main(String[] args) {
+        // s1 and s2 are different objects
+        Student s1 = new Student("Alice", 20, 3.8);
+        Student s2 = new Student("Alice", 20, 3.8);
+        System.out.println(s1 == s2);       // false (different references)
+        System.out.println(s1.equals(s2));  // true  (same content, if overridden)
+
+        // s3 points to SAME object as s1
+        Student s3 = s1;
+        s3.name = "Modified";
+        System.out.println(s1.name); // "Modified" — both point to same object!
+
+        // null reference
+        Student s4 = null;
+        // s4.display(); // NullPointerException!
+        if (s4 != null) s4.display(); // safe check
+    }
+}`
+      }
+    ],
+    warning: "Using `==` compares **references** (memory addresses), not content. Always use `.equals()` for object comparison."
   },
   {
     id: "oop-constructors",
     title: "Constructors & this Keyword",
     difficulty: "Easy",
     theory: [
-      "A **constructor** initializes an object. Java supports **default**, **parameterized**, and **copy** constructors, plus **constructor chaining** with `this()`."
+      "A **constructor** is a special method that initializes an object when it's created with `new`",
+      "Constructor name must **match the class name** exactly and has **no return type** (not even void)",
+      "If you don't write any constructor, Java provides a **default no-arg constructor** automatically",
+      "But if you write ANY constructor, the default one is **NOT provided** — you must write it yourself if needed",
+      "**Constructor types:** Default (no-arg), Parameterized (with arguments), Copy (takes same class instance)",
+      "**Constructor chaining:** use `this()` to call another constructor in the same class — must be the **first statement**",
+      "**`this` keyword** refers to the current object — used to distinguish fields from parameters with the same name",
+      "`this` can also be used to: pass current object to a method, return current object for method chaining",
+      "Constructors are **NOT inherited** — a subclass cannot inherit the parent's constructor, but can call it using `super()`"
     ],
-    code: [{
-      title: "Constructor Types & Chaining",
-      language: "java",
-      content: `public class Rectangle {
+    code: [
+      {
+        title: "Constructor Types & Chaining",
+        language: "java",
+        content: `public class Rectangle {
     double width, height;
 
-    public Rectangle() { this(1.0, 1.0); }
+    // Default constructor — chains to parameterized
+    public Rectangle() {
+        this(1.0, 1.0); // constructor chaining with this()
+    }
 
+    // Parameterized constructor
     public Rectangle(double width, double height) {
-        this.width = width;
+        this.width = width;   // this.width = field, width = parameter
         this.height = height;
     }
 
+    // Copy constructor
     public Rectangle(Rectangle other) {
-        this(other.width, other.height);
+        this(other.width, other.height); // chain to parameterized
     }
 
     public double area() { return width * height; }
+    public double perimeter() { return 2 * (width + height); }
 
     public static void main(String[] args) {
-        Rectangle r1 = new Rectangle();         // 1×1
-        Rectangle r2 = new Rectangle(5, 3);     // 5×3
-        Rectangle r3 = new Rectangle(r2);       // Copy of r2
-        System.out.println(r2.area());           // 15.0
+        Rectangle r1 = new Rectangle();          // 1×1 (default)
+        Rectangle r2 = new Rectangle(5, 3);      // 5×3
+        Rectangle r3 = new Rectangle(r2);        // Copy of r2
+
+        System.out.println(r1.area());       // 1.0
+        System.out.println(r2.area());       // 15.0
+        System.out.println(r3.perimeter());  // 16.0
     }
 }`
-    }]
+      },
+      {
+        title: "Method Chaining with this — Builder Pattern",
+        language: "java",
+        content: `public class QueryBuilder {
+    private String table;
+    private String where;
+    private String orderBy;
+    private int limit = -1;
+
+    // Each setter returns 'this' for chaining
+    public QueryBuilder from(String table) {
+        this.table = table;
+        return this;  // return current object
+    }
+
+    public QueryBuilder where(String condition) {
+        this.where = condition;
+        return this;
+    }
+
+    public QueryBuilder orderBy(String column) {
+        this.orderBy = column;
+        return this;
+    }
+
+    public QueryBuilder limit(int n) {
+        this.limit = n;
+        return this;
+    }
+
+    public String build() {
+        StringBuilder sb = new StringBuilder("SELECT * FROM " + table);
+        if (where != null) sb.append(" WHERE ").append(where);
+        if (orderBy != null) sb.append(" ORDER BY ").append(orderBy);
+        if (limit > 0) sb.append(" LIMIT ").append(limit);
+        return sb.toString();
+    }
+
+    public static void main(String[] args) {
+        // Fluent API using method chaining
+        String query = new QueryBuilder()
+            .from("users")
+            .where("age > 18")
+            .orderBy("name")
+            .limit(10)
+            .build();
+        System.out.println(query);
+        // SELECT * FROM users WHERE age > 18 ORDER BY name LIMIT 10
+    }
+}`
+      }
+    ],
+    tip: "Use **method chaining** (returning `this`) to create fluent APIs — it makes code more readable and concise."
   },
   {
     id: "oop-encapsulation",
     title: "Encapsulation & Access Modifiers",
     difficulty: "Medium",
     theory: [
-      "**Encapsulation** bundles data and methods into a class, restricting direct access. **Access Modifiers:** public (anywhere), private (class only), protected (package + subclasses), default/package-private (package only)."
+      "**Encapsulation** is the practice of bundling data (fields) and the methods that operate on that data into a single unit (class), and restricting direct access to the internals",
+      "This is the most fundamental OOP principle — it protects your data from invalid states",
+      "**Access Modifiers** control visibility of classes, fields, methods, and constructors:",
+      "**public** — accessible from anywhere, any package, any class",
+      "**private** — accessible only within the **same class**. Most fields should be private",
+      "**protected** — accessible within the same **package** AND in **subclasses** (even in different packages)",
+      "**default (no modifier)** — accessible only within the same **package** (package-private)",
+      "The standard pattern: make fields **private**, expose through **public getters/setters** with validation",
+      "**Immutable objects** — make fields `private final`, no setters, set values only in constructor. Examples: String, Integer, LocalDate",
+      "Encapsulation allows you to change internal implementation without affecting code that uses the class"
     ],
-    code: [{
-      title: "Encapsulation with Getters/Setters",
-      language: "java",
-      content: `public class BankAccount {
+    keyPoints: [
+      "private fields + public getters/setters = encapsulation",
+      "Validate data in setters to prevent invalid states",
+      "Immutable objects are thread-safe and easier to reason about",
+      "Access levels: private < default < protected < public"
+    ],
+    code: [
+      {
+        title: "Encapsulation with Getters/Setters & Validation",
+        language: "java",
+        content: `public class BankAccount {
+    private String owner;          // private — only accessible in this class
     private double balance;
-    private String owner;
+    private final String accountId; // final — set once, never changed
 
-    public BankAccount(String owner, double initialBalance) {
+    public BankAccount(String owner, String accountId, double initialBalance) {
+        if (initialBalance < 0) throw new IllegalArgumentException("Balance can't be negative");
         this.owner = owner;
+        this.accountId = accountId;
         this.balance = initialBalance;
     }
 
+    // Getter — read access
     public double getBalance() { return balance; }
+    public String getOwner() { return owner; }
+    public String getAccountId() { return accountId; }
 
+    // No setter for accountId — it's immutable
+
+    // Controlled modification — not raw setter
     public void deposit(double amount) {
-        if (amount <= 0) throw new IllegalArgumentException("Amount must be positive");
+        if (amount <= 0) throw new IllegalArgumentException("Deposit must be positive");
         balance += amount;
+        System.out.println("Deposited: " + amount + " | New balance: " + balance);
     }
 
-    public void withdraw(double amount) {
-        if (amount > balance) throw new IllegalArgumentException("Insufficient funds");
+    public boolean withdraw(double amount) {
+        if (amount <= 0) throw new IllegalArgumentException("Withdrawal must be positive");
+        if (amount > balance) {
+            System.out.println("Insufficient funds!");
+            return false;
+        }
         balance -= amount;
+        System.out.println("Withdrew: " + amount + " | New balance: " + balance);
+        return true;
+    }
+
+    public static void main(String[] args) {
+        BankAccount acc = new BankAccount("Alice", "ACC001", 1000);
+        acc.deposit(500);     // Deposited: 500 | New balance: 1500
+        acc.withdraw(200);    // Withdrew: 200 | New balance: 1300
+        // acc.balance = -999; // ❌ COMPILE ERROR — balance is private
     }
 }`
-    }],
-    tip: "Always make fields **private** and provide **public getters/setters** with validation."
+      },
+      {
+        title: "Access Modifier Summary",
+        language: "java",
+        content: `// Access Modifier Visibility Table:
+// ┌──────────────┬───────┬─────────┬──────────┬───────┐
+// │   Modifier   │ Class │ Package │ Subclass │ World │
+// ├──────────────┼───────┼─────────┼──────────┼───────┤
+// │ public       │  ✅   │   ✅    │    ✅    │  ✅   │
+// │ protected    │  ✅   │   ✅    │    ✅    │  ❌   │
+// │ default      │  ✅   │   ✅    │    ❌    │  ❌   │
+// │ private      │  ✅   │   ❌    │    ❌    │  ❌   │
+// └──────────────┴───────┴─────────┴──────────┴───────┘
+
+package com.example;
+
+public class AccessDemo {
+    public int publicField = 1;       // anyone
+    protected int protectedField = 2; // package + subclasses
+    int defaultField = 3;             // same package only
+    private int privateField = 4;     // this class only
+
+    // Best practice: private fields + public methods
+    private String secret = "hidden";
+
+    public String getSecret() {
+        return secret;  // controlled access
+    }
+}`
+      },
+      {
+        title: "Immutable Class — Thread-Safe by Design",
+        language: "java",
+        content: `// Immutable class — all fields are final, no setters
+public final class Money {  // final — can't be subclassed
+    private final double amount;
+    private final String currency;
+
+    public Money(double amount, String currency) {
+        this.amount = amount;
+        this.currency = currency;
+    }
+
+    // Only getters, no setters
+    public double getAmount() { return amount; }
+    public String getCurrency() { return currency; }
+
+    // Operations return NEW objects instead of modifying
+    public Money add(Money other) {
+        if (!this.currency.equals(other.currency))
+            throw new IllegalArgumentException("Currency mismatch");
+        return new Money(this.amount + other.amount, this.currency);
+    }
+
+    public Money multiply(double factor) {
+        return new Money(this.amount * factor, this.currency);
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%.2f %s", amount, currency);
+    }
+
+    public static void main(String[] args) {
+        Money price = new Money(100, "USD");
+        Money tax = new Money(8.5, "USD");
+        Money total = price.add(tax);           // returns NEW Money
+        System.out.println(total);              // 108.50 USD
+        System.out.println(price);              // 100.00 USD (unchanged!)
+    }
+}`
+      }
+    ],
+    warning: "Exposing mutable objects (arrays, lists) through getters breaks encapsulation — return **defensive copies** instead."
   },
   {
     id: "oop-inheritance",
     title: "Inheritance & super Keyword",
     difficulty: "Medium",
     theory: [
-      "**Inheritance** lets a class acquire properties and methods of another using `extends`. Java supports **single inheritance** but a class can implement **multiple interfaces**."
+      "**Inheritance** allows a child class to acquire all fields and methods of a parent class using `extends`",
+      "It represents an **IS-A** relationship: Dog IS-A Animal, Car IS-A Vehicle",
+      "Java supports only **single inheritance** for classes — a class can extend only ONE parent",
+      "But a class can implement **multiple interfaces** — achieving a form of multiple inheritance",
+      "The **super** keyword refers to the parent class — used to: call parent constructor `super()`, call parent method `super.method()`",
+      "The first line of every constructor is either `this()` or `super()`. If you write neither, Java inserts `super()` automatically",
+      "**Method overriding:** the child provides its own version of a parent method with the **same signature**",
+      "Use `@Override` annotation — the compiler will catch mistakes like wrong method name or parameters",
+      "**final** classes cannot be extended. **final** methods cannot be overridden",
+      "**Inheritance hierarchy:** Object → Animal → Dog. Every class ultimately extends Object",
+      "Avoid deep inheritance chains (>3 levels) — prefer **composition** (HAS-A) over inheritance for flexibility"
     ],
-    code: [{
-      title: "Inheritance, super & Method Overriding",
-      language: "java",
-      content: `class Animal {
+    keyPoints: [
+      "super() must be the first statement in a constructor",
+      "Private members are inherited but NOT accessible in the subclass",
+      "Use @Override annotation to catch override mistakes at compile time",
+      "Prefer composition over inheritance when possible"
+    ],
+    code: [
+      {
+        title: "Inheritance — IS-A Relationship",
+        language: "java",
+        content: `class Animal {
     String name;
-    Animal(String name) { this.name = name; }
-    void speak() { System.out.println(name + " makes a sound"); }
-    void eat() { System.out.println(name + " is eating"); }
+    int age;
+
+    Animal(String name, int age) {
+        this.name = name;
+        this.age = age;
+    }
+
+    void speak() {
+        System.out.println(name + " makes a sound");
+    }
+
+    void eat() {
+        System.out.println(name + " is eating");
+    }
+
+    @Override
+    public String toString() {
+        return name + " (age " + age + ")";
+    }
 }
 
 class Dog extends Animal {
     String breed;
-    Dog(String name, String breed) {
-        super(name);
+
+    Dog(String name, int age, String breed) {
+        super(name, age);  // MUST call parent constructor first
         this.breed = breed;
     }
+
+    @Override  // method overriding
+    void speak() {
+        System.out.println(name + " barks! 🐕");
+    }
+
+    // New method specific to Dog
+    void fetch() {
+        System.out.println(name + " fetches the ball");
+    }
+}
+
+class Cat extends Animal {
+    Cat(String name, int age) {
+        super(name, age);
+    }
+
     @Override
-    void speak() { System.out.println(name + " barks!"); }
-    void fetch() { System.out.println(name + " fetches the ball"); }
+    void speak() {
+        System.out.println(name + " meows! 🐱");
+    }
 }
 
 public class InheritanceDemo {
     public static void main(String[] args) {
-        Dog d = new Dog("Buddy", "Golden Retriever");
-        d.speak();   // Buddy barks!
-        d.eat();     // Buddy is eating (inherited)
+        Dog dog = new Dog("Buddy", 3, "Golden Retriever");
+        dog.speak();    // Buddy barks! 🐕
+        dog.eat();      // Buddy is eating (inherited from Animal)
+        dog.fetch();    // Buddy fetches the ball
 
-        Animal a = new Dog("Rex", "German Shepherd");
-        a.speak();   // Rex barks! (dynamic dispatch)
+        // Polymorphic reference — parent type, child object
+        Animal animal = new Cat("Whiskers", 2);
+        animal.speak(); // Whiskers meows! 🐱 (dynamic dispatch)
+        // animal.purr(); // ❌ can't call Cat-specific methods
     }
 }`
-    }]
+      },
+      {
+        title: "Composition over Inheritance (HAS-A)",
+        language: "java",
+        content: `// ❌ Inheritance can be rigid
+// class FlyingCar extends Car, Airplane {} // NOT allowed in Java
+
+// ✅ Composition — flexible and modular
+class Engine {
+    int horsepower;
+    Engine(int hp) { this.horsepower = hp; }
+    void start() { System.out.println("Engine started (" + horsepower + " HP)"); }
+}
+
+class GPS {
+    void navigate(String dest) { System.out.println("Navigating to " + dest); }
+}
+
+// Car HAS-A Engine and HAS-A GPS (composition)
+class Car {
+    private Engine engine;     // HAS-A relationship
+    private GPS gps;           // HAS-A relationship
+    private String model;
+
+    Car(String model, int hp) {
+        this.model = model;
+        this.engine = new Engine(hp);  // composed inside
+        this.gps = new GPS();
+    }
+
+    void start() {
+        System.out.println(model + " starting...");
+        engine.start();  // delegate to engine
+    }
+
+    void goTo(String dest) {
+        gps.navigate(dest);  // delegate to GPS
+    }
+}
+
+public class CompositionDemo {
+    public static void main(String[] args) {
+        Car car = new Car("Tesla Model 3", 283);
+        car.start();         // Tesla Model 3 starting... Engine started (283 HP)
+        car.goTo("Airport"); // Navigating to Airport
+    }
+}`
+      }
+    ],
+    tip: "Ask yourself: 'Is B truly a type of A?' If yes → inheritance. If 'B uses A' → composition. When in doubt, prefer composition."
   },
   {
     id: "oop-polymorphism",
     title: "Polymorphism (Overloading/Overriding)",
     difficulty: "Medium",
     theory: [
-      "**Compile-time** polymorphism → Method **Overloading** (same name, different params). **Runtime** polymorphism → Method **Overriding** (subclass redefines parent method)."
+      "**Polymorphism** means 'many forms' — the same method name behaves differently based on the context",
+      "**Compile-time polymorphism (Static)** → **Method Overloading**: same method name, different parameter lists in the SAME class",
+      "**Runtime polymorphism (Dynamic)** → **Method Overriding**: subclass provides its own implementation of a parent method",
+      "**Overloading rules:** methods must differ in number, type, or order of parameters. Return type alone is NOT enough",
+      "**Overriding rules:** same name, same parameters, same or covariant return type. Access can be **same or wider** (not narrower)",
+      "**Dynamic dispatch:** when you call a method on a parent reference pointing to a child object, the **child's version** runs",
+      "This is how Java achieves runtime polymorphism — the JVM determines the actual type at runtime",
+      "**Upcasting** (automatic): `Animal a = new Dog()` — safe, always works",
+      "**Downcasting** (manual): `Dog d = (Dog) animal` — risky, can throw ClassCastException. Use `instanceof` first",
+      "Java 16+ pattern matching: `if (obj instanceof Dog d)` — combines instanceof check and cast in one step"
     ],
-    code: [{
-      title: "Overloading & Overriding with Dynamic Dispatch",
-      language: "java",
-      content: `class Calculator {
+    code: [
+      {
+        title: "Method Overloading — Compile-Time Polymorphism",
+        language: "java",
+        content: `class MathHelper {
+    // Same name, different parameters = overloading
     int add(int a, int b) { return a + b; }
     double add(double a, double b) { return a + b; }
     int add(int a, int b, int c) { return a + b + c; }
-}
+    String add(String a, String b) { return a + b; } // concatenation
 
-class Shape {
-    double area() { return 0; }
+    // ❌ This is NOT valid overloading — same params, different return
+    // double add(int a, int b) { return a + b; } // COMPILE ERROR
+
+    public static void main(String[] args) {
+        MathHelper m = new MathHelper();
+        System.out.println(m.add(2, 3));         // 5 (int version)
+        System.out.println(m.add(2.5, 3.5));     // 6.0 (double version)
+        System.out.println(m.add(1, 2, 3));      // 6 (three-arg version)
+        System.out.println(m.add("Hi", " Java")); // Hi Java (String version)
+    }
+}`
+      },
+      {
+        title: "Method Overriding & Dynamic Dispatch",
+        language: "java",
+        content: `class Shape {
+    String name;
+    Shape(String name) { this.name = name; }
+
+    double area() { return 0; }  // default implementation
+
+    void describe() {
+        System.out.printf("%s: area = %.2f%n", name, area());
+    }
 }
 
 class Circle extends Shape {
     double radius;
-    Circle(double r) { this.radius = r; }
-    @Override double area() { return Math.PI * radius * radius; }
+    Circle(double r) { super("Circle"); this.radius = r; }
+
+    @Override
+    double area() { return Math.PI * radius * radius; }
 }
 
-class Square extends Shape {
-    double side;
-    Square(double s) { this.side = s; }
-    @Override double area() { return side * side; }
+class Rectangle extends Shape {
+    double w, h;
+    Rectangle(double w, double h) { super("Rectangle"); this.w = w; this.h = h; }
+
+    @Override
+    double area() { return w * h; }
+}
+
+class Triangle extends Shape {
+    double base, height;
+    Triangle(double b, double h) { super("Triangle"); this.base = b; this.height = h; }
+
+    @Override
+    double area() { return 0.5 * base * height; }
 }
 
 public class PolymorphismDemo {
+    // This method works with ANY shape — polymorphism in action
     static void printArea(Shape s) {
-        System.out.printf("Area: %.2f%n", s.area());
+        s.describe(); // calls the ACTUAL type's area() at runtime
     }
+
     public static void main(String[] args) {
-        Shape[] shapes = { new Circle(5), new Square(4) };
-        for (Shape s : shapes) printArea(s);
+        Shape[] shapes = {
+            new Circle(5),
+            new Rectangle(4, 6),
+            new Triangle(3, 8)
+        };
+
+        for (Shape s : shapes) {
+            printArea(s);  // dynamic dispatch picks correct area()
+        }
+        // Circle: area = 78.54
+        // Rectangle: area = 24.00
+        // Triangle: area = 12.00
     }
 }`
-    }]
+      },
+      {
+        title: "Upcasting, Downcasting & instanceof",
+        language: "java",
+        content: `public class CastingDemo {
+    public static void main(String[] args) {
+        // Upcasting — always safe (automatic)
+        Animal myDog = new Dog("Rex", 4, "Husky"); // Dog → Animal
+        myDog.speak(); // Rex barks! (dynamic dispatch)
+        // myDog.fetch(); // ❌ COMPILE ERROR — Animal doesn't have fetch()
+
+        // Downcasting — needs explicit cast
+        if (myDog instanceof Dog) {
+            Dog d = (Dog) myDog;  // safe — we checked first
+            d.fetch();            // ✅ Now we can call Dog methods
+        }
+
+        // Java 16+ pattern matching — cleaner
+        if (myDog instanceof Dog d) {
+            d.fetch();  // d is already cast!
+        }
+
+        // Polymorphic array
+        Animal[] zoo = { new Dog("A", 1, "Lab"), new Cat("B", 2) };
+        for (Animal a : zoo) {
+            a.speak(); // each animal speaks differently
+
+            if (a instanceof Dog d) {
+                d.fetch(); // only dogs fetch
+            }
+        }
+    }
+}`
+      }
+    ],
+    warning: "Always check with `instanceof` before downcasting — otherwise you risk **ClassCastException** at runtime."
   },
   {
     id: "oop-abstraction",
     title: "Abstract Classes & Interfaces",
     difficulty: "Medium",
     theory: [
-      "**Abstract class** — Can have abstract + concrete methods, fields, constructors. Single inheritance only.",
-      "**Interface** — Pure contract. Java 8+ allows default/static methods. Supports multiple inheritance."
+      "**Abstraction** hides implementation details and shows only the essential features to the user",
+      "**Abstract class** — a class declared with `abstract` keyword. Cannot be instantiated directly",
+      "Abstract classes can have: abstract methods (no body), concrete methods (with body), fields, constructors",
+      "Any class with at least one abstract method MUST be declared abstract",
+      "A subclass MUST implement all abstract methods — or be declared abstract itself",
+      "**Interface** — a pure contract that defines WHAT a class must do, not HOW",
+      "Before Java 8: interfaces could only have abstract methods and constants (public static final)",
+      "Java 8+: interfaces can have **default methods** (with body) and **static methods**",
+      "Java 9+: interfaces can have **private methods** (helper methods for defaults)",
+      "**Key difference:** Abstract class = partial implementation + IS-A. Interface = capability/contract + CAN-DO",
+      "A class can extend only ONE abstract class but implement MANY interfaces",
+      "Use **abstract class** when: classes share common state (fields) and behavior. Use **interface** when: defining a capability that unrelated classes can implement"
     ],
-    code: [{
-      title: "Abstract Class + Multiple Interfaces",
-      language: "java",
-      content: `abstract class Vehicle {
+    keyPoints: [
+      "Abstract class: single inheritance, can have state (fields), constructors",
+      "Interface: multiple inheritance, no state (only constants), no constructors",
+      "Java 8+ interfaces can have default and static methods",
+      "Prefer interfaces for defining contracts; abstract classes for sharing code"
+    ],
+    code: [
+      {
+        title: "Abstract Class — Shared Base with Template Method",
+        language: "java",
+        content: `abstract class Vehicle {
     String brand;
-    Vehicle(String brand) { this.brand = brand; }
+    int year;
+
+    // Abstract classes CAN have constructors
+    Vehicle(String brand, int year) {
+        this.brand = brand;
+        this.year = year;
+    }
+
+    // Abstract method — subclasses MUST implement
     abstract void start();
-    void stop() { System.out.println(brand + " stopped"); }
+    abstract double fuelEfficiency();
+
+    // Concrete method — shared implementation
+    void stop() {
+        System.out.println(brand + " stopped");
+    }
+
+    // Template method pattern — defines the algorithm skeleton
+    final void tripReport(double distance) {
+        start();
+        double fuel = distance / fuelEfficiency();
+        System.out.printf("Trip: %.1f km, Fuel: %.1f liters%n", distance, fuel);
+        stop();
+    }
 }
 
-interface Electric {
-    void charge();
-    default void batteryStatus() { System.out.println("Battery OK"); }
+class Car extends Vehicle {
+    Car(String brand, int year) { super(brand, year); }
+
+    @Override
+    void start() { System.out.println(brand + " engine roars!"); }
+
+    @Override
+    double fuelEfficiency() { return 15.0; } // km per liter
 }
 
-interface GPS {
-    void navigate(String destination);
+class ElectricCar extends Vehicle {
+    ElectricCar(String brand, int year) { super(brand, year); }
+
+    @Override
+    void start() { System.out.println(brand + " silently starts"); }
+
+    @Override
+    double fuelEfficiency() { return 150.0; } // km per "liter equivalent"
 }
 
-class Tesla extends Vehicle implements Electric, GPS {
-    Tesla() { super("Tesla"); }
-    @Override void start() { System.out.println("Tesla silently starts"); }
-    @Override public void charge() { System.out.println("Supercharging..."); }
-    @Override public void navigate(String dest) {
-        System.out.println("Navigating to " + dest);
+public class AbstractDemo {
+    public static void main(String[] args) {
+        // Vehicle v = new Vehicle("X", 2024); // ❌ can't instantiate abstract
+        Vehicle car = new Car("BMW", 2024);
+        Vehicle ev = new ElectricCar("Tesla", 2024);
+
+        car.tripReport(100);
+        System.out.println();
+        ev.tripReport(100);
     }
 }`
-    }]
+      },
+      {
+        title: "Interfaces — Multiple Inheritance of Behavior",
+        language: "java",
+        content: `// Interfaces define capabilities (CAN-DO)
+interface Flyable {
+    void fly();                       // abstract
+    default void land() {             // default method (Java 8+)
+        System.out.println("Landing safely");
+    }
+}
+
+interface Swimmable {
+    void swim();
+    default void dive() {
+        System.out.println("Diving deep");
+    }
+}
+
+interface Trackable {
+    void getLocation();
+    // Static method in interface
+    static String gpsFormat(double lat, double lon) {
+        return String.format("(%.4f, %.4f)", lat, lon);
+    }
+}
+
+// A class can implement MULTIPLE interfaces
+class Duck implements Flyable, Swimmable {
+    @Override
+    public void fly() { System.out.println("Duck flies! 🦆"); }
+
+    @Override
+    public void swim() { System.out.println("Duck swims!"); }
+    // land() and dive() are inherited as defaults
+}
+
+// Real-world: combining interfaces
+class Drone implements Flyable, Trackable {
+    @Override
+    public void fly() { System.out.println("Drone hovering 🚁"); }
+
+    @Override
+    public void getLocation() {
+        System.out.println("Location: " + Trackable.gpsFormat(40.7128, -74.0060));
+    }
+}
+
+public class InterfaceDemo {
+    public static void main(String[] args) {
+        Duck duck = new Duck();
+        duck.fly();    // Duck flies! 🦆
+        duck.swim();   // Duck swims!
+        duck.land();   // Landing safely (default method)
+
+        // Interface as type — polymorphism
+        Flyable flyer = new Drone();
+        flyer.fly();   // Drone hovering 🚁
+        flyer.land();  // Landing safely
+
+        Drone drone = new Drone();
+        drone.getLocation(); // Location: (40.7128, -74.0060)
+    }
+}`
+      },
+      {
+        title: "Abstract Class vs Interface — When to Use Which",
+        language: "java",
+        content: `/*
+ * ┌─────────────────────┬──────────────────┬──────────────────┐
+ * │     Feature         │  Abstract Class  │    Interface     │
+ * ├─────────────────────┼──────────────────┼──────────────────┤
+ * │ Inheritance         │  Single only     │  Multiple OK     │
+ * │ Fields              │  Any type        │  public static   │
+ * │                     │                  │  final only      │
+ * │ Constructors        │  Yes             │  No              │
+ * │ Access modifiers    │  Any             │  public only     │
+ * │ Methods             │  Abstract +      │  Abstract +      │
+ * │                     │  concrete        │  default + static│
+ * │ Speed               │  Slightly faster │  Slightly slower │
+ * │ Use when            │  Related classes │  Unrelated       │
+ * │                     │  share code      │  classes share   │
+ * │                     │                  │  capability      │
+ * └─────────────────────┴──────────────────┴──────────────────┘
+ *
+ * RULE OF THUMB:
+ * - Use INTERFACE for: "can do" relationships (Comparable, Serializable)
+ * - Use ABSTRACT CLASS for: "is a" with shared state/behavior
+ * - Use BOTH: abstract class implements interface for hybrid approach
+ */
+
+// Hybrid approach — best of both worlds
+interface Printable {
+    void print();
+}
+
+abstract class Document implements Printable {
+    String title;
+    Document(String title) { this.title = title; }
+    abstract String getContent();
+
+    @Override
+    public void print() {
+        System.out.println("=== " + title + " ===");
+        System.out.println(getContent());
+    }
+}
+
+class PDFDocument extends Document {
+    String text;
+    PDFDocument(String title, String text) { super(title); this.text = text; }
+    @Override String getContent() { return "[PDF] " + text; }
+}
+
+class SpreadsheetDocument extends Document {
+    int rows, cols;
+    SpreadsheetDocument(String title, int r, int c) { super(title); rows = r; cols = c; }
+    @Override String getContent() { return "[Spreadsheet] " + rows + "x" + cols; }
+}`
+      }
+    ],
+    tip: "Since Java 8, interfaces are much more powerful with default methods. Many new designs use interfaces exclusively."
   },
   {
     id: "oop-static",
     title: "Static Members & Methods",
     difficulty: "Easy",
     theory: [
-      "**Static** members belong to the **class itself**, shared across all instances. Static methods can only access static members directly."
+      "**Static** members belong to the **class itself**, not to any specific instance — shared across all objects",
+      "**Static field:** one copy exists for the entire class, regardless of how many objects are created",
+      "**Static method:** can be called without creating an object. Can only access other static members directly",
+      "**Static block:** runs once when the class is first loaded into memory — used for complex static initialization",
+      "Static methods CANNOT access instance fields/methods directly — they don't have a `this` reference",
+      "Instance methods CAN access static members — static belongs to the class, which is always available",
+      "Common uses: utility methods (Math.max), factory methods, counters, constants, singleton pattern",
+      "**static final** = constant. Convention: `UPPER_SNAKE_CASE` (e.g., `MAX_SIZE`, `PI`)"
     ],
-    code: [{
-      title: "Static Fields, Methods & Blocks",
-      language: "java",
-      content: `public class Counter {
-    private static int count = 0;
+    code: [
+      {
+        title: "Static Fields, Methods & Blocks",
+        language: "java",
+        content: `public class Counter {
+    // Static field — shared across ALL instances
+    private static int totalCount = 0;
+
+    // Instance field — unique to each object
     private int id;
+    private String name;
 
-    static { System.out.println("Counter class loaded!"); }
+    // Static constant
+    public static final int MAX_COUNT = 1000;
 
-    public Counter() { count++; this.id = count; }
+    // Static block — runs once when class loads
+    static {
+        System.out.println("Counter class loaded!");
+        // Can do complex static initialization here
+    }
 
-    public static int getCount() { return count; }
-    public int getId() { return id; }
+    public Counter(String name) {
+        if (totalCount >= MAX_COUNT) throw new RuntimeException("Max reached");
+        totalCount++;           // shared counter
+        this.id = totalCount;   // unique ID
+        this.name = name;
+    }
+
+    // Static method — access via class name
+    public static int getTotalCount() {
+        // return name; // ❌ ERROR — can't access instance field
+        return totalCount; // ✅ can access static field
+    }
+
+    // Instance method — can access both
+    public String getInfo() {
+        return "ID: " + id + ", Name: " + name + " (Total: " + totalCount + ")";
+    }
 
     public static void main(String[] args) {
-        System.out.println(Counter.getCount()); // 0
-        Counter c1 = new Counter();
-        Counter c2 = new Counter();
-        System.out.println(Counter.getCount()); // 2
-        System.out.println(c1.getId());          // 1
+        System.out.println(Counter.getTotalCount()); // 0
+
+        Counter c1 = new Counter("Alice");
+        Counter c2 = new Counter("Bob");
+        Counter c3 = new Counter("Charlie");
+
+        System.out.println(Counter.getTotalCount()); // 3
+        System.out.println(c1.getInfo()); // ID: 1, Name: Alice (Total: 3)
+        System.out.println(c2.getInfo()); // ID: 2, Name: Bob (Total: 3)
     }
 }`
-    }]
+      },
+      {
+        title: "Static Utility Class — Real-World Pattern",
+        language: "java",
+        content: `// Utility class — all static, cannot be instantiated
+public final class StringUtils {
+    // Private constructor prevents instantiation
+    private StringUtils() {
+        throw new AssertionError("Utility class");
+    }
+
+    public static boolean isEmpty(String s) {
+        return s == null || s.trim().isEmpty();
+    }
+
+    public static String capitalize(String s) {
+        if (isEmpty(s)) return s;
+        return Character.toUpperCase(s.charAt(0)) + s.substring(1).toLowerCase();
+    }
+
+    public static String repeat(String s, int times) {
+        return s.repeat(times); // Java 11+
+    }
+
+    public static String reverse(String s) {
+        return new StringBuilder(s).reverse().toString();
+    }
+
+    public static void main(String[] args) {
+        // Called via class name — no object needed
+        System.out.println(StringUtils.isEmpty(""));        // true
+        System.out.println(StringUtils.capitalize("hello")); // Hello
+        System.out.println(StringUtils.reverse("Java"));     // avaJ
+    }
+}`
+      }
+    ],
+    note: "The **Math** class in Java is a perfect example of a utility class — all methods are static: `Math.max()`, `Math.sqrt()`, `Math.PI`."
   },
   {
     id: "oop-inner",
     title: "Inner & Anonymous Classes",
     difficulty: "Medium",
     theory: [
-      "Java supports **inner classes** (access outer's private members), **static nested classes**, **local classes**, and **anonymous classes** (inline implementations, often replaced by lambdas)."
+      "Java supports **four types** of nested classes, each with different use cases:",
+      "**Inner class (non-static):** declared inside another class. Has access to outer class's private members including `this`",
+      "**Static nested class:** declared with `static`. Does NOT need an outer instance. Can only access outer's static members",
+      "**Local class:** defined inside a method. Can access method's effectively final variables",
+      "**Anonymous class:** a class without a name, defined inline. Used to implement interfaces/abstract classes on the spot",
+      "Inner classes are useful for: iterators, event handlers, helper objects that need outer class access",
+      "Since Java 8, **lambdas** replace most anonymous class usage for functional interfaces (single method)",
+      "Anonymous classes are still needed when: you need to implement multiple methods, or override methods of a concrete class"
     ],
-    code: [{
-      title: "Inner & Anonymous Classes",
-      language: "java",
-      content: `import java.util.*;
-
-public class OuterClass {
+    code: [
+      {
+        title: "Inner Class & Static Nested Class",
+        language: "java",
+        content: `public class OuterClass {
     private int x = 10;
+    private static int staticVal = 100;
 
+    // Inner class — has access to outer's private members
     class Inner {
-        void show() { System.out.println("Outer x = " + x); }
+        void show() {
+            System.out.println("Outer x = " + x);           // ✅ can access
+            System.out.println("Outer static = " + staticVal); // ✅ can access
+        }
     }
 
+    // Static nested class — no access to instance members
     static class StaticNested {
-        void show() { System.out.println("I'm static nested"); }
+        void show() {
+            // System.out.println("x = " + x); // ❌ can't access instance
+            System.out.println("Static val = " + staticVal);  // ✅ static OK
+        }
     }
 
     public static void main(String[] args) {
+        // Inner class — needs outer instance
         OuterClass outer = new OuterClass();
         Inner inner = outer.new Inner();
         inner.show();
 
-        // Anonymous class → Lambda
-        Comparator<String> comp = (a, b) -> a.length() - b.length();
-        List<String> words = Arrays.asList("banana", "fig", "apple");
-        words.sort(comp);
-        System.out.println(words); // [fig, apple, banana]
+        // Static nested — no outer instance needed
+        StaticNested nested = new StaticNested();
+        nested.show();
     }
 }`
-    }]
+      },
+      {
+        title: "Anonymous Classes & Lambda Replacement",
+        language: "java",
+        content: `import java.util.*;
+
+public class AnonymousDemo {
+    // Functional interface (single abstract method)
+    interface Greeting {
+        void greet(String name);
+    }
+
+    public static void main(String[] args) {
+        // ❌ Verbose — anonymous class
+        Greeting oldWay = new Greeting() {
+            @Override
+            public void greet(String name) {
+                System.out.println("Hello, " + name + "!");
+            }
+        };
+        oldWay.greet("Alice");
+
+        // ✅ Clean — lambda (Java 8+)
+        Greeting newWay = name -> System.out.println("Hello, " + name + "!");
+        newWay.greet("Bob");
+
+        // Anonymous class still useful for multi-method interfaces
+        List<String> names = new ArrayList<>(Arrays.asList("Charlie", "Alice", "Bob"));
+
+        // Lambda for Comparator (single method)
+        names.sort((a, b) -> a.length() - b.length());
+        System.out.println(names); // [Bob, Alice, Charlie]
+
+        // Anonymous class for complex behavior
+        Thread thread = new Thread() {
+            @Override
+            public void run() {
+                System.out.println("Running in: " + getName());
+            }
+        };
+        thread.start();
+    }
+}`
+      }
+    ],
+    tip: "If an anonymous class implements a **functional interface** (one method), replace it with a **lambda** for cleaner code."
   },
   {
     id: "oop-enums",
     title: "Enums & Annotations",
     difficulty: "Medium",
     theory: [
-      "**Enums** represent a fixed set of constants. They can have fields, methods, and constructors."
+      "**Enums** represent a fixed set of named constants — type-safe alternative to int/String constants",
+      "Enums in Java are much more powerful than in other languages — they can have **fields, methods, constructors**",
+      "Each enum constant is an **instance** of the enum class — created once when the class loads",
+      "Enum constructors are always **private** (even if you don't specify) — can't create new instances",
+      "Built-in methods: `values()` (all constants), `valueOf(String)` (by name), `ordinal()` (position), `name()` (string name)",
+      "Enums can implement interfaces — useful for strategy pattern",
+      "Enums are the **best way to implement Singleton** in Java — thread-safe, serialization-safe",
+      "**Annotations** are metadata tags that provide info to the compiler or runtime: `@Override`, `@Deprecated`, `@SuppressWarnings`",
+      "Custom annotations are declared with `@interface` — commonly used in frameworks like Spring and JUnit"
     ],
-    code: [{
-      title: "Enum with Fields & Methods",
-      language: "java",
-      content: `enum Planet {
+    code: [
+      {
+        title: "Enum with Fields, Methods & Constructor",
+        language: "java",
+        content: `enum Planet {
     MERCURY(3.303e+23, 2.4397e6),
     VENUS(4.869e+24, 6.0518e6),
     EARTH(5.976e+24, 6.37814e6),
     MARS(6.421e+23, 3.3972e6);
 
-    private final double mass, radius;
+    // Fields
+    private final double mass;    // in kg
+    private final double radius;  // in meters
     static final double G = 6.67300E-11;
 
+    // Constructor (always private)
     Planet(double mass, double radius) {
         this.mass = mass;
         this.radius = radius;
     }
 
-    double surfaceGravity() { return G * mass / (radius * radius); }
-    double surfaceWeight(double otherMass) { return otherMass * surfaceGravity(); }
+    // Methods
+    double surfaceGravity() {
+        return G * mass / (radius * radius);
+    }
+
+    double surfaceWeight(double otherMass) {
+        return otherMass * surfaceGravity();
+    }
 }
 
 public class EnumDemo {
     public static void main(String[] args) {
+        // Iterate all enum values
         for (Planet p : Planet.values()) {
             System.out.printf("Weight on %s: %.2f N%n",
-                p, p.surfaceWeight(75.0));
+                p.name(), p.surfaceWeight(75.0));
         }
-        Planet p = Planet.valueOf("MARS");
-        System.out.println(p.ordinal()); // 3
+
+        // Get by name
+        Planet mars = Planet.valueOf("MARS");
+        System.out.println(mars.ordinal()); // 3 (zero-based position)
+
+        // Enum in switch
+        Planet p = Planet.EARTH;
+        switch (p) {
+            case EARTH -> System.out.println("Home! 🌍");
+            case MARS  -> System.out.println("The Red Planet");
+            default    -> System.out.println("Space!");
+        }
     }
 }`
-    }]
+      },
+      {
+        title: "Enum Implementing Interface — Strategy Pattern",
+        language: "java",
+        content: `// Enum as strategy — each constant has different behavior
+interface MathOperation {
+    double apply(double a, double b);
+}
+
+enum Operation implements MathOperation {
+    ADD      { public double apply(double a, double b) { return a + b; } },
+    SUBTRACT { public double apply(double a, double b) { return a - b; } },
+    MULTIPLY { public double apply(double a, double b) { return a * b; } },
+    DIVIDE   { public double apply(double a, double b) {
+        if (b == 0) throw new ArithmeticException("Division by zero");
+        return a / b;
+    }};
+
+    // Shared method
+    public String calculate(double a, double b) {
+        return String.format("%.1f %s %.1f = %.1f", a, name(), b, apply(a, b));
+    }
+}
+
+// Enum Singleton — best singleton in Java
+enum Database {
+    INSTANCE;  // only one instance ever
+
+    private int connectionCount = 0;
+
+    public void connect() {
+        connectionCount++;
+        System.out.println("Connected (#" + connectionCount + ")");
+    }
+}
+
+public class EnumStrategyDemo {
+    public static void main(String[] args) {
+        for (Operation op : Operation.values()) {
+            System.out.println(op.calculate(10, 3));
+        }
+        // 10.0 ADD 3.0 = 13.0
+        // 10.0 SUBTRACT 3.0 = 7.0
+        // 10.0 MULTIPLY 3.0 = 30.0
+        // 10.0 DIVIDE 3.0 = 3.3
+
+        // Singleton usage
+        Database.INSTANCE.connect(); // Connected (#1)
+        Database.INSTANCE.connect(); // Connected (#2)
+    }
+}`
+      }
+    ],
+    note: "Enum-based Singleton is the **recommended** singleton approach by Joshua Bloch (Effective Java) — it handles serialization and reflection attacks automatically."
   },
   {
     id: "oop-solid",
     title: "SOLID Principles",
     difficulty: "Hard",
     theory: [
-      "**S — Single Responsibility**: A class should have only one reason to change.",
-      "**O — Open/Closed**: Open for extension, closed for modification.",
-      "**L — Liskov Substitution**: Subtypes must be substitutable for their base types.",
-      "**I — Interface Segregation**: Many specific interfaces > one general interface.",
-      "**D — Dependency Inversion**: Depend on abstractions, not concrete implementations."
+      "**SOLID** is a set of five design principles that make software more maintainable, flexible, and scalable",
+      "**S — Single Responsibility Principle (SRP):** A class should have only **one reason to change**. Each class handles one job",
+      "If a class does email sending AND user validation AND logging, it violates SRP — split into separate classes",
+      "**O — Open/Closed Principle (OCP):** Classes should be **open for extension, closed for modification**",
+      "Add new behavior by creating new classes/implementations, not by modifying existing code",
+      "**L — Liskov Substitution Principle (LSP):** Subtype objects must be **substitutable** for their parent type without breaking the program",
+      "If Square extends Rectangle but breaks when you set width/height independently, it violates LSP",
+      "**I — Interface Segregation Principle (ISP):** No client should be forced to depend on methods it doesn't use. Prefer **many small interfaces** over one large one",
+      "**D — Dependency Inversion Principle (DIP):** High-level modules should depend on **abstractions** (interfaces), not on concrete implementations",
+      "DIP enables dependency injection — pass dependencies through constructors, making code testable and flexible"
     ],
-    code: [{
-      title: "SOLID in Practice — Open/Closed + Dependency Inversion",
-      language: "java",
-      content: `// Open/Closed: add new strategies without modifying existing code
+    keyPoints: [
+      "SRP: One class = one responsibility = one reason to change",
+      "OCP: Extend behavior with new classes, don't modify existing ones",
+      "LSP: Subclasses must honor the parent's contract",
+      "ISP: Small focused interfaces > large bloated ones",
+      "DIP: Depend on abstractions (interfaces), not concrete classes"
+    ],
+    code: [
+      {
+        title: "SRP & OCP — Single Responsibility + Open/Closed",
+        language: "java",
+        content: `// ❌ Violates SRP — one class doing too many things
+class BadUserService {
+    void createUser() { /* ... */ }
+    void sendEmail() { /* ... */ }
+    void generateReport() { /* ... */ }
+    void logActivity() { /* ... */ }
+}
+
+// ✅ SRP — each class has one job
+class UserService { void createUser() { /* ... */ } }
+class EmailService { void sendEmail() { /* ... */ } }
+class ReportService { void generateReport() { /* ... */ } }
+
+// ✅ OCP — open for extension, closed for modification
 interface DiscountStrategy {
     double apply(double price);
 }
@@ -904,19 +1752,96 @@ class NoDiscount implements DiscountStrategy {
 }
 
 class PercentDiscount implements DiscountStrategy {
-    double percent;
+    private double percent;
     PercentDiscount(double p) { this.percent = p; }
     public double apply(double price) { return price * (1 - percent / 100); }
 }
 
-// Dependency Inversion: depends on abstraction, not concrete class
+class BuyOneGetOneFree implements DiscountStrategy {
+    public double apply(double price) { return price / 2; }
+}
+
+// Adding new discount = new class, NO changes to existing code
 class OrderService {
-    private final DiscountStrategy strategy;
+    private DiscountStrategy strategy;
     OrderService(DiscountStrategy strategy) { this.strategy = strategy; }
     double calculateTotal(double price) { return strategy.apply(price); }
 }`
-    }],
-    tip: "SOLID principles are essential for interviews and real-world software engineering."
+      },
+      {
+        title: "ISP & DIP — Interface Segregation + Dependency Inversion",
+        language: "java",
+        content: `// ❌ Violates ISP — too many methods in one interface
+interface BadWorker {
+    void work();
+    void eat();
+    void sleep();
+    void code();    // not all workers code
+    void manage();  // not all workers manage
+}
+
+// ✅ ISP — small, focused interfaces
+interface Workable { void work(); }
+interface Eatable  { void eat(); }
+interface Codable  { void code(); }
+interface Manageable { void manage(); }
+
+// Each class implements only what it needs
+class Developer implements Workable, Eatable, Codable {
+    public void work() { System.out.println("Working"); }
+    public void eat()  { System.out.println("Eating"); }
+    public void code() { System.out.println("Coding in Java"); }
+}
+
+class Manager implements Workable, Eatable, Manageable {
+    public void work()   { System.out.println("Working"); }
+    public void eat()    { System.out.println("Eating"); }
+    public void manage() { System.out.println("Managing team"); }
+}
+
+// ✅ DIP — depend on abstraction, not concrete
+interface NotificationSender {
+    void send(String message);
+}
+
+class EmailSender implements NotificationSender {
+    public void send(String msg) { System.out.println("Email: " + msg); }
+}
+
+class SMSSender implements NotificationSender {
+    public void send(String msg) { System.out.println("SMS: " + msg); }
+}
+
+class PushSender implements NotificationSender {
+    public void send(String msg) { System.out.println("Push: " + msg); }
+}
+
+// High-level class depends on abstraction (NotificationSender)
+class AlertService {
+    private NotificationSender sender;  // abstraction, not concrete
+
+    AlertService(NotificationSender sender) {
+        this.sender = sender;  // injected via constructor
+    }
+
+    void alert(String msg) { sender.send("ALERT: " + msg); }
+}
+
+public class SOLIDDemo {
+    public static void main(String[] args) {
+        // Easy to swap implementations — that's DIP power!
+        AlertService emailAlert = new AlertService(new EmailSender());
+        AlertService smsAlert = new AlertService(new SMSSender());
+        AlertService pushAlert = new AlertService(new PushSender());
+
+        emailAlert.alert("Server down!"); // Email: ALERT: Server down!
+        smsAlert.alert("Server down!");   // SMS: ALERT: Server down!
+        pushAlert.alert("Server down!");  // Push: ALERT: Server down!
+    }
+}`
+      }
+    ],
+    tip: "SOLID principles are **interview essentials** and the foundation of clean architecture. Practice applying them in every project."
   }
 ];
 
