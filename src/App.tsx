@@ -169,26 +169,14 @@ function SearchButton() {
         </kbd>
       </button>
 
-      <AnimatePresence>
-        {open && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center" onClick={() => setOpen(false)}>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.15 }}
-              className="fixed inset-0"
-              style={{ background: "hsl(var(--background)/0.75)", backdropFilter: "blur(8px)" }}
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: -10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: -10 }}
-              transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
-              className="relative w-full max-w-md mx-4 rounded-2xl overflow-hidden max-h-[70vh]"
-              style={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", boxShadow: "0 25px 80px hsl(var(--foreground)/0.2)" }}
-              onClick={(e) => e.stopPropagation()}
-            >
+      {open && (
+        <div className="fixed inset-0 flex items-center justify-center" style={{ zIndex: 9999 }} onClick={() => setOpen(false)}>
+          <div className="fixed inset-0" style={{ background: "hsl(var(--background)/0.75)", backdropFilter: "blur(8px)" }} />
+          <div
+            className="relative w-full max-w-md mx-4 rounded-2xl overflow-hidden flex flex-col"
+            style={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", boxShadow: "0 25px 80px hsl(var(--foreground)/0.2)", maxHeight: "65vh" }}
+            onClick={(e) => e.stopPropagation()}
+          >
               {/* Search header */}
               <div className="flex items-center gap-3 px-5 py-4 border-b" style={{ borderColor: "hsl(var(--border))" }}>
                 <div className="flex items-center justify-center w-9 h-9 rounded-xl" style={{ background: "hsl(var(--primary)/0.1)" }}>
@@ -267,10 +255,9 @@ function SearchButton() {
                   <span><kbd className="px-1.5 py-0.5 rounded font-mono text-[9px]" style={{ background: "hsl(var(--muted))", border: "1px solid hsl(var(--border))" }}>esc</kbd> close</span>
                 </div>
               </div>
-            </motion.div>
           </div>
-        )}
-      </AnimatePresence>
+        </div>
+      )}
     </>
   );
 }
