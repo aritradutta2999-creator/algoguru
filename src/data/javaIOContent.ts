@@ -14,6 +14,32 @@ export const javaIOContent: ContentSection[] = [
       "Character streams automatically handle **character encoding** (UTF-8, etc.) — prefer them for text",
       "Always **close** streams after use — use try-with-resources for automatic closing"
     ],
+    diagram: {
+      type: "table-visual",
+      title: "I/O Streams — Byte vs Character",
+      data: [
+        {
+          label: "Byte Streams (Binary Data)",
+          color: "primary",
+          children: [
+            { label: "InputStream → FileInputStream, BufferedInputStream" },
+            { label: "OutputStream → FileOutputStream, BufferedOutputStream" },
+            { label: "Use for: images, PDFs, binary files" },
+            { label: "Base unit: byte (8 bits)" }
+          ]
+        },
+        {
+          label: "Character Streams (Text Data)",
+          color: "success",
+          children: [
+            { label: "Reader → FileReader, BufferedReader" },
+            { label: "Writer → FileWriter, BufferedWriter, PrintWriter" },
+            { label: "Use for: .txt, .csv, text-based files" },
+            { label: "Base unit: char (16-bit Unicode)" }
+          ]
+        }
+      ]
+    },
     code: [
       {
         title: "Byte Streams — Reading & Writing Files",

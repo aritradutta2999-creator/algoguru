@@ -15,6 +15,61 @@ export const javaCollectionsContent: ContentSection[] = [
       "**Key interfaces:** List (ArrayList, LinkedList), Set (HashSet, TreeSet), Queue (PriorityQueue, ArrayDeque), Map (HashMap, TreeMap)",
       "All collections store **references** (objects), not primitives. Use wrapper classes (Integer, Double, etc.) for primitives"
     ],
+    diagram: {
+      type: "hierarchy",
+      title: "Collections Framework Hierarchy",
+      data: [
+        {
+          label: "Iterable<E>",
+          color: "muted",
+          children: [
+            {
+              label: "Collection<E>",
+              color: "primary",
+              children: [
+                {
+                  label: "List<E> — ordered, duplicates",
+                  color: "info",
+                  children: [
+                    { label: "ArrayList", color: "info" },
+                    { label: "LinkedList", color: "info" },
+                    { label: "Vector → Stack", color: "info" }
+                  ]
+                },
+                {
+                  label: "Set<E> — no duplicates",
+                  color: "success",
+                  children: [
+                    { label: "HashSet", color: "success" },
+                    { label: "LinkedHashSet", color: "success" },
+                    { label: "TreeSet (SortedSet)", color: "success" }
+                  ]
+                },
+                {
+                  label: "Queue<E> — FIFO",
+                  color: "accent",
+                  children: [
+                    { label: "PriorityQueue", color: "accent" },
+                    { label: "ArrayDeque (Deque)", color: "accent" },
+                    { label: "LinkedList (Deque)", color: "accent" }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          label: "Map<K,V> — separate hierarchy",
+          color: "warning",
+          children: [
+            { label: "HashMap", color: "warning" },
+            { label: "LinkedHashMap", color: "warning" },
+            { label: "TreeMap (SortedMap)", color: "warning" },
+            { label: "Hashtable → Properties", color: "warning" }
+          ]
+        }
+      ]
+    },
     keyPoints: [
       "Collection is the root interface; Map is separate",
       "Use generics (Collection<String>) for type safety",

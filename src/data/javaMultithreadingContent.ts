@@ -83,6 +83,18 @@ export const javaMultithreadingContent: ContentSection[] = [
       "**Thread priority** (1-10, default 5) is a hint to the scheduler — not guaranteed",
       "**Daemon threads** run in background and don't prevent JVM shutdown. Set with `setDaemon(true)` before start()"
     ],
+    diagram: {
+      type: "flow",
+      title: "Thread Lifecycle — State Transitions",
+      direction: "horizontal",
+      data: [
+        { label: "NEW", color: "muted" },
+        { label: "RUNNABLE", color: "success" },
+        { label: "RUNNING", color: "primary" },
+        { label: "BLOCKED / WAITING", color: "warning", children: [{ label: "TIMED_WAITING" }] },
+        { label: "TERMINATED", color: "accent" }
+      ]
+    },
     code: [
       {
         title: "Thread Lifecycle & States",

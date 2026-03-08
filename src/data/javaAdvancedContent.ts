@@ -172,6 +172,42 @@ public class AnnotationDemo {
       "**Native Method Stack** — for native (C/C++) method calls via JNI",
       "**Execution Engine:** Interpreter (line-by-line) + **JIT Compiler** (compiles hot methods to native code for performance)"
     ],
+    diagram: {
+      type: "layers",
+      title: "JVM Architecture",
+      data: [
+        {
+          label: "JVM (Java Virtual Machine)",
+          color: "primary",
+          children: [
+            {
+              label: "Class Loader Subsystem",
+              color: "info",
+              children: [
+                { label: "Bootstrap → Extension → Application ClassLoader", color: "info" }
+              ]
+            },
+            {
+              label: "Runtime Data Areas (Memory)",
+              color: "warning",
+              children: [
+                { label: "Heap (Objects & Arrays — shared, GC managed)", color: "accent" },
+                { label: "Stack (Per thread — local vars, method frames)", color: "success" },
+                { label: "Method Area / Metaspace (Class metadata, statics)", color: "heap" },
+                { label: "PC Register + Native Method Stack (Per thread)", color: "muted" }
+              ]
+            },
+            {
+              label: "Execution Engine",
+              color: "primary",
+              children: [
+                { label: "Interpreter + JIT Compiler + Garbage Collector", color: "primary" }
+              ]
+            }
+          ]
+        }
+      ]
+    },
     code: [
       {
         title: "JVM Memory — Inspecting at Runtime",
