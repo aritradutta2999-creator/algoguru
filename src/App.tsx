@@ -255,10 +255,9 @@ function SearchButton() {
                   <span><kbd className="px-1.5 py-0.5 rounded font-mono text-[9px]" style={{ background: "hsl(var(--muted))", border: "1px solid hsl(var(--border))" }}>esc</kbd> close</span>
                 </div>
               </div>
-            </motion.div>
           </div>
-        )}
-      </AnimatePresence>
+        </div>
+      )}
     </>
   );
 }
