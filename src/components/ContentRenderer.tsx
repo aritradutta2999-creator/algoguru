@@ -4,7 +4,7 @@ import { DiagramRenderer } from "@/components/DiagramRenderer";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Play, Lightbulb, CheckCircle2, AlertTriangle, Clock, HardDrive, Sparkles } from "lucide-react";
+import { Play } from "lucide-react";
 
 function renderMarkdown(text: string) {
   const parts: React.ReactNode[] = [];
@@ -19,18 +19,11 @@ function renderMarkdown(text: string) {
     }
     if (match[2]) {
       parts.push(
-        <span
-          key={key++}
-          className="inline-code-keyword"
-        >
-          {match[2]}
-        </span>
+        <strong key={key++} className="cr-bold">{match[2]}</strong>
       );
     } else if (match[4]) {
       parts.push(
-        <code key={key++} className="inline-code-snippet">
-          {match[4]}
-        </code>
+        <code key={key++} className="cr-code">{match[4]}</code>
       );
     }
     lastIndex = match.index + match[0].length;
@@ -41,11 +34,11 @@ function renderMarkdown(text: string) {
   return parts.length > 0 ? parts : text;
 }
 
-const difficultyClass: Record<string, string> = {
-  Easy: "difficulty-easy",
-  Medium: "difficulty-medium",
-  Hard: "difficulty-hard",
-  Expert: "difficulty-expert",
+const difficultyColor: Record<string, string> = {
+  Easy: "hsl(var(--difficulty-easy))",
+  Medium: "hsl(var(--difficulty-medium))",
+  Hard: "hsl(var(--difficulty-hard))",
+  Expert: "hsl(var(--difficulty-expert))",
 };
 
 interface ContentRendererProps {
@@ -74,132 +67,81 @@ export function ContentRenderer({ section, isPractice }: ContentRendererProps) {
   return (
     <motion.div
       id={section.id}
-      className="mb-20 scroll-mt-24"
+      className="cr-section"
       initial={{ opacity: 0, y: 16 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-50px" }}
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
     >
-      {/* ── Section Header ── */}
-      <div className="flex flex-wrap items-center gap-3 mb-2">
-        <div className="flex items-center gap-3">
-          <span className="section-title-bar" />
-          <h2 className="section-title">{section.title}</h2>
-        </div>
-        {section.difficulty && (
-          <span className={cn("section-badge", difficultyClass[section.difficulty])}>
-            {section.difficulty}
-          </span>
-        )}
-      </div>
-      <div className="section-title-underline" />
+      {/* Title */}
+      <h2 className="cr-title">{section.title}</h2>
 
-      {/* ── Complexity Badges ── */}
-      {(section.timeComplexity || section.spaceComplexity) && (
-        <div className="flex flex-wrap gap-3 mb-8">
-          {section.timeComplexity && (
-            <div className="complexity-chip complexity-chip--time">
-              <Clock size={13} strokeWidth={2.5} />
-              <span className="complexity-chip-label">Time</span>
-              <span className="complexity-chip-value">{section.timeComplexity}</span>
-            </div>
-          )}
-          {section.spaceComplexity && (
-            <div className="complexity-chip complexity-chip--space">
-              <HardDrive size={13} strokeWidth={2.5} />
-              <span className="complexity-chip-label">Space</span>
-              <span className="complexity-chip-value">{section.spaceComplexity}</span>
-            </div>
-          )}
-        </div>
+      {/* Difficulty */}
+      {section.difficulty && (
+        <span
+          className="cr-difficulty"
+          style={{ color: difficultyColor[section.difficulty] }}
+        >
+          {section.difficulty}
+        </span>
       )}
 
-      {/* ── Theory ── */}
-      <div className="theory-section">
-        {section.theory.map((para, i) => (
-          <p key={i} className="theory-paragraph">
-            {renderMarkdown(para)}
-          </p>
-        ))}
-      </div>
+      {/* Complexity */}
+      {(section.timeComplexity || section.spaceComplexity) && (
+        <p className="cr-complexity">
+          {section.timeComplexity && <>Time: <code className="cr-code">{section.timeComplexity}</code></>}
+          {section.timeComplexity && section.spaceComplexity && <span className="cr-sep">·</span>}
+          {section.spaceComplexity && <>Space: <code className="cr-code">{section.spaceComplexity}</code></>}
+        </p>
+      )}
 
-      {/* ── Diagram ── */}
+      {/* Theory — plain paragraphs */}
+      {section.theory.map((para, i) => (
+        <p key={i} className="cr-para">{renderMarkdown(para)}</p>
+      ))}
+
+      {/* Diagram */}
       {section.diagram && <DiagramRenderer diagram={section.diagram} />}
 
-      {/* ── Key Points ── */}
+      {/* Key Points — simple bullet list */}
       {section.keyPoints && (
-        <div className="keypoints-section">
-          <div className="keypoints-section-header">
-            <Sparkles size={14} />
-            <span>Key Points</span>
-            <div className="keypoints-section-line" />
-          </div>
-          <ul className="keypoints-list">
+        <div className="cr-keypoints">
+          <h3 className="cr-subtitle">Key Points:</h3>
+          <ul className="cr-list">
             {section.keyPoints.map((point, i) => (
-              <li key={i} className="keypoints-list-item">
-                <CheckCircle2
-                  size={15}
-                  className="flex-shrink-0 mt-[3px]"
-                  style={{ color: "hsl(var(--primary))" }}
-                />
-                <span>{renderMarkdown(point)}</span>
-              </li>
+              <li key={i}>{renderMarkdown(point)}</li>
             ))}
           </ul>
         </div>
       )}
 
-      {/* ── Note ── */}
+      {/* Note */}
       {section.note && (
-        <div className="callout-block callout-block--note">
-          <div className="callout-block-bar callout-block-bar--note" />
-          <div className="callout-block-inner">
-            <div className="callout-block-head">
-              <span className="callout-block-icon callout-block-icon--note">
-                <Lightbulb size={14} />
-              </span>
-              <span className="callout-block-title" style={{ color: "hsl(var(--primary))" }}>Note</span>
-            </div>
-            <p className="callout-block-body">{renderMarkdown(section.note)}</p>
-          </div>
+        <div className="cr-keypoints">
+          <h3 className="cr-subtitle">Note:</h3>
+          <p className="cr-para">{renderMarkdown(section.note)}</p>
         </div>
       )}
 
-      {/* ── Tip ── */}
+      {/* Tip */}
       {section.tip && (
-        <div className="callout-block callout-block--tip">
-          <div className="callout-block-bar callout-block-bar--tip" />
-          <div className="callout-block-inner">
-            <div className="callout-block-head">
-              <span className="callout-block-icon callout-block-icon--tip">
-                <CheckCircle2 size={14} />
-              </span>
-              <span className="callout-block-title" style={{ color: "hsl(var(--success))" }}>Pro Tip</span>
-            </div>
-            <p className="callout-block-body">{renderMarkdown(section.tip)}</p>
-          </div>
+        <div className="cr-keypoints">
+          <h3 className="cr-subtitle">Pro Tip:</h3>
+          <p className="cr-para">{renderMarkdown(section.tip)}</p>
         </div>
       )}
 
-      {/* ── Warning ── */}
+      {/* Warning */}
       {section.warning && (
-        <div className="callout-block callout-block--warning">
-          <div className="callout-block-bar callout-block-bar--warning" />
-          <div className="callout-block-inner">
-            <div className="callout-block-head">
-              <span className="callout-block-icon callout-block-icon--warning">
-                <AlertTriangle size={14} />
-              </span>
-              <span className="callout-block-title" style={{ color: "hsl(var(--accent))" }}>Warning</span>
-            </div>
-            <p className="callout-block-body">{renderMarkdown(section.warning)}</p>
-          </div>
+        <div className="cr-keypoints">
+          <h3 className="cr-subtitle">⚠ Warning:</h3>
+          <p className="cr-para">{renderMarkdown(section.warning)}</p>
         </div>
       )}
 
-      {/* ── Table ── */}
+      {/* Table */}
       {section.table && (
-        <div className="table-wrapper">
+        <div className="cr-table-wrap">
           <table className="table-premium">
             <thead>
               <tr>
@@ -212,9 +154,7 @@ export function ContentRenderer({ section, isPractice }: ContentRendererProps) {
               {section.table.rows.map((row, i) => (
                 <tr key={i}>
                   {row.map((cell, j) => (
-                    <td key={j} className={j === 0 ? "font-semibold" : ""}>
-                      {renderMarkdown(cell)}
-                    </td>
+                    <td key={j}>{renderMarkdown(cell)}</td>
                   ))}
                 </tr>
               ))}
@@ -223,25 +163,25 @@ export function ContentRenderer({ section, isPractice }: ContentRendererProps) {
         </div>
       )}
 
-      {/* ── Code Blocks ── */}
+      {/* Code Blocks */}
       {section.code?.map((block, i) => (
         <CodeBlock key={i} title={block.title} language={block.language} code={block.content} />
       ))}
 
-      {/* ── Practice in Playground ── */}
+      {/* Practice in Playground */}
       {isPractice && section.code && section.code.length > 0 && (
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={openInPlayground}
-          className="playground-btn"
+          className="cr-playground-btn"
         >
           <Play size={15} />
           Practice in Playground
         </motion.button>
       )}
 
-      <div className="section-divider mt-14" />
+      <hr className="cr-divider" />
     </motion.div>
   );
 }
