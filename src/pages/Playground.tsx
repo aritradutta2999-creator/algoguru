@@ -24,34 +24,9 @@ const THEMES = [
   { id: "hc-black", label: "High Contrast", icon: <Palette size={13} /> },
 ];
 
-const DEFAULT_CODE = `import java.util.*;
-import java.util.stream.*;
-import java.io.*;
-
-public class Main {
+const DEFAULT_CODE = `public class Main {
     public static void main(String[] args) {
-        System.out.println("Hello, AlgoGuru! ☕");
-
-        // Array operations
-        int[] arr = {5, 3, 8, 1, 9, 2};
-        System.out.println("Original: " + Arrays.toString(arr));
-
-        Arrays.sort(arr);
-        System.out.println("Sorted:   " + Arrays.toString(arr));
-
-        // Collections
-        List<String> names = Arrays.asList("Alice", "Bob", "Charlie");
-        Map<String, Integer> scores = new HashMap<>();
-        scores.put("Alice", 95);
-        scores.put("Bob", 87);
-
-        // Streams
-        names.stream()
-             .map(String::toUpperCase)
-             .forEach(name -> System.out.println("Hello, " + name + "!"));
-
-        // HashMap iteration
-        scores.forEach((k, v) -> System.out.println(k + " -> " + v));
+        System.out.println("Hello, World!");
     }
 }`;
 
