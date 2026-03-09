@@ -14,6 +14,7 @@ import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/componen
 import { ALL_SNIPPETS, PRIORITY_LABELS } from "@/data/javaSnippets";
 import { STATIC_COMPLETIONS_MAP, INSTANCE_COMPLETIONS_MAP, ALL_INSTANCE_METHODS, JAVA_KEYWORDS, JAVA_TYPES } from "@/data/javaAutoComplete";
 import { CP_TEMPLATES } from "@/data/cpTemplates";
+import { useCPTemplates } from "@/hooks/useCPTemplates";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -303,6 +304,7 @@ export default function Playground() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const practiceId = searchParams.get("practice");
+  const { templates: dbTemplates } = useCPTemplates();
 
   const practiceData = useMemo(() => {
     if (!practiceId) return null;
@@ -351,6 +353,8 @@ export default function Playground() {
   const editorRef = useRef<any>(null);
   const monacoRef = useRef<any>(null);
   const decorationsRef = useRef<any[]>([]);
+  const dbTemplatesRef = useRef(dbTemplates);
+  dbTemplatesRef.current = dbTemplates;
 
   useEffect(() => {
     // Fetch actual available Java compilers from Wandbox
@@ -608,7 +612,53 @@ export default function Playground() {
       },
     });
 
-    // Ctrl+Enter / Cmd+Enter to run
+    // 3. CP Templates from database — prefix-triggered snippets
+    const FULL_TEMPLATE_PREFIXES = new Set([
+      "template", "cpfull", "codeforces", "codeforces-contest",
+      "codechef", "codechef-contest", "leetcode", "leetcode-contest", "interview",
+    ]);
+
+    monaco.languages.registerCompletionItemProvider("java", {
+      provideCompletionItems: (model, position) => {
+        const word = model.getWordUntilPosition(position);
+        const range = {
+          startLineNumber: position.lineNumber,
+          endLineNumber: position.lineNumber,
+          startColumn: word.startColumn,
+          endColumn: word.endColumn,
+        };
+
+        const textUntilPosition = model.getValueInRange({
+          startLineNumber: position.lineNumber,
+          startColumn: 1,
+          endLineNumber: position.lineNumber,
+          endColumn: position.column,
+        });
+        if (textUntilPosition.match(/\w+\.\s*\w*$/)) {
+          return { suggestions: [] };
+        }
+
+        const suggestions: any[] = [];
+        for (const t of dbTemplatesRef.current) {
+          const isFullTemplate = FULL_TEMPLATE_PREFIXES.has(t.prefix);
+          suggestions.push({
+            label: t.prefix,
+            kind: monaco.languages.CompletionItemKind.Snippet,
+            insertText: isFullTemplate ? t.code : t.code,
+            insertTextRules: monaco.languages.CompletionItemInsertTextRule.None,
+            detail: `⚡ ${t.name}`,
+            documentation: t.description,
+            filterText: `${t.prefix} ${t.name}`,
+            sortText: `0_${t.prefix}`,
+            range: isFullTemplate
+              ? { startLineNumber: 1, endLineNumber: model.getLineCount(), startColumn: 1, endColumn: model.getLineMaxColumn(model.getLineCount()) }
+              : range,
+          });
+        }
+        return { suggestions };
+      },
+    });
+
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
       runCode();
     });
