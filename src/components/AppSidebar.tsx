@@ -145,12 +145,41 @@ export function AppSidebar() {
 
   const allSearchItems = useMemo(() => {
     const allTopicsList = [...topics, ...javaTopics, ...practiceTopics];
-    return allTopicsList.flatMap((t) => [
-      { id: t.id, title: t.title, icon: t.icon, type: "topic" as const, path: `/${t.id}`, parent: null, subtopicCount: t.subtopics.length },
-      ...t.subtopics.map((s) => ({
-        id: s.id, title: s.title, icon: t.icon, type: "subtopic" as const, path: `/${t.id}#${s.id}`, parent: t.title, subtopicCount: 0,
-      })),
-    ]);
+    const items: Array<{
+      id: string; title: string; icon: string; type: "topic" | "subtopic" | "content";
+      path: string; parent: string | null; subtopicCount: number; difficulty?: string;
+    }> = [];
+
+    // Index topics and subtopics
+    allTopicsList.forEach((t) => {
+      items.push({ id: t.id, title: t.title, icon: t.icon, type: "topic", path: `/${t.id}`, parent: null, subtopicCount: t.subtopics.length });
+      t.subtopics.forEach((s) => {
+        items.push({ id: s.id, title: s.title, icon: t.icon, type: "subtopic", path: `/${t.id}#${s.id}`, parent: t.title, subtopicCount: 0 });
+      });
+    });
+
+    // Index individual content sections (problems, algorithms, concepts)
+    const allContentMaps: Record<string, ContentSection[]> = { ...dsContentMap, ...javaContentMap, ...practiceContentMap };
+    Object.entries(allContentMaps).forEach(([topicId, sections]) => {
+      const topic = allTopicsList.find((t) => t.id === topicId);
+      if (!topic || !sections) return;
+      sections.forEach((section) => {
+        // Skip group headers (empty theory) and duplicates of subtopic titles
+        if (section.theory.length === 0 && !section.difficulty) return;
+        items.push({
+          id: section.id,
+          title: section.title,
+          icon: topic.icon,
+          type: "content",
+          path: `/${topicId}#${section.id}`,
+          parent: topic.title,
+          subtopicCount: 0,
+          difficulty: section.difficulty,
+        });
+      });
+    });
+
+    return items;
   }, []);
 
   const searchResults = useMemo(() => {
