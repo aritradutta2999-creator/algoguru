@@ -612,7 +612,53 @@ export default function Playground() {
       },
     });
 
-    // Ctrl+Enter / Cmd+Enter to run
+    // 3. CP Templates from database — prefix-triggered snippets
+    const FULL_TEMPLATE_PREFIXES = new Set([
+      "template", "cpfull", "codeforces", "codeforces-contest",
+      "codechef", "codechef-contest", "leetcode", "leetcode-contest", "interview",
+    ]);
+
+    monaco.languages.registerCompletionItemProvider("java", {
+      provideCompletionItems: (model, position) => {
+        const word = model.getWordUntilPosition(position);
+        const range = {
+          startLineNumber: position.lineNumber,
+          endLineNumber: position.lineNumber,
+          startColumn: word.startColumn,
+          endColumn: word.endColumn,
+        };
+
+        const textUntilPosition = model.getValueInRange({
+          startLineNumber: position.lineNumber,
+          startColumn: 1,
+          endLineNumber: position.lineNumber,
+          endColumn: position.column,
+        });
+        if (textUntilPosition.match(/\w+\.\s*\w*$/)) {
+          return { suggestions: [] };
+        }
+
+        const suggestions: any[] = [];
+        for (const t of dbTemplatesRef.current) {
+          const isFullTemplate = FULL_TEMPLATE_PREFIXES.has(t.prefix);
+          suggestions.push({
+            label: t.prefix,
+            kind: monaco.languages.CompletionItemKind.Snippet,
+            insertText: isFullTemplate ? t.code : t.code,
+            insertTextRules: monaco.languages.CompletionItemInsertTextRule.None,
+            detail: `⚡ ${t.name}`,
+            documentation: t.description,
+            filterText: `${t.prefix} ${t.name}`,
+            sortText: `0_${t.prefix}`,
+            range: isFullTemplate
+              ? { startLineNumber: 1, endLineNumber: model.getLineCount(), startColumn: 1, endColumn: model.getLineMaxColumn(model.getLineCount()) }
+              : range,
+          });
+        }
+        return { suggestions };
+      },
+    });
+
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
       runCode();
     });
