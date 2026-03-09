@@ -185,7 +185,16 @@ export function AppSidebar() {
   const searchResults = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
     if (!q) return [];
-    return allSearchItems.filter((i) => i.title.toLowerCase().includes(q));
+    return allSearchItems
+      .filter((i) => i.title.toLowerCase().includes(q))
+      .sort((a, b) => {
+        const aTitle = a.title.toLowerCase();
+        const bTitle = b.title.toLowerCase();
+        const aStarts = aTitle.startsWith(q) ? 0 : 1;
+        const bStarts = bTitle.startsWith(q) ? 0 : 1;
+        if (aStarts !== bStarts) return aStarts - bStarts;
+        return aTitle.indexOf(q) - bTitle.indexOf(q);
+      });
   }, [searchQuery, allSearchItems]);
 
   const toggleTopic = (id: string) => {
