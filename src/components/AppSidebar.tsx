@@ -19,6 +19,40 @@ import { ChevronDown, Home, BookOpen, Layers, Coffee, Search, X, Code2, LogOut, 
 import { useSettings } from "@/contexts/SettingsContext";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
+
+// Content imports for deep search indexing
+import { recursionContent } from "@/data/recursionContent";
+import { backtrackingContent } from "@/data/backtrackingContent";
+import { stackQueueContent } from "@/data/stackQueueContent";
+import { dpContent } from "@/data/dpContent";
+import { graphsContent } from "@/data/graphsContent";
+import { bitManipulationContent } from "@/data/bitManipulationContent";
+import { heapContent } from "@/data/heapContent";
+import { stringsContent } from "@/data/stringsContent";
+import { numberTheoryContent } from "@/data/numberTheoryContent";
+import { treesContent } from "@/data/treesContent";
+import { segmentTreeContent } from "@/data/segmentTreeContent";
+import { advancedMathContent } from "@/data/advancedMathContent";
+import { advancedTopicsContent } from "@/data/advancedTopicsContent";
+import { javaContentMap } from "@/data/javaContent";
+import { practiceContentMap } from "@/data/practiceContent";
+import type { ContentSection } from "@/data/recursionContent";
+
+const dsContentMap: Record<string, ContentSection[]> = {
+  "stack-queue": stackQueueContent,
+  recursion: recursionContent,
+  backtracking: backtrackingContent,
+  dp: dpContent,
+  graphs: graphsContent,
+  bits: bitManipulationContent,
+  heaps: heapContent,
+  strings: stringsContent,
+  "number-theory": numberTheoryContent,
+  trees: treesContent,
+  "segment-tree": segmentTreeContent,
+  "advanced-math": advancedMathContent,
+  "advanced-topics": advancedTopicsContent,
+};
 import { useMode, APP_MODES } from "@/contexts/ModeContext";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -111,12 +145,41 @@ export function AppSidebar() {
 
   const allSearchItems = useMemo(() => {
     const allTopicsList = [...topics, ...javaTopics, ...practiceTopics];
-    return allTopicsList.flatMap((t) => [
-      { id: t.id, title: t.title, icon: t.icon, type: "topic" as const, path: `/${t.id}`, parent: null, subtopicCount: t.subtopics.length },
-      ...t.subtopics.map((s) => ({
-        id: s.id, title: s.title, icon: t.icon, type: "subtopic" as const, path: `/${t.id}#${s.id}`, parent: t.title, subtopicCount: 0,
-      })),
-    ]);
+    const items: Array<{
+      id: string; title: string; icon: string; type: "topic" | "subtopic" | "content";
+      path: string; parent: string | null; subtopicCount: number; difficulty?: string;
+    }> = [];
+
+    // Index topics and subtopics
+    allTopicsList.forEach((t) => {
+      items.push({ id: t.id, title: t.title, icon: t.icon, type: "topic", path: `/${t.id}`, parent: null, subtopicCount: t.subtopics.length });
+      t.subtopics.forEach((s) => {
+        items.push({ id: s.id, title: s.title, icon: t.icon, type: "subtopic", path: `/${t.id}#${s.id}`, parent: t.title, subtopicCount: 0 });
+      });
+    });
+
+    // Index individual content sections (problems, algorithms, concepts)
+    const allContentMaps: Record<string, ContentSection[]> = { ...dsContentMap, ...javaContentMap, ...practiceContentMap };
+    Object.entries(allContentMaps).forEach(([topicId, sections]) => {
+      const topic = allTopicsList.find((t) => t.id === topicId);
+      if (!topic || !sections) return;
+      sections.forEach((section) => {
+        // Skip group headers (empty theory) and duplicates of subtopic titles
+        if (section.theory.length === 0 && !section.difficulty) return;
+        items.push({
+          id: section.id,
+          title: section.title,
+          icon: topic.icon,
+          type: "content",
+          path: `/${topicId}#${section.id}`,
+          parent: topic.title,
+          subtopicCount: 0,
+          difficulty: section.difficulty,
+        });
+      });
+    });
+
+    return items;
   }, []);
 
   const searchResults = useMemo(() => {
@@ -295,7 +358,7 @@ export function AppSidebar() {
                 ref={searchInputRef}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search all topics..."
+                placeholder="Search topics, problems, algorithms..."
                 className="flex-1 bg-transparent text-xs outline-none"
                 style={{ color: "hsl(var(--foreground))" }}
               />
@@ -306,11 +369,11 @@ export function AppSidebar() {
               )}
             </div>
             {searchQuery.trim() && (
-              <div className="max-h-48 overflow-y-auto border-t" style={{ borderColor: "hsl(var(--border))" }}>
+              <div className="max-h-64 overflow-y-auto border-t" style={{ borderColor: "hsl(var(--border))" }}>
                 {searchResults.length === 0 ? (
                   <div className="px-3 py-3 text-[11px] text-center" style={{ color: "hsl(var(--muted-foreground))" }}>No results found</div>
                 ) : (
-                  searchResults.slice(0, 15).map((item) => (
+                  searchResults.slice(0, 20).map((item) => (
                     <button
                       key={item.path}
                       onClick={() => { navigate(item.path); setSearchQuery(""); }}
@@ -319,7 +382,20 @@ export function AppSidebar() {
                     >
                       <span className="text-sm">{item.icon}</span>
                       <div className="flex-1 min-w-0">
-                        <div className="font-medium truncate">{item.title}</div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-medium truncate">{item.title}</span>
+                          {item.difficulty && (
+                            <span
+                              className="text-[8px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0"
+                              style={{
+                                background: item.difficulty === "Easy" ? "hsl(var(--success)/0.15)" : item.difficulty === "Medium" ? "hsl(var(--warning)/0.15)" : "hsl(var(--destructive)/0.15)",
+                                color: item.difficulty === "Easy" ? "hsl(var(--success))" : item.difficulty === "Medium" ? "hsl(var(--warning))" : "hsl(var(--destructive))",
+                              }}
+                            >
+                              {item.difficulty}
+                            </span>
+                          )}
+                        </div>
                         {item.parent && (
                           <div className="text-[9px]" style={{ color: "hsl(var(--muted-foreground))" }}>{item.parent}</div>
                         )}
