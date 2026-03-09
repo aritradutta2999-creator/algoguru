@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      cp_templates: {
+        Row: {
+          code: string
+          created_at: string
+          description: string
+          id: string
+          name: string
+          prefix: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          description?: string
+          id?: string
+          name: string
+          prefix: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          description?: string
+          id?: string
+          name?: string
+          prefix?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
