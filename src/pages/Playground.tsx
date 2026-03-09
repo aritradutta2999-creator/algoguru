@@ -353,6 +353,8 @@ export default function Playground() {
   const editorRef = useRef<any>(null);
   const monacoRef = useRef<any>(null);
   const decorationsRef = useRef<any[]>([]);
+  const dbTemplatesRef = useRef(dbTemplates);
+  dbTemplatesRef.current = dbTemplates;
 
   useEffect(() => {
     // Fetch actual available Java compilers from Wandbox
