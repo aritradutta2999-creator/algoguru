@@ -358,7 +358,7 @@ export function AppSidebar() {
                 ref={searchInputRef}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search all topics..."
+                placeholder="Search topics, problems, algorithms..."
                 className="flex-1 bg-transparent text-xs outline-none"
                 style={{ color: "hsl(var(--foreground))" }}
               />
@@ -369,11 +369,11 @@ export function AppSidebar() {
               )}
             </div>
             {searchQuery.trim() && (
-              <div className="max-h-48 overflow-y-auto border-t" style={{ borderColor: "hsl(var(--border))" }}>
+              <div className="max-h-64 overflow-y-auto border-t" style={{ borderColor: "hsl(var(--border))" }}>
                 {searchResults.length === 0 ? (
                   <div className="px-3 py-3 text-[11px] text-center" style={{ color: "hsl(var(--muted-foreground))" }}>No results found</div>
                 ) : (
-                  searchResults.slice(0, 15).map((item) => (
+                  searchResults.slice(0, 20).map((item) => (
                     <button
                       key={item.path}
                       onClick={() => { navigate(item.path); setSearchQuery(""); }}
@@ -382,7 +382,20 @@ export function AppSidebar() {
                     >
                       <span className="text-sm">{item.icon}</span>
                       <div className="flex-1 min-w-0">
-                        <div className="font-medium truncate">{item.title}</div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-medium truncate">{item.title}</span>
+                          {item.difficulty && (
+                            <span
+                              className="text-[8px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0"
+                              style={{
+                                background: item.difficulty === "Easy" ? "hsl(var(--success)/0.15)" : item.difficulty === "Medium" ? "hsl(var(--warning)/0.15)" : "hsl(var(--destructive)/0.15)",
+                                color: item.difficulty === "Easy" ? "hsl(var(--success))" : item.difficulty === "Medium" ? "hsl(var(--warning))" : "hsl(var(--destructive))",
+                              }}
+                            >
+                              {item.difficulty}
+                            </span>
+                          )}
+                        </div>
                         {item.parent && (
                           <div className="text-[9px]" style={{ color: "hsl(var(--muted-foreground))" }}>{item.parent}</div>
                         )}
