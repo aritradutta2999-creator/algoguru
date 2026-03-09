@@ -304,6 +304,7 @@ export default function Playground() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const practiceId = searchParams.get("practice");
+  const { templates: dbTemplates } = useCPTemplates();
 
   const practiceData = useMemo(() => {
     if (!practiceId) return null;
