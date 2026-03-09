@@ -19,6 +19,40 @@ import { ChevronDown, Home, BookOpen, Layers, Coffee, Search, X, Code2, LogOut, 
 import { useSettings } from "@/contexts/SettingsContext";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
+
+// Content imports for deep search indexing
+import { recursionContent } from "@/data/recursionContent";
+import { backtrackingContent } from "@/data/backtrackingContent";
+import { stackQueueContent } from "@/data/stackQueueContent";
+import { dpContent } from "@/data/dpContent";
+import { graphsContent } from "@/data/graphsContent";
+import { bitManipulationContent } from "@/data/bitManipulationContent";
+import { heapContent } from "@/data/heapContent";
+import { stringsContent } from "@/data/stringsContent";
+import { numberTheoryContent } from "@/data/numberTheoryContent";
+import { treesContent } from "@/data/treesContent";
+import { segmentTreeContent } from "@/data/segmentTreeContent";
+import { advancedMathContent } from "@/data/advancedMathContent";
+import { advancedTopicsContent } from "@/data/advancedTopicsContent";
+import { javaContentMap } from "@/data/javaContent";
+import { practiceContentMap } from "@/data/practiceContent";
+import type { ContentSection } from "@/data/recursionContent";
+
+const dsContentMap: Record<string, ContentSection[]> = {
+  "stack-queue": stackQueueContent,
+  recursion: recursionContent,
+  backtracking: backtrackingContent,
+  dp: dpContent,
+  graphs: graphsContent,
+  bits: bitManipulationContent,
+  heaps: heapContent,
+  strings: stringsContent,
+  "number-theory": numberTheoryContent,
+  trees: treesContent,
+  "segment-tree": segmentTreeContent,
+  "advanced-math": advancedMathContent,
+  "advanced-topics": advancedTopicsContent,
+};
 import { useMode, APP_MODES } from "@/contexts/ModeContext";
 import { useAuth } from "@/contexts/AuthContext";
 
