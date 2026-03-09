@@ -164,8 +164,12 @@ export function AppSidebar() {
       const topic = allTopicsList.find((t) => t.id === topicId);
       if (!topic || !sections) return;
       sections.forEach((section) => {
-        // Skip group headers (empty theory) and duplicates of subtopic titles
-        if (section.theory.length === 0 && !section.difficulty) return;
+        if (!section.title || !section.id) return;
+        // Skip group headers like "Easy Problems", "Medium Problems", "Hard Problems"
+        const isGroupHeader = /^(Easy|Medium|Hard) Problems$/i.test(section.title);
+        if (isGroupHeader) return;
+        const alreadyExists = items.some((i) => i.id === section.id && i.path.startsWith(`/${topicId}`));
+        if (alreadyExists) return;
         items.push({
           id: section.id,
           title: section.title,
@@ -190,9 +194,19 @@ export function AppSidebar() {
       .sort((a, b) => {
         const aTitle = a.title.toLowerCase();
         const bTitle = b.title.toLowerCase();
+        // Exact match first
+        if (aTitle === q && bTitle !== q) return -1;
+        if (bTitle === q && aTitle !== q) return 1;
+        // Starts with query next
         const aStarts = aTitle.startsWith(q) ? 0 : 1;
         const bStarts = bTitle.startsWith(q) ? 0 : 1;
         if (aStarts !== bStarts) return aStarts - bStarts;
+        // Then by type priority: topic > subtopic > content
+        const typePriority = { topic: 0, subtopic: 1, content: 2 };
+        const aPrio = typePriority[a.type] ?? 2;
+        const bPrio = typePriority[b.type] ?? 2;
+        if (aPrio !== bPrio) return aPrio - bPrio;
+        // Then by position of match
         return aTitle.indexOf(q) - bTitle.indexOf(q);
       });
   }, [searchQuery, allSearchItems]);
