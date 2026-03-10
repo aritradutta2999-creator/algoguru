@@ -659,6 +659,129 @@ export default function Playground() {
       },
     });
 
+    // 4. User-defined symbol autocomplete (IntelliSense) — parses current code for variables, methods, classes
+    const JAVA_RESERVED = new Set([
+      "abstract","assert","boolean","break","byte","case","catch","char","class","const",
+      "continue","default","do","double","else","enum","extends","final","finally","float",
+      "for","goto","if","implements","import","instanceof","int","interface","long","native",
+      "new","package","private","protected","public","return","short","static","strictfp",
+      "super","switch","synchronized","this","throw","throws","transient","try","void",
+      "volatile","while","var","record","sealed","permits","yield","true","false","null",
+      "String","System","Math","Integer","Long","Double","Boolean","Character","Object",
+      "Arrays","Collections","List","Map","Set","HashMap","ArrayList","LinkedList","TreeMap",
+      "HashSet","TreeSet","Queue","Stack","Deque","PriorityQueue","Scanner","StringBuilder",
+      "BufferedReader","InputStreamReader","PrintWriter","main","args","out","in","err",
+    ]);
+
+    monaco.languages.registerCompletionItemProvider("java", {
+      provideCompletionItems: (model, position) => {
+        const textUntilPosition = model.getValueInRange({
+          startLineNumber: position.lineNumber,
+          startColumn: 1,
+          endLineNumber: position.lineNumber,
+          endColumn: position.column,
+        });
+        // Skip if in dot-context
+        if (textUntilPosition.match(/\w+\.\s*\w*$/)) return { suggestions: [] };
+
+        const word = model.getWordUntilPosition(position);
+        const range = {
+          startLineNumber: position.lineNumber,
+          endLineNumber: position.lineNumber,
+          startColumn: word.startColumn,
+          endColumn: word.endColumn,
+        };
+
+        const fullText = model.getValue();
+        const symbolMap = new Map<string, { kind: string; line: number }>();
+
+        const lines = fullText.split("\n");
+        for (let i = 0; i < lines.length; i++) {
+          const ln = lines[i];
+          const trimmed = ln.trim();
+          if (trimmed.startsWith("//") || trimmed.startsWith("/*") || trimmed.startsWith("*")) continue;
+
+          // Classes: class Foo / interface Bar
+          const classMatch = trimmed.match(/(?:class|interface|enum)\s+(\w+)/);
+          if (classMatch && !JAVA_RESERVED.has(classMatch[1])) {
+            symbolMap.set(classMatch[1], { kind: "class", line: i + 1 });
+          }
+
+          // Methods: returnType methodName(
+          const methodMatch = trimmed.match(/(?:(?:public|private|protected|static|final|abstract|synchronized)\s+)*(?:\w+(?:<[^>]*>)?(?:\[\])*)\s+(\w+)\s*\(/);
+          if (methodMatch && !JAVA_RESERVED.has(methodMatch[1]) && methodMatch[1] !== "if" && methodMatch[1] !== "for" && methodMatch[1] !== "while" && methodMatch[1] !== "switch" && methodMatch[1] !== "catch") {
+            symbolMap.set(methodMatch[1], { kind: "method", line: i + 1 });
+          }
+
+          // Variables: Type varName = or Type varName; or Type varName,
+          const varMatches = trimmed.matchAll(/(?:(?:final)\s+)?(\w+(?:<[^>]*>)?(?:\[\])*)\s+(\w+)\s*[=;,)]/g);
+          for (const m of varMatches) {
+            const typePart = m[1];
+            const varName = m[2];
+            if (!JAVA_RESERVED.has(varName) && !JAVA_RESERVED.has(typePart) &&
+                !["class","interface","enum","return","throw","new","import","package"].includes(typePart)) {
+              if (!symbolMap.has(varName) || symbolMap.get(varName)!.kind !== "method") {
+                symbolMap.set(varName, { kind: "variable", line: i + 1 });
+              }
+            }
+          }
+
+          // var declarations: var x =
+          const varDecl = trimmed.match(/(?:final\s+)?var\s+(\w+)\s*=/);
+          if (varDecl && !JAVA_RESERVED.has(varDecl[1])) {
+            symbolMap.set(varDecl[1], { kind: "variable", line: i + 1 });
+          }
+
+          // For-loop variables
+          const forMatch = trimmed.match(/for\s*\(\s*(?:final\s+)?(?:\w+(?:<[^>]*>)?(?:\[\])*)\s+(\w+)\s*[=:]/);
+          if (forMatch && !JAVA_RESERVED.has(forMatch[1])) {
+            symbolMap.set(forMatch[1], { kind: "variable", line: i + 1 });
+          }
+
+          // Method parameters
+          const paramSigMatch = trimmed.match(/\w+\s*\(([^)]+)\)\s*(?:throws\s+\w+(?:\s*,\s*\w+)*)?\s*\{?/);
+          if (paramSigMatch) {
+            const params = paramSigMatch[1].split(",");
+            for (const p of params) {
+              const pm = p.trim().match(/(?:final\s+)?(?:\w+(?:<[^>]*>)?(?:\[\])*)\s+(\w+)$/);
+              if (pm && !JAVA_RESERVED.has(pm[1])) {
+                if (!symbolMap.has(pm[1])) {
+                  symbolMap.set(pm[1], { kind: "parameter", line: i + 1 });
+                }
+              }
+            }
+          }
+
+          // Constants: static final TYPE NAME =
+          const constMatch = trimmed.match(/static\s+final\s+\w+(?:<[^>]*>)?\s+(\w+)\s*=/);
+          if (constMatch && !JAVA_RESERVED.has(constMatch[1])) {
+            symbolMap.set(constMatch[1], { kind: "constant", line: i + 1 });
+          }
+        }
+
+        const suggestions: any[] = [];
+        for (const [name, info] of symbolMap) {
+          let kind = monaco.languages.CompletionItemKind.Variable;
+          let icon = "variable";
+          if (info.kind === "method") { kind = monaco.languages.CompletionItemKind.Method; icon = "method"; }
+          else if (info.kind === "class") { kind = monaco.languages.CompletionItemKind.Class; icon = "class"; }
+          else if (info.kind === "constant") { kind = monaco.languages.CompletionItemKind.Constant; icon = "constant"; }
+          else if (info.kind === "parameter") { kind = monaco.languages.CompletionItemKind.Variable; icon = "param"; }
+
+          suggestions.push({
+            label: name,
+            kind,
+            insertText: name,
+            detail: `${icon} (line ${info.line})`,
+            sortText: `0_${name.toLowerCase()}`,
+            range,
+          });
+        }
+
+        return { suggestions };
+      },
+    });
+
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
       runCode();
     });
