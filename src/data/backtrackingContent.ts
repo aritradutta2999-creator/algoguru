@@ -763,4 +763,469 @@ public class GraphColoringHamiltonian {
       },
     ],
   },
+  {
+    id: "bt-wordsearch",
+    title: "Word Search (2D Grid)",
+    difficulty: "Medium",
+    timeComplexity: "O(M × N × 4^L) where L = word length",
+    spaceComplexity: "O(L) recursion depth",
+    theory: [
+      "Given an M×N grid of characters and a target word, determine if the word exists in the grid by following adjacent cells (horizontal/vertical). Each cell may be used at most once per path.",
+      "Classic backtracking on a 2D grid: start from every cell that matches the first character, then explore all 4 directions for the next character.",
+      "Key optimization: mark cells as visited in-place by temporarily changing the character (e.g., to '#'), avoiding an extra visited array. Restore it during backtracking.",
+      "Word Search II (Hard variant): Given a list of words, find all words present in the grid. Use a Trie to prune — if no word in the dictionary starts with the current prefix, stop exploring that branch.",
+    ],
+    keyPoints: [
+      "Start DFS from every cell matching word[0]",
+      "In-place marking avoids extra O(M×N) space",
+      "For Word Search II, Trie-based pruning reduces from O(K × M×N × 4^L) to near-linear in practice",
+    ],
+    code: [
+      {
+        title: "Word Search I — Single Word",
+        language: "java",
+        content: `public class WordSearch {
+    
+    public boolean exist(char[][] board, String word) {
+        int m = board.length, n = board[0].length;
+        
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                if (board[i][j] == word.charAt(0) && dfs(board, word, i, j, 0))
+                    return true;
+            }
+        }
+        return false;
+    }
+    
+    private boolean dfs(char[][] board, String word, int r, int c, int idx) {
+        if (idx == word.length()) return true;
+        
+        if (r < 0 || r >= board.length || c < 0 || c >= board[0].length
+                || board[r][c] != word.charAt(idx))
+            return false;
+        
+        char original = board[r][c];
+        board[r][c] = '#';
+        
+        int[] dr = {0, 0, 1, -1};
+        int[] dc = {1, -1, 0, 0};
+        for (int d = 0; d < 4; d++) {
+            if (dfs(board, word, r + dr[d], c + dc[d], idx + 1))
+                return true;
+        }
+        
+        board[r][c] = original;
+        return false;
+    }
+    
+    public static void main(String[] args) {
+        WordSearch ws = new WordSearch();
+        char[][] board = {
+            {'A','B','C','E'},
+            {'S','F','C','S'},
+            {'A','D','E','E'}
+        };
+        System.out.println("ABCCED: " + ws.exist(board, "ABCCED")); // true
+        System.out.println("SEE:    " + ws.exist(board, "SEE"));    // true
+        System.out.println("ABCB:   " + ws.exist(board, "ABCB"));  // false
+    }
+}`,
+      },
+      {
+        title: "Word Search II — Multiple Words with Trie Pruning",
+        language: "java",
+        content: `import java.util.*;
+
+public class WordSearchII {
+    
+    static class TrieNode {
+        TrieNode[] children = new TrieNode[26];
+        String word = null;
+    }
+    
+    public List<String> findWords(char[][] board, String[] words) {
+        TrieNode root = new TrieNode();
+        for (String w : words) {
+            TrieNode node = root;
+            for (char c : w.toCharArray()) {
+                int idx = c - 'a';
+                if (node.children[idx] == null)
+                    node.children[idx] = new TrieNode();
+                node = node.children[idx];
+            }
+            node.word = w;
+        }
+        
+        List<String> result = new ArrayList<>();
+        int m = board.length, n = board[0].length;
+        
+        for (int i = 0; i < m; i++)
+            for (int j = 0; j < n; j++)
+                dfs(board, i, j, root, result);
+        return result;
+    }
+    
+    private void dfs(char[][] board, int r, int c, TrieNode node, List<String> result) {
+        if (r < 0 || r >= board.length || c < 0 || c >= board[0].length) return;
+        
+        char ch = board[r][c];
+        if (ch == '#' || node.children[ch - 'a'] == null) return;
+        
+        node = node.children[ch - 'a'];
+        if (node.word != null) {
+            result.add(node.word);
+            node.word = null;
+        }
+        
+        board[r][c] = '#';
+        dfs(board, r + 1, c, node, result);
+        dfs(board, r - 1, c, node, result);
+        dfs(board, r, c + 1, node, result);
+        dfs(board, r, c - 1, node, result);
+        board[r][c] = ch;
+    }
+    
+    public static void main(String[] args) {
+        WordSearchII ws = new WordSearchII();
+        char[][] board = {
+            {'o','a','a','n'},
+            {'e','t','a','e'},
+            {'i','h','k','r'},
+            {'i','f','l','v'}
+        };
+        String[] words = {"oath","pea","eat","rain"};
+        System.out.println("Found: " + ws.findWords(board, words));
+        // Output: [oath, eat]
+    }
+}`,
+      },
+    ],
+  },
+  {
+    id: "bt-knights-tour",
+    title: "Knight's Tour",
+    difficulty: "Hard",
+    timeComplexity: "O(8^(N²)) worst case — Warnsdorff's heuristic makes it near-linear",
+    spaceComplexity: "O(N²) for the board",
+    theory: [
+      "A Knight's Tour is a sequence of moves on an N×N chessboard where the knight visits every square exactly once. The knight moves in an L-shape: 2 squares in one direction and 1 in the perpendicular.",
+      "Brute-force backtracking tries all 8 possible knight moves from each cell. For an 8×8 board, the search space is enormous without heuristics.",
+      "Warnsdorff's Rule (greedy heuristic): always move to the square with the fewest onward moves. This almost always finds a solution without backtracking, reducing complexity to near O(N²).",
+      "A closed tour returns to the starting square — it forms a Hamiltonian circuit on the knight's graph.",
+    ],
+    code: [
+      {
+        title: "Knight's Tour — Backtracking + Warnsdorff's Heuristic",
+        language: "java",
+        content: `import java.util.*;
+
+public class KnightsTour {
+    
+    static int[] dx = {2, 1, -1, -2, -2, -1, 1, 2};
+    static int[] dy = {1, 2, 2, 1, -1, -2, -2, -1};
+    
+    public static boolean solveBasic(int n) {
+        int[][] board = new int[n][n];
+        for (int[] row : board) Arrays.fill(row, -1);
+        board[0][0] = 0;
+        if (solve(board, 0, 0, 1, n)) {
+            printBoard(board, n);
+            return true;
+        }
+        return false;
+    }
+    
+    private static boolean solve(int[][] board, int x, int y, int moveNum, int n) {
+        if (moveNum == n * n) return true;
+        for (int i = 0; i < 8; i++) {
+            int nx = x + dx[i], ny = y + dy[i];
+            if (nx >= 0 && nx < n && ny >= 0 && ny < n && board[nx][ny] == -1) {
+                board[nx][ny] = moveNum;
+                if (solve(board, nx, ny, moveNum + 1, n)) return true;
+                board[nx][ny] = -1;
+            }
+        }
+        return false;
+    }
+    
+    // Warnsdorff's: always jump to cell with fewest onward moves
+    public static boolean solveWarnsdorff(int n) {
+        int[][] board = new int[n][n];
+        for (int[] row : board) Arrays.fill(row, -1);
+        board[0][0] = 0;
+        int x = 0, y = 0;
+        
+        for (int move = 1; move < n * n; move++) {
+            int minDeg = Integer.MAX_VALUE;
+            int bestX = -1, bestY = -1;
+            for (int i = 0; i < 8; i++) {
+                int nx = x + dx[i], ny = y + dy[i];
+                if (nx >= 0 && nx < n && ny >= 0 && ny < n && board[nx][ny] == -1) {
+                    int deg = 0;
+                    for (int j = 0; j < 8; j++) {
+                        int nnx = nx + dx[j], nny = ny + dy[j];
+                        if (nnx >= 0 && nnx < n && nny >= 0 && nny < n && board[nnx][nny] == -1)
+                            deg++;
+                    }
+                    if (deg < minDeg) { minDeg = deg; bestX = nx; bestY = ny; }
+                }
+            }
+            if (bestX == -1) return false;
+            x = bestX; y = bestY;
+            board[x][y] = move;
+        }
+        printBoard(board, n);
+        return true;
+    }
+    
+    private static void printBoard(int[][] board, int n) {
+        for (int[] row : board) {
+            for (int cell : row) System.out.printf("%3d", cell);
+            System.out.println();
+        }
+    }
+    
+    public static void main(String[] args) {
+        System.out.println("=== 8x8 Knight's Tour (Warnsdorff) ===");
+        solveWarnsdorff(8);
+    }
+}`,
+      },
+    ],
+  },
+  {
+    id: "bt-phone-letter",
+    title: "Letter Combinations of a Phone Number",
+    difficulty: "Medium",
+    timeComplexity: "O(4^N × N) where N = number of digits",
+    spaceComplexity: "O(N) recursion depth",
+    theory: [
+      "Given a string of digits 2-9, return all possible letter combinations the number could represent (like old phone keypads).",
+      "Each digit maps to 3-4 letters (e.g., 2→abc, 3→def, ..., 9→wxyz). For each digit, we branch into all its mapped letters.",
+      "This is a classic backtracking problem where the decision tree has branching factor 3-4 at each level, with depth = number of digits.",
+      "Iterative BFS approach is also possible: maintain a queue, and for each digit, expand every existing combination with each mapped letter.",
+    ],
+    code: [
+      {
+        title: "Phone Letter Combinations — Backtracking + Iterative",
+        language: "java",
+        content: `import java.util.*;
+
+public class PhoneLetterCombinations {
+    
+    static String[] mapping = {"", "", "abc", "def", "ghi", "jkl", "mno", "pqrs", "tuv", "wxyz"};
+    
+    public static List<String> letterCombinations(String digits) {
+        List<String> result = new ArrayList<>();
+        if (digits == null || digits.isEmpty()) return result;
+        backtrack(digits, 0, new StringBuilder(), result);
+        return result;
+    }
+    
+    private static void backtrack(String digits, int idx, StringBuilder sb, List<String> result) {
+        if (idx == digits.length()) {
+            result.add(sb.toString());
+            return;
+        }
+        String letters = mapping[digits.charAt(idx) - '0'];
+        for (char c : letters.toCharArray()) {
+            sb.append(c);
+            backtrack(digits, idx + 1, sb, result);
+            sb.deleteCharAt(sb.length() - 1);
+        }
+    }
+    
+    // Iterative BFS approach
+    public static List<String> letterCombinationsIterative(String digits) {
+        LinkedList<String> queue = new LinkedList<>();
+        if (digits == null || digits.isEmpty()) return queue;
+        queue.add("");
+        for (int i = 0; i < digits.length(); i++) {
+            String letters = mapping[digits.charAt(i) - '0'];
+            int size = queue.size();
+            for (int j = 0; j < size; j++) {
+                String curr = queue.poll();
+                for (char c : letters.toCharArray()) queue.add(curr + c);
+            }
+        }
+        return queue;
+    }
+    
+    public static void main(String[] args) {
+        System.out.println("23 → " + letterCombinations("23"));
+        // [ad, ae, af, bd, be, bf, cd, ce, cf]
+    }
+}`,
+      },
+    ],
+  },
+  {
+    id: "bt-palindrome-partition",
+    title: "Palindrome Partitioning",
+    difficulty: "Medium",
+    timeComplexity: "O(N × 2^N)",
+    spaceComplexity: "O(N) recursion depth",
+    theory: [
+      "Given a string s, partition it such that every substring in the partition is a palindrome. Return all possible palindrome partitionings.",
+      "At each position, try every possible prefix that is a palindrome. If it is, add it to the current partition and recurse on the remaining suffix.",
+      "Optimization: precompute a DP table isPalin[i][j] to check if s[i..j] is a palindrome in O(1) instead of O(N) per check.",
+      "This problem is frequently asked at Google, Amazon, and Meta interviews. It combines string manipulation with backtracking elegantly.",
+    ],
+    code: [
+      {
+        title: "Palindrome Partitioning — With DP Optimization",
+        language: "java",
+        content: `import java.util.*;
+
+public class PalindromePartition {
+    
+    public List<List<String>> partition(String s) {
+        int n = s.length();
+        boolean[][] isPalin = new boolean[n][n];
+        for (int len = 1; len <= n; len++) {
+            for (int i = 0; i <= n - len; i++) {
+                int j = i + len - 1;
+                if (s.charAt(i) == s.charAt(j) && (len <= 2 || isPalin[i+1][j-1]))
+                    isPalin[i][j] = true;
+            }
+        }
+        
+        List<List<String>> result = new ArrayList<>();
+        backtrack(s, 0, isPalin, new ArrayList<>(), result);
+        return result;
+    }
+    
+    private void backtrack(String s, int start, boolean[][] isPalin,
+                           List<String> current, List<List<String>> result) {
+        if (start == s.length()) {
+            result.add(new ArrayList<>(current));
+            return;
+        }
+        for (int end = start; end < s.length(); end++) {
+            if (isPalin[start][end]) {
+                current.add(s.substring(start, end + 1));
+                backtrack(s, end + 1, isPalin, current, result);
+                current.remove(current.size() - 1);
+            }
+        }
+    }
+    
+    public static void main(String[] args) {
+        PalindromePartition pp = new PalindromePartition();
+        System.out.println("aab → " + pp.partition("aab"));
+        // [[a, a, b], [aa, b]]
+    }
+}`,
+      },
+    ],
+  },
+  {
+    id: "bt-generate-parens",
+    title: "Generate Parentheses",
+    difficulty: "Medium",
+    timeComplexity: "O(4^N / √N) — Catalan number",
+    spaceComplexity: "O(N) recursion depth",
+    theory: [
+      "Given n pairs of parentheses, generate all combinations of well-formed (valid) parentheses.",
+      "At each position, we have two choices: place '(' or ')'. The constraints are: (1) we can place '(' if open count < n, (2) we can place ')' only if close count < open count.",
+      "The number of valid combinations is the Nth Catalan number: C(n) = (2n)! / ((n+1)! × n!).",
+      "This is one of the most elegant backtracking problems — the pruning conditions themselves define the structure of valid parentheses.",
+    ],
+    code: [
+      {
+        title: "Generate Valid Parentheses",
+        language: "java",
+        content: `import java.util.*;
+
+public class GenerateParentheses {
+    
+    public static List<String> generateParenthesis(int n) {
+        List<String> result = new ArrayList<>();
+        backtrack(result, new StringBuilder(), 0, 0, n);
+        return result;
+    }
+    
+    private static void backtrack(List<String> result, StringBuilder sb,
+                                   int open, int close, int n) {
+        if (sb.length() == 2 * n) {
+            result.add(sb.toString());
+            return;
+        }
+        if (open < n) {
+            sb.append('(');
+            backtrack(result, sb, open + 1, close, n);
+            sb.deleteCharAt(sb.length() - 1);
+        }
+        if (close < open) {
+            sb.append(')');
+            backtrack(result, sb, open, close + 1, n);
+            sb.deleteCharAt(sb.length() - 1);
+        }
+    }
+    
+    public static void main(String[] args) {
+        System.out.println("n=3 → " + generateParenthesis(3));
+        // [((())), (()()), (())(), ()(()), ()()()]
+        System.out.println("Count n=4: " + generateParenthesis(4).size()); // 14
+    }
+}`,
+      },
+    ],
+  },
+  {
+    id: "bt-word-break",
+    title: "Word Break II (Sentence Construction)",
+    difficulty: "Hard",
+    timeComplexity: "O(2^N × N) worst case — memoization helps",
+    spaceComplexity: "O(2^N × N) for storing all results",
+    theory: [
+      "Given a string s and a dictionary of words, add spaces to s to construct sentences where each word is in the dictionary. Return all possible sentences.",
+      "This combines backtracking with memoization: at each position, try every dictionary word that matches the prefix, then recurse on the remaining string.",
+      "Word Break I (can we segment?) is solvable with DP in O(N²). Word Break II (list all segmentations) requires backtracking since we need to enumerate all valid splits.",
+      "A HashSet for the dictionary gives O(1) lookups. Memoize results for each starting index to avoid recomputing overlapping subproblems.",
+    ],
+    code: [
+      {
+        title: "Word Break II — Backtracking with Memoization",
+        language: "java",
+        content: `import java.util.*;
+
+public class WordBreakII {
+    
+    public List<String> wordBreak(String s, List<String> wordDict) {
+        Set<String> dict = new HashSet<>(wordDict);
+        Map<Integer, List<String>> memo = new HashMap<>();
+        return backtrack(s, 0, dict, memo);
+    }
+    
+    private List<String> backtrack(String s, int start, Set<String> dict,
+                                    Map<Integer, List<String>> memo) {
+        if (memo.containsKey(start)) return memo.get(start);
+        List<String> result = new ArrayList<>();
+        if (start == s.length()) { result.add(""); return result; }
+        
+        for (int end = start + 1; end <= s.length(); end++) {
+            String word = s.substring(start, end);
+            if (dict.contains(word)) {
+                List<String> suffixes = backtrack(s, end, dict, memo);
+                for (String suffix : suffixes)
+                    result.add(word + (suffix.isEmpty() ? "" : " " + suffix));
+            }
+        }
+        memo.put(start, result);
+        return result;
+    }
+    
+    public static void main(String[] args) {
+        WordBreakII wb = new WordBreakII();
+        String s1 = "catsanddog";
+        List<String> dict1 = Arrays.asList("cat","cats","and","sand","dog");
+        System.out.println(s1 + " → " + wb.wordBreak(s1, dict1));
+        // [cats and dog, cat sand dog]
+    }
+}`,
+      },
+    ],
+  },
 ];
