@@ -1,11 +1,19 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
-import { Sparkles, X, Minus, Send, Trash2 } from "lucide-react";
+import { Sparkles, X, Minus, Send, Trash2, Maximize2, Minimize2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/guru-chat`;
+
+type SizePreset = "small" | "medium" | "large" | "full";
+const SIZES: Record<SizePreset, { w: number; h: number; label: string }> = {
+  small: { w: 320, h: 400, label: "S" },
+  medium: { w: 400, h: 520, label: "M" },
+  large: { w: 560, h: 640, label: "L" },
+  full: { w: 0, h: 0, label: "⛶" },
+};
 
 async function streamChat({
   messages,
@@ -69,27 +77,44 @@ export function GuruBot() {
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [sizePreset, setSizePreset] = useState<SizePreset>("medium");
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const abortRef = useRef<AbortController | null>(null);
 
-  // Drag state
   const [pos, setPos] = useState({ x: 0, y: 0 });
   const [dragging, setDragging] = useState(false);
   const dragOffset = useRef({ x: 0, y: 0 });
   const panelRef = useRef<HTMLDivElement>(null);
   const initialized = useRef(false);
 
+  const getSize = useCallback(() => {
+    if (sizePreset === "full") {
+      return { w: window.innerWidth - 48, h: window.innerHeight - 48 };
+    }
+    return { w: SIZES[sizePreset].w, h: SIZES[sizePreset].h };
+  }, [sizePreset]);
+
   useEffect(() => {
     if (open && !initialized.current) {
-      // Position bottom-right
-      setPos({
-        x: window.innerWidth - 400 - 24,
-        y: window.innerHeight - 520 - 24,
-      });
+      const s = getSize();
+      setPos({ x: window.innerWidth - s.w - 24, y: window.innerHeight - s.h - 24 });
       initialized.current = true;
     }
-  }, [open]);
+  }, [open, getSize]);
+
+  useEffect(() => {
+    if (!open || minimized) return;
+    const s = getSize();
+    if (sizePreset === "full") {
+      setPos({ x: 24, y: 24 });
+    } else {
+      setPos((prev) => ({
+        x: Math.min(Math.max(prev.x, 0), window.innerWidth - s.w - 16),
+        y: Math.min(Math.max(prev.y, 0), window.innerHeight - s.h - 16),
+      }));
+    }
+  }, [sizePreset, open, minimized, getSize]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -100,9 +125,10 @@ export function GuruBot() {
   }, [open, minimized]);
 
   const onMouseDown = useCallback((e: React.MouseEvent) => {
+    if (sizePreset === "full") return;
     setDragging(true);
     dragOffset.current = { x: e.clientX - pos.x, y: e.clientY - pos.y };
-  }, [pos]);
+  }, [pos, sizePreset]);
 
   useEffect(() => {
     if (!dragging) return;
@@ -159,6 +185,16 @@ export function GuruBot() {
     setLoading(false);
   };
 
+  const cycleSize = () => {
+    const order: SizePreset[] = ["small", "medium", "large", "full"];
+    const idx = order.indexOf(sizePreset);
+    setSizePreset(order[(idx + 1) % order.length]);
+  };
+
+  const toggleFullscreen = () => {
+    setSizePreset(sizePreset === "full" ? "medium" : "full");
+  };
+
   // FAB button
   const fab = (
     <button
@@ -179,40 +215,37 @@ export function GuruBot() {
 
   // Minimized pill
   if (minimized) {
-    return (
-      <>
-        {createPortal(
-          <button
-            onClick={() => setMinimized(false)}
-            className="fixed bottom-6 right-6 flex items-center gap-2 px-4 py-2.5 rounded-full shadow-xl z-50 transition-all hover:scale-105"
-            style={{
-              background: "hsl(var(--card))",
-              border: "1px solid hsl(var(--border))",
-              color: "hsl(var(--foreground))",
-            }}
-          >
-            <Sparkles size={16} style={{ color: "hsl(var(--primary))" }} />
-            <span className="text-sm font-semibold">Guru</span>
-            {messages.length > 0 && (
-              <span className="w-2 h-2 rounded-full" style={{ background: "hsl(var(--primary))" }} />
-            )}
-          </button>,
-          document.body
+    return createPortal(
+      <button
+        onClick={() => setMinimized(false)}
+        className="fixed bottom-6 right-6 flex items-center gap-2 px-4 py-2.5 rounded-full shadow-xl z-50 transition-all hover:scale-105"
+        style={{
+          background: "hsl(var(--card))",
+          border: "1px solid hsl(var(--border))",
+          color: "hsl(var(--foreground))",
+        }}
+      >
+        <Sparkles size={16} style={{ color: "hsl(var(--primary))" }} />
+        <span className="text-sm font-semibold">Guru</span>
+        {messages.length > 0 && (
+          <span className="w-2 h-2 rounded-full" style={{ background: "hsl(var(--primary))" }} />
         )}
-      </>
+      </button>,
+      document.body
     );
   }
 
-  // Full chat panel
+  const size = getSize();
+
   return createPortal(
     <div
       ref={panelRef}
-      className="fixed flex flex-col rounded-2xl overflow-hidden shadow-2xl"
+      className="fixed flex flex-col rounded-2xl overflow-hidden shadow-2xl transition-all duration-200 ease-out"
       style={{
         left: pos.x,
         top: pos.y,
-        width: 380,
-        height: 500,
+        width: size.w,
+        height: size.h,
         zIndex: 9998,
         background: "hsl(var(--card))",
         border: "1px solid hsl(var(--border))",
@@ -220,22 +253,41 @@ export function GuruBot() {
         userSelect: dragging ? "none" : "auto",
       }}
     >
-      {/* Header - draggable */}
+      {/* Header */}
       <div
         onMouseDown={onMouseDown}
-        className="flex items-center gap-2.5 px-4 py-3 border-b cursor-move flex-shrink-0"
+        className="flex items-center gap-2 px-4 py-3 border-b flex-shrink-0"
         style={{
           borderColor: "hsl(var(--border))",
           background: "linear-gradient(135deg, hsl(var(--primary)/0.08), hsl(var(--primary)/0.03))",
+          cursor: sizePreset === "full" ? "default" : "move",
         }}
       >
         <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: "hsl(var(--primary)/0.15)" }}>
           <Sparkles size={16} style={{ color: "hsl(var(--primary))" }} />
         </div>
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <div className="text-sm font-bold" style={{ color: "hsl(var(--foreground))" }}>Guru</div>
           <div className="text-[10px]" style={{ color: "hsl(var(--muted-foreground))" }}>DSA & CP Assistant</div>
         </div>
+
+        {/* Size cycle */}
+        <button
+          onClick={cycleSize}
+          className="px-2 py-1 rounded-lg text-[10px] font-bold transition-colors hover:opacity-80"
+          title={`Size: ${sizePreset} — click to cycle (S → M → L → Full)`}
+          style={{
+            color: "hsl(var(--primary))",
+            background: "hsl(var(--primary)/0.1)",
+            border: "1px solid hsl(var(--primary)/0.2)",
+          }}
+        >
+          {SIZES[sizePreset].label}
+        </button>
+
+        <button onClick={toggleFullscreen} className="p-1.5 rounded-lg transition-colors hover:bg-muted" title={sizePreset === "full" ? "Exit fullscreen" : "Fullscreen"} style={{ color: "hsl(var(--muted-foreground))" }}>
+          {sizePreset === "full" ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+        </button>
         <button onClick={clearChat} className="p-1.5 rounded-lg transition-colors hover:bg-muted" title="Clear chat" style={{ color: "hsl(var(--muted-foreground))" }}>
           <Trash2 size={14} />
         </button>
@@ -267,16 +319,8 @@ export function GuruBot() {
               className="max-w-[85%] rounded-2xl px-3.5 py-2.5 text-[13px] leading-relaxed"
               style={
                 m.role === "user"
-                  ? {
-                      background: "hsl(var(--primary))",
-                      color: "hsl(var(--primary-foreground))",
-                      borderBottomRightRadius: 6,
-                    }
-                  : {
-                      background: "hsl(var(--muted))",
-                      color: "hsl(var(--foreground))",
-                      borderBottomLeftRadius: 6,
-                    }
+                  ? { background: "hsl(var(--primary))", color: "hsl(var(--primary-foreground))", borderBottomRightRadius: 6 }
+                  : { background: "hsl(var(--muted))", color: "hsl(var(--foreground))", borderBottomLeftRadius: 6 }
               }
             >
               {m.role === "assistant" ? (
@@ -320,10 +364,7 @@ export function GuruBot() {
           onClick={send}
           disabled={!input.trim() || loading}
           className="p-2 rounded-xl transition-all disabled:opacity-30 hover:scale-105 active:scale-95"
-          style={{
-            background: "hsl(var(--primary))",
-            color: "hsl(var(--primary-foreground))",
-          }}
+          style={{ background: "hsl(var(--primary))", color: "hsl(var(--primary-foreground))" }}
         >
           <Send size={14} />
         </button>
