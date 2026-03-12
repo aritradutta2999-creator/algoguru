@@ -388,6 +388,7 @@ function AppLayout({ children }: { children: React.ReactNode }) {
             {children}
           </main>
         </div>
+        <GuruBot />
       </div>
     </SidebarProvider>
   );
