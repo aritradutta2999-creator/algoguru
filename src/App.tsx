@@ -18,6 +18,7 @@ import { SettingsProvider, useSettings } from "@/contexts/SettingsContext";
 import { ModeProvider, useMode } from "@/contexts/ModeContext";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { UserMenu } from "@/components/UserMenu";
+import { GuruBot } from "@/components/GuruBot";
 import Profile from "./pages/Profile";
 import Admin from "./pages/Admin";
 import { topics } from "@/data/topics";
@@ -387,6 +388,7 @@ function AppLayout({ children }: { children: React.ReactNode }) {
             {children}
           </main>
         </div>
+        <GuruBot />
       </div>
     </SidebarProvider>
   );
