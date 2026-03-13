@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Sparkles, X, Send, Trash2, Copy, Check } from "lucide-react";
+import { Sparkles, X, Send, Trash2, Copy, Check, PanelRightOpen, PanelRightClose } from "lucide-react";
 import ReactMarkdown from "react-markdown";
-import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -63,7 +62,6 @@ async function streamChat({
   onDone();
 }
 
-/* ── Code block with copy button ── */
 function GuruCodeBlock({ children, className }: { children: string; className?: string }) {
   const [copied, setCopied] = useState(false);
   const lang = className?.replace("language-", "") || "";
@@ -77,9 +75,7 @@ function GuruCodeBlock({ children, className }: { children: string; className?: 
   return (
     <div className="relative my-2 rounded-lg overflow-hidden" style={{ background: "hsl(var(--muted))" }}>
       <div className="flex items-center justify-between px-3 py-1.5 border-b" style={{ borderColor: "hsl(var(--border))", background: "hsl(var(--muted)/0.6)" }}>
-        <span className="text-[10px] font-mono font-medium" style={{ color: "hsl(var(--muted-foreground))" }}>
-          {lang || "code"}
-        </span>
+        <span className="text-[10px] font-mono font-medium" style={{ color: "hsl(var(--muted-foreground))" }}>{lang || "code"}</span>
         <button
           onClick={handleCopy}
           className="flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded transition-colors hover:bg-background/50"
@@ -104,7 +100,6 @@ function DraggableFab({ onClick }: { onClick: () => void }) {
   const offset = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
-    // Initialize position to bottom-right
     setPos({ x: window.innerWidth - 130, y: window.innerHeight - 70 });
   }, []);
 
@@ -149,7 +144,7 @@ function DraggableFab({ onClick }: { onClick: () => void }) {
   );
 }
 
-/* ── Main GuruBot component ── */
+/* ── Main GuruBot: inline right-side panel ── */
 export function GuruBot() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Msg[]>([]);
@@ -211,134 +206,132 @@ export function GuruBot() {
     setLoading(false);
   };
 
+  if (!open) {
+    return <DraggableFab onClick={() => setOpen(true)} />;
+  }
+
+  // Render as an inline right-side panel within the flex layout
   return (
-    <>
-      {!open && <DraggableFab onClick={() => setOpen(true)} />}
+    <div
+      className="flex flex-col border-l flex-shrink-0 h-screen sticky top-0 transition-all duration-300"
+      style={{
+        width: 380,
+        background: "hsl(var(--card))",
+        borderColor: "hsl(var(--border))",
+      }}
+    >
+      {/* Header */}
+      <div
+        className="flex items-center gap-2 px-4 py-3 border-b flex-shrink-0"
+        style={{
+          borderColor: "hsl(var(--border))",
+          background: "linear-gradient(135deg, hsl(var(--primary)/0.08), hsl(var(--primary)/0.03))",
+        }}
+      >
+        <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: "hsl(var(--primary)/0.15)" }}>
+          <Sparkles size={16} style={{ color: "hsl(var(--primary))" }} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="text-sm font-bold" style={{ color: "hsl(var(--foreground))" }}>Guru</div>
+          <div className="text-[10px]" style={{ color: "hsl(var(--muted-foreground))" }}>DSA & CP Assistant</div>
+        </div>
+        <button onClick={clearChat} className="p-1.5 rounded-lg transition-colors hover:bg-muted" title="Clear chat" style={{ color: "hsl(var(--muted-foreground))" }}>
+          <Trash2 size={14} />
+        </button>
+        <button onClick={() => { setOpen(false); if (abortRef.current) abortRef.current.abort(); }} className="p-1.5 rounded-lg transition-colors hover:bg-muted" title="Close Guru" style={{ color: "hsl(var(--muted-foreground))" }}>
+          <PanelRightClose size={16} />
+        </button>
+      </div>
 
-      <Sheet open={open} onOpenChange={(v) => { setOpen(v); if (!v && abortRef.current) abortRef.current.abort(); }}>
-        <SheetContent
-          side="right"
-          className="p-0 flex flex-col w-[380px] sm:max-w-[420px] border-l gap-0"
-          style={{ background: "hsl(var(--card))", borderColor: "hsl(var(--border))" }}
-        >
-          {/* Header */}
-          <div
-            className="flex items-center gap-2 px-4 py-3 border-b flex-shrink-0"
-            style={{
-              borderColor: "hsl(var(--border))",
-              background: "linear-gradient(135deg, hsl(var(--primary)/0.08), hsl(var(--primary)/0.03))",
-            }}
-          >
-            <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: "hsl(var(--primary)/0.15)" }}>
-              <Sparkles size={16} style={{ color: "hsl(var(--primary))" }} />
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 min-h-0">
+        {messages.length === 0 && (
+          <div className="flex flex-col items-center justify-center h-full text-center gap-3 py-8">
+            <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ background: "hsl(var(--primary)/0.1)" }}>
+              <Sparkles size={28} style={{ color: "hsl(var(--primary))" }} />
             </div>
-            <div className="flex-1 min-w-0">
-              <SheetTitle className="text-sm font-bold leading-tight" style={{ color: "hsl(var(--foreground))" }}>Guru</SheetTitle>
-              <div className="text-[10px]" style={{ color: "hsl(var(--muted-foreground))" }}>DSA & CP Assistant</div>
+            <div className="text-sm font-semibold" style={{ color: "hsl(var(--foreground))" }}>Hey! I'm Guru 👋</div>
+            <div className="text-xs leading-relaxed max-w-[260px]" style={{ color: "hsl(var(--muted-foreground))" }}>
+              Ask me anything about DSA, competitive programming, or algorithms. I'm here to help!
             </div>
-            <button onClick={clearChat} className="p-1.5 rounded-lg transition-colors hover:bg-muted" title="Clear chat" style={{ color: "hsl(var(--muted-foreground))" }}>
-              <Trash2 size={14} />
-            </button>
-            <button onClick={() => setOpen(false)} className="p-1.5 rounded-lg transition-colors hover:bg-muted" title="Close" style={{ color: "hsl(var(--muted-foreground))" }}>
-              <X size={14} />
-            </button>
           </div>
+        )}
 
-          {/* Messages */}
-          <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 min-h-0">
-            {messages.length === 0 && (
-              <div className="flex flex-col items-center justify-center h-full text-center gap-3 py-8">
-                <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ background: "hsl(var(--primary)/0.1)" }}>
-                  <Sparkles size={28} style={{ color: "hsl(var(--primary))" }} />
-                </div>
-                <div className="text-sm font-semibold" style={{ color: "hsl(var(--foreground))" }}>Hey! I'm Guru 👋</div>
-                <div className="text-xs leading-relaxed max-w-[260px]" style={{ color: "hsl(var(--muted-foreground))" }}>
-                  Ask me anything about DSA, competitive programming, or algorithms. I'm here to help!
-                </div>
-              </div>
-            )}
-
-            {messages.map((m, i) => (
-              <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
-                <div
-                  className="max-w-[85%] rounded-2xl px-3.5 py-2.5 text-[13px] leading-relaxed overflow-hidden"
-                  style={
-                    m.role === "user"
-                      ? { background: "hsl(var(--primary))", color: "hsl(var(--primary-foreground))", borderBottomRightRadius: 6, wordBreak: "break-word", overflowWrap: "anywhere" }
-                      : { background: "hsl(var(--muted))", color: "hsl(var(--foreground))", borderBottomLeftRadius: 6, wordBreak: "break-word", overflowWrap: "anywhere" }
-                  }
-                >
-                  {m.role === "assistant" ? (
-                    <div className="prose prose-sm dark:prose-invert max-w-none [&_pre]:p-0 [&_pre]:bg-transparent [&_pre]:m-0 [&_code]:text-xs [&_p]:m-0 [&_p]:mb-1.5 [&_ul]:m-0 [&_ol]:m-0 [&_li]:m-0 overflow-hidden">
-                      <ReactMarkdown
-                        components={{
-                          code({ className, children, ...props }) {
-                            const isBlock = className?.startsWith("language-") || String(children).includes("\n");
-                            if (isBlock) {
-                              return <GuruCodeBlock className={className}>{String(children).replace(/\n$/, "")}</GuruCodeBlock>;
-                            }
-                            return (
-                              <code
-                                className="px-1 py-0.5 rounded text-xs"
-                                style={{ background: "hsl(var(--background))", color: "hsl(var(--primary))" }}
-                                {...props}
-                              >
-                                {children}
-                              </code>
-                            );
-                          },
-                          pre({ children }) {
-                            return <>{children}</>;
-                          },
-                        }}
-                      >
-                        {m.content}
-                      </ReactMarkdown>
-                    </div>
-                  ) : (
-                    m.content
-                  )}
-                </div>
-              </div>
-            ))}
-
-            {loading && messages[messages.length - 1]?.role !== "assistant" && (
-              <div className="flex justify-start">
-                <div className="rounded-2xl px-4 py-3" style={{ background: "hsl(var(--muted))" }}>
-                  <div className="flex gap-1.5">
-                    <span className="w-2 h-2 rounded-full animate-bounce" style={{ background: "hsl(var(--primary))", animationDelay: "0ms" }} />
-                    <span className="w-2 h-2 rounded-full animate-bounce" style={{ background: "hsl(var(--primary))", animationDelay: "150ms" }} />
-                    <span className="w-2 h-2 rounded-full animate-bounce" style={{ background: "hsl(var(--primary))", animationDelay: "300ms" }} />
-                  </div>
-                </div>
-              </div>
-            )}
-            <div ref={bottomRef} />
-          </div>
-
-          {/* Input */}
-          <div className="flex items-center gap-2 px-3 py-2.5 border-t flex-shrink-0" style={{ borderColor: "hsl(var(--border))" }}>
-            <input
-              ref={inputRef}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
-              placeholder="Ask Guru anything..."
-              disabled={loading}
-              className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground disabled:opacity-50"
-              style={{ color: "hsl(var(--foreground))" }}
-            />
-            <button
-              onClick={send}
-              disabled={!input.trim() || loading}
-              className="p-2 rounded-xl transition-all disabled:opacity-30 hover:scale-105 active:scale-95"
-              style={{ background: "hsl(var(--primary))", color: "hsl(var(--primary-foreground))" }}
+        {messages.map((m, i) => (
+          <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+            <div
+              className="max-w-[85%] rounded-2xl px-3.5 py-2.5 text-[13px] leading-relaxed overflow-hidden"
+              style={
+                m.role === "user"
+                  ? { background: "hsl(var(--primary))", color: "hsl(var(--primary-foreground))", borderBottomRightRadius: 6, wordBreak: "break-word", overflowWrap: "anywhere" }
+                  : { background: "hsl(var(--muted))", color: "hsl(var(--foreground))", borderBottomLeftRadius: 6, wordBreak: "break-word", overflowWrap: "anywhere" }
+              }
             >
-              <Send size={14} />
-            </button>
+              {m.role === "assistant" ? (
+                <div className="prose prose-sm dark:prose-invert max-w-none [&_pre]:p-0 [&_pre]:bg-transparent [&_pre]:m-0 [&_code]:text-xs [&_p]:m-0 [&_p]:mb-1.5 [&_ul]:m-0 [&_ol]:m-0 [&_li]:m-0 overflow-hidden">
+                  <ReactMarkdown
+                    components={{
+                      code({ className, children, ...props }) {
+                        const isBlock = className?.startsWith("language-") || String(children).includes("\n");
+                        if (isBlock) {
+                          return <GuruCodeBlock className={className}>{String(children).replace(/\n$/, "")}</GuruCodeBlock>;
+                        }
+                        return (
+                          <code className="px-1 py-0.5 rounded text-xs" style={{ background: "hsl(var(--background))", color: "hsl(var(--primary))" }} {...props}>
+                            {children}
+                          </code>
+                        );
+                      },
+                      pre({ children }) {
+                        return <>{children}</>;
+                      },
+                    }}
+                  >
+                    {m.content}
+                  </ReactMarkdown>
+                </div>
+              ) : (
+                m.content
+              )}
+            </div>
           </div>
-        </SheetContent>
-      </Sheet>
-    </>
+        ))}
+
+        {loading && messages[messages.length - 1]?.role !== "assistant" && (
+          <div className="flex justify-start">
+            <div className="rounded-2xl px-4 py-3" style={{ background: "hsl(var(--muted))" }}>
+              <div className="flex gap-1.5">
+                <span className="w-2 h-2 rounded-full animate-bounce" style={{ background: "hsl(var(--primary))", animationDelay: "0ms" }} />
+                <span className="w-2 h-2 rounded-full animate-bounce" style={{ background: "hsl(var(--primary))", animationDelay: "150ms" }} />
+                <span className="w-2 h-2 rounded-full animate-bounce" style={{ background: "hsl(var(--primary))", animationDelay: "300ms" }} />
+              </div>
+            </div>
+          </div>
+        )}
+        <div ref={bottomRef} />
+      </div>
+
+      {/* Input */}
+      <div className="flex items-center gap-2 px-3 py-2.5 border-t flex-shrink-0" style={{ borderColor: "hsl(var(--border))" }}>
+        <input
+          ref={inputRef}
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
+          placeholder="Ask Guru anything..."
+          disabled={loading}
+          className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground disabled:opacity-50"
+          style={{ color: "hsl(var(--foreground))" }}
+        />
+        <button
+          onClick={send}
+          disabled={!input.trim() || loading}
+          className="p-2 rounded-xl transition-all disabled:opacity-30 hover:scale-105 active:scale-95"
+          style={{ background: "hsl(var(--primary))", color: "hsl(var(--primary-foreground))" }}
+        >
+          <Send size={14} />
+        </button>
+      </div>
+    </div>
   );
 }
