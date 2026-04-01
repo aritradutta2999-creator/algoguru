@@ -122,6 +122,7 @@ export const topics: Topic[] = [
       { id: "graph-matching", title: "Bipartite Matching" },
       { id: "graph-mcmf", title: "Min-Cost Max-Flow" },
       { id: "graph-advanced", title: "Advanced Graph Algorithms" },
+      { id: "graph-successor", title: "Successor Graphs" },
     ],
   },
   {

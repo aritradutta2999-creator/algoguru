@@ -765,6 +765,161 @@ public class Dijkstra {
     ],
   },
   {
+    id: "graph-bellman",
+    title: "Bellman-Ford & SPFA",
+    difficulty: "Hard",
+    timeComplexity: "O(VE) — O(E) average with SPFA",
+    spaceComplexity: "O(V + E)",
+    theory: [
+      "**Bellman-Ford** finds shortest paths from a single source in O(VE), even with **negative edge weights**. Published by Bellman (1958) and Ford (1956). The key advantage over Dijkstra: it handles negative weights and detects negative-weight cycles.",
+      "**Algorithm**: Initialize d[s]=0, all others ∞. Perform V-1 **phases**. In each phase, iterate over ALL edges (u,v,w) and relax: if d[u] + w < d[v], update d[v] = d[u] + w. Why V-1 phases? The shortest path has at most V-1 edges (in a graph with no negative cycles). After phase k, all shortest paths using ≤ k edges are correct.",
+      "**Negative cycle detection**: After V-1 phases, perform one more phase. If ANY edge can still be relaxed, a negative-weight cycle exists that's reachable from the source. This is because a negative cycle can always be traversed to reduce the total distance infinitely.",
+      "**Finding the negative cycle** (from CPHB): Track which vertex x was last relaxed in the V-th phase. Then follow predecessors from x for exactly V steps — this guarantees entering the cycle. From there, trace the cycle by following predecessors until you return to the same vertex.",
+      "**Important guard**: Always check `if (d[u] < INF)` before relaxing edge (u,v). Without this, computing ∞ + negative_weight can underflow, producing bogus small values for unreachable vertices.",
+      "**Early termination optimization**: Track a boolean `relaxed` per phase. If no relaxation occurs in a phase, all distances are already optimal — terminate early. This dramatically improves average-case performance though worst case remains O(VE).",
+      "**SPFA (Shortest Path Faster Algorithm)**: Queue-based optimization. Instead of scanning ALL edges in each phase, only re-process vertices whose distances actually changed. Maintain a queue and an `inQueue[]` boolean array. Average case O(E), worst case still O(VE). Extremely popular in competitive programming, especially on CSES and Codeforces.",
+      "**When to use**: (1) Graph has negative edge weights → must use Bellman-Ford, not Dijkstra. (2) Need to detect negative cycles → run V-th phase check. (3) Arbitrage detection (currency exchange) → take negative log of exchange rates, detect negative cycles. (4) Difference constraints → model x_j - x_i ≤ w_ij as edge i→j with weight w_ij.",
+    ],
+    keyPoints: [
+      "V-1 phases guarantee shortest paths (each phase fixes paths with one more edge)",
+      "V-th phase detects negative cycles — if anything relaxes, cycle exists",
+      "SPFA: queue-based optimization, O(E) average, O(VE) worst case",
+      "Always guard: if (d[u] < INF) before relaxation to avoid underflow",
+      "Arbitrage detection: negative log of exchange rates → find negative cycle",
+      "Difference constraints: x_j - x_i ≤ w_ij maps to graph edge i→j with weight w",
+    ],
+    tip: "SPFA is banned on some competitive programming judges (e.g., certain Codeforces problems) because its worst case is O(VE). In such cases, use Dijkstra with Johnson's reweighting to handle negative edges.",
+    warning: "Bellman-Ford is O(VE) — much slower than Dijkstra's O((V+E) log V). Only use it when the graph has negative weights or you need negative cycle detection.",
+    code: [
+      {
+        title: "Bellman-Ford — Negative Cycle Detection & SPFA",
+        language: "java",
+        content: `import java.util.*;
+
+public class BellmanFord {
+    
+    // ==================== STANDARD BELLMAN-FORD ====================
+    
+    public static int[] bellmanFord(int V, int[][] edges, int src) {
+        int[] dist = new int[V];
+        int[] parent = new int[V];
+        Arrays.fill(dist, Integer.MAX_VALUE);
+        Arrays.fill(parent, -1);
+        dist[src] = 0;
+        
+        // V-1 phases
+        for (int i = 0; i < V - 1; i++) {
+            boolean relaxed = false;
+            for (int[] edge : edges) {
+                int u = edge[0], v = edge[1], w = edge[2];
+                if (dist[u] != Integer.MAX_VALUE && dist[u] + w < dist[v]) {
+                    dist[v] = dist[u] + w;
+                    parent[v] = u;
+                    relaxed = true;
+                }
+            }
+            if (!relaxed) break; // Early termination — no change means done
+        }
+        
+        // V-th phase: check for negative cycles
+        for (int[] edge : edges) {
+            int u = edge[0], v = edge[1], w = edge[2];
+            if (dist[u] != Integer.MAX_VALUE && dist[u] + w < dist[v]) {
+                System.out.println("Negative cycle detected!");
+                return null;
+            }
+        }
+        return dist;
+    }
+    
+    // ==================== FIND THE ACTUAL NEGATIVE CYCLE ====================
+    
+    public static List<Integer> findNegativeCycle(int V, int[][] edges) {
+        int[] dist = new int[V];
+        int[] parent = new int[V];
+        Arrays.fill(parent, -1);
+        int x = -1; // Vertex relaxed in V-th phase
+        
+        for (int i = 0; i < V; i++) {
+            x = -1;
+            for (int[] edge : edges) {
+                int u = edge[0], v = edge[1], w = edge[2];
+                if (dist[u] + w < dist[v]) {
+                    dist[v] = dist[u] + w;
+                    parent[v] = u;
+                    x = v;
+                }
+            }
+        }
+        
+        if (x == -1) return Collections.emptyList(); // No negative cycle
+        
+        // x might not be ON the cycle, but is reachable from it
+        // Go back V times to guarantee we're inside the cycle
+        int y = x;
+        for (int i = 0; i < V; i++) y = parent[y];
+        
+        // Now y is definitely on the cycle — trace it
+        List<Integer> cycle = new ArrayList<>();
+        int cur = y;
+        do {
+            cycle.add(cur);
+            cur = parent[cur];
+        } while (cur != y);
+        cycle.add(y);
+        Collections.reverse(cycle);
+        return cycle;
+    }
+    
+    // ==================== SPFA (Shortest Path Faster Algorithm) ====================
+    // Queue-based Bellman-Ford optimization — O(E) average
+    
+    public static int[] spfa(List<List<int[]>> adj, int src, int V) {
+        int[] dist = new int[V];
+        boolean[] inQueue = new boolean[V];
+        int[] cnt = new int[V]; // Count times vertex entered queue (for cycle detection)
+        Arrays.fill(dist, Integer.MAX_VALUE);
+        dist[src] = 0;
+        
+        Queue<Integer> queue = new LinkedList<>();
+        queue.offer(src);
+        inQueue[src] = true;
+        
+        while (!queue.isEmpty()) {
+            int u = queue.poll();
+            inQueue[u] = false;
+            
+            for (int[] edge : adj.get(u)) {
+                int v = edge[0], w = edge[1];
+                if (dist[u] + w < dist[v]) {
+                    dist[v] = dist[u] + w;
+                    if (!inQueue[v]) {
+                        queue.offer(v);
+                        inQueue[v] = true;
+                        cnt[v]++;
+                        if (cnt[v] >= V) {
+                            System.out.println("Negative cycle detected!");
+                            return null;
+                        }
+                    }
+                }
+            }
+        }
+        return dist;
+    }
+    
+    public static void main(String[] args) {
+        // Graph with negative edges (but no negative cycle)
+        int[][] edges = {{0,1,4},{0,2,5},{1,3,-3},{2,1,2},{3,2,1}};
+        int[] dist = bellmanFord(4, edges, 0);
+        if (dist != null) System.out.println("Distances: " + Arrays.toString(dist));
+        // [0, 4, 2, 1]
+    }
+}`,
+      },
+    ],
+  },
+  {
     id: "graph-floyd",
     title: "Bellman-Ford & Floyd-Warshall",
     difficulty: "Hard",
@@ -2670,6 +2825,139 @@ public class EulerPath {
         ["Euler Path (Hierholzer)", "O(V+E)", "O(V+E)", "Route inspection, DNA assembly"],
         ["0-1 BFS", "O(V+E)", "O(V)", "0/1 weighted shortest paths"],
         ["Centroid Decomposition", "O(n log n)", "O(n log n)", "Tree path queries"],
+      ],
+    },
+  },
+  {
+    id: "graph-successor",
+    title: "Successor Graphs (Functional Graphs)",
+    difficulty: "Hard",
+    timeComplexity: "O(n log n) preprocessing | O(log n) per query",
+    spaceComplexity: "O(n log n)",
+    theory: [
+      "A **successor graph** (functional graph) is a directed graph where each node has exactly one outgoing edge. The successor of node x is denoted succ(x). Since each node has out-degree 1, the graph consists of **ρ-shaped components**: each component has exactly one cycle, with tails (paths) leading into it.",
+      "**Key property**: Starting from any node and following successors, you will eventually enter a cycle. The structure of every connected component looks like the Greek letter ρ — a tail followed by a cycle.",
+      "**Finding the k-th successor in O(log k)**: Precompute succ_k(x) = the node reached after following k successors from x. Using binary lifting: succ[x][0] = direct successor, succ[x][j] = succ[succ[x][j-1]][j-1] (the 2^j-th successor = apply 2^(j-1) twice). To find succ_k(x): decompose k in binary, apply the corresponding jumps.",
+      "**Floyd's cycle detection** (tortoise and hare): Use two pointers — slow (moves 1 step) and fast (moves 2 steps). They meet inside the cycle. Then reset slow to start and advance both by 1 — they meet at the cycle entry. Cycle length = continue advancing from the meeting point until returning to it.",
+      "**Applications**: Permutation cycles (each permutation is a functional graph), iterated function queries (f^k(x)), detecting cycles in linked lists, pseudorandom number generators, functional graph problems on Codeforces.",
+    ],
+    keyPoints: [
+      "Every node has exactly one outgoing edge → ρ-shaped components",
+      "Binary lifting for k-th successor: O(n log n) space, O(log k) query",
+      "Floyd's algorithm: O(1) space cycle detection using slow/fast pointers",
+      "Permutations are functional graphs — cycles = permutation cycles",
+      "Common in CP: 'apply operation k times' problems",
+    ],
+    tip: "When a problem says 'apply function f repeatedly k times' where k can be up to 10^18, think binary lifting on the successor graph immediately.",
+    code: [
+      {
+        title: "Successor Graph — Binary Lifting & Cycle Detection",
+        language: "java",
+        content: `import java.util.*;
+
+public class SuccessorGraph {
+    
+    static final int LOG = 30; // Supports k up to ~10^9
+    static int[][] succ; // succ[v][j] = 2^j-th successor of v
+    
+    // ==================== BINARY LIFTING ON SUCCESSOR GRAPH ====================
+    
+    public static void build(int[] next, int n) {
+        succ = new int[n][LOG];
+        for (int v = 0; v < n; v++) succ[v][0] = next[v];
+        
+        for (int j = 1; j < LOG; j++)
+            for (int v = 0; v < n; v++)
+                succ[v][j] = succ[succ[v][j-1]][j-1];
+    }
+    
+    // Find k-th successor of x in O(log k)
+    public static int kthSuccessor(int x, long k) {
+        for (int j = 0; j < LOG && k > 0; j++) {
+            if ((k >> j & 1) == 1) x = succ[x][j];
+        }
+        return x;
+    }
+    
+    // ==================== FLOYD'S CYCLE DETECTION ====================
+    // O(1) space, O(λ + μ) time where λ=tail, μ=cycle length
+    
+    public static int[] floydCycleDetection(int[] next, int start) {
+        // Phase 1: Find meeting point
+        int slow = next[start], fast = next[next[start]];
+        while (slow != fast) {
+            slow = next[slow];
+            fast = next[next[fast]];
+        }
+        
+        // Phase 2: Find cycle entry (tail length λ)
+        int mu = 0;
+        slow = start;
+        while (slow != fast) {
+            slow = next[slow];
+            fast = next[fast];
+            mu++;
+        }
+        
+        // Phase 3: Find cycle length
+        int cycleLen = 1;
+        fast = next[slow];
+        while (fast != slow) {
+            fast = next[fast];
+            cycleLen++;
+        }
+        
+        return new int[]{slow, mu, cycleLen}; // {cycle_entry, tail_length, cycle_length}
+    }
+    
+    // ==================== PERMUTATION CYCLES ====================
+    // Find all cycles in a permutation (which IS a functional graph)
+    
+    public static List<List<Integer>> permutationCycles(int[] perm) {
+        int n = perm.length;
+        boolean[] visited = new boolean[n];
+        List<List<Integer>> cycles = new ArrayList<>();
+        
+        for (int i = 0; i < n; i++) {
+            if (visited[i]) continue;
+            List<Integer> cycle = new ArrayList<>();
+            int j = i;
+            while (!visited[j]) {
+                visited[j] = true;
+                cycle.add(j);
+                j = perm[j];
+            }
+            cycles.add(cycle);
+        }
+        return cycles;
+    }
+    
+    public static void main(String[] args) {
+        // Successor graph: 0→1→2→3→1 (tail: 0, cycle: 1→2→3→1)
+        int[] next = {1, 2, 3, 1};
+        build(next, 4);
+        
+        System.out.println("5th successor of 0: " + kthSuccessor(0, 5)); // 0→1→2→3→1→2 = 2
+        System.out.println("10th successor of 0: " + kthSuccessor(0, 10)); // follows cycle
+        
+        int[] info = floydCycleDetection(next, 0);
+        System.out.println("Cycle entry: " + info[0] + ", Tail: " + info[1] + ", Cycle len: " + info[2]);
+        // Entry: 1, Tail: 1, Cycle: 3
+        
+        // Permutation cycles
+        int[] perm = {2, 0, 1, 4, 3}; // 0→2→1→0, 3→4→3
+        System.out.println("Permutation cycles: " + permutationCycles(perm));
+    }
+}`,
+      },
+    ],
+    table: {
+      headers: ["Operation", "Time", "Space", "Technique"],
+      rows: [
+        ["Build binary lifting", "O(n log n)", "O(n log n)", "DP on successors"],
+        ["k-th successor query", "O(log k)", "O(1)", "Binary decomposition"],
+        ["Cycle detection (Floyd)", "O(λ + μ)", "O(1)", "Slow/fast pointers"],
+        ["All permutation cycles", "O(n)", "O(n)", "DFS traversal"],
       ],
     },
   },
