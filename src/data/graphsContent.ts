@@ -765,6 +765,161 @@ public class Dijkstra {
     ],
   },
   {
+    id: "graph-bellman",
+    title: "Bellman-Ford & SPFA",
+    difficulty: "Hard",
+    timeComplexity: "O(VE) — O(E) average with SPFA",
+    spaceComplexity: "O(V + E)",
+    theory: [
+      "**Bellman-Ford** finds shortest paths from a single source in O(VE), even with **negative edge weights**. Published by Bellman (1958) and Ford (1956). The key advantage over Dijkstra: it handles negative weights and detects negative-weight cycles.",
+      "**Algorithm**: Initialize d[s]=0, all others ∞. Perform V-1 **phases**. In each phase, iterate over ALL edges (u,v,w) and relax: if d[u] + w < d[v], update d[v] = d[u] + w. Why V-1 phases? The shortest path has at most V-1 edges (in a graph with no negative cycles). After phase k, all shortest paths using ≤ k edges are correct.",
+      "**Negative cycle detection**: After V-1 phases, perform one more phase. If ANY edge can still be relaxed, a negative-weight cycle exists that's reachable from the source. This is because a negative cycle can always be traversed to reduce the total distance infinitely.",
+      "**Finding the negative cycle** (from CPHB): Track which vertex x was last relaxed in the V-th phase. Then follow predecessors from x for exactly V steps — this guarantees entering the cycle. From there, trace the cycle by following predecessors until you return to the same vertex.",
+      "**Important guard**: Always check `if (d[u] < INF)` before relaxing edge (u,v). Without this, computing ∞ + negative_weight can underflow, producing bogus small values for unreachable vertices.",
+      "**Early termination optimization**: Track a boolean `relaxed` per phase. If no relaxation occurs in a phase, all distances are already optimal — terminate early. This dramatically improves average-case performance though worst case remains O(VE).",
+      "**SPFA (Shortest Path Faster Algorithm)**: Queue-based optimization. Instead of scanning ALL edges in each phase, only re-process vertices whose distances actually changed. Maintain a queue and an `inQueue[]` boolean array. Average case O(E), worst case still O(VE). Extremely popular in competitive programming, especially on CSES and Codeforces.",
+      "**When to use**: (1) Graph has negative edge weights → must use Bellman-Ford, not Dijkstra. (2) Need to detect negative cycles → run V-th phase check. (3) Arbitrage detection (currency exchange) → take negative log of exchange rates, detect negative cycles. (4) Difference constraints → model x_j - x_i ≤ w_ij as edge i→j with weight w_ij.",
+    ],
+    keyPoints: [
+      "V-1 phases guarantee shortest paths (each phase fixes paths with one more edge)",
+      "V-th phase detects negative cycles — if anything relaxes, cycle exists",
+      "SPFA: queue-based optimization, O(E) average, O(VE) worst case",
+      "Always guard: if (d[u] < INF) before relaxation to avoid underflow",
+      "Arbitrage detection: negative log of exchange rates → find negative cycle",
+      "Difference constraints: x_j - x_i ≤ w_ij maps to graph edge i→j with weight w",
+    ],
+    tip: "SPFA is banned on some competitive programming judges (e.g., certain Codeforces problems) because its worst case is O(VE). In such cases, use Dijkstra with Johnson's reweighting to handle negative edges.",
+    warning: "Bellman-Ford is O(VE) — much slower than Dijkstra's O((V+E) log V). Only use it when the graph has negative weights or you need negative cycle detection.",
+    code: [
+      {
+        title: "Bellman-Ford — Negative Cycle Detection & SPFA",
+        language: "java",
+        content: `import java.util.*;
+
+public class BellmanFord {
+    
+    // ==================== STANDARD BELLMAN-FORD ====================
+    
+    public static int[] bellmanFord(int V, int[][] edges, int src) {
+        int[] dist = new int[V];
+        int[] parent = new int[V];
+        Arrays.fill(dist, Integer.MAX_VALUE);
+        Arrays.fill(parent, -1);
+        dist[src] = 0;
+        
+        // V-1 phases
+        for (int i = 0; i < V - 1; i++) {
+            boolean relaxed = false;
+            for (int[] edge : edges) {
+                int u = edge[0], v = edge[1], w = edge[2];
+                if (dist[u] != Integer.MAX_VALUE && dist[u] + w < dist[v]) {
+                    dist[v] = dist[u] + w;
+                    parent[v] = u;
+                    relaxed = true;
+                }
+            }
+            if (!relaxed) break; // Early termination — no change means done
+        }
+        
+        // V-th phase: check for negative cycles
+        for (int[] edge : edges) {
+            int u = edge[0], v = edge[1], w = edge[2];
+            if (dist[u] != Integer.MAX_VALUE && dist[u] + w < dist[v]) {
+                System.out.println("Negative cycle detected!");
+                return null;
+            }
+        }
+        return dist;
+    }
+    
+    // ==================== FIND THE ACTUAL NEGATIVE CYCLE ====================
+    
+    public static List<Integer> findNegativeCycle(int V, int[][] edges) {
+        int[] dist = new int[V];
+        int[] parent = new int[V];
+        Arrays.fill(parent, -1);
+        int x = -1; // Vertex relaxed in V-th phase
+        
+        for (int i = 0; i < V; i++) {
+            x = -1;
+            for (int[] edge : edges) {
+                int u = edge[0], v = edge[1], w = edge[2];
+                if (dist[u] + w < dist[v]) {
+                    dist[v] = dist[u] + w;
+                    parent[v] = u;
+                    x = v;
+                }
+            }
+        }
+        
+        if (x == -1) return Collections.emptyList(); // No negative cycle
+        
+        // x might not be ON the cycle, but is reachable from it
+        // Go back V times to guarantee we're inside the cycle
+        int y = x;
+        for (int i = 0; i < V; i++) y = parent[y];
+        
+        // Now y is definitely on the cycle — trace it
+        List<Integer> cycle = new ArrayList<>();
+        int cur = y;
+        do {
+            cycle.add(cur);
+            cur = parent[cur];
+        } while (cur != y);
+        cycle.add(y);
+        Collections.reverse(cycle);
+        return cycle;
+    }
+    
+    // ==================== SPFA (Shortest Path Faster Algorithm) ====================
+    // Queue-based Bellman-Ford optimization — O(E) average
+    
+    public static int[] spfa(List<List<int[]>> adj, int src, int V) {
+        int[] dist = new int[V];
+        boolean[] inQueue = new boolean[V];
+        int[] cnt = new int[V]; // Count times vertex entered queue (for cycle detection)
+        Arrays.fill(dist, Integer.MAX_VALUE);
+        dist[src] = 0;
+        
+        Queue<Integer> queue = new LinkedList<>();
+        queue.offer(src);
+        inQueue[src] = true;
+        
+        while (!queue.isEmpty()) {
+            int u = queue.poll();
+            inQueue[u] = false;
+            
+            for (int[] edge : adj.get(u)) {
+                int v = edge[0], w = edge[1];
+                if (dist[u] + w < dist[v]) {
+                    dist[v] = dist[u] + w;
+                    if (!inQueue[v]) {
+                        queue.offer(v);
+                        inQueue[v] = true;
+                        cnt[v]++;
+                        if (cnt[v] >= V) {
+                            System.out.println("Negative cycle detected!");
+                            return null;
+                        }
+                    }
+                }
+            }
+        }
+        return dist;
+    }
+    
+    public static void main(String[] args) {
+        // Graph with negative edges (but no negative cycle)
+        int[][] edges = {{0,1,4},{0,2,5},{1,3,-3},{2,1,2},{3,2,1}};
+        int[] dist = bellmanFord(4, edges, 0);
+        if (dist != null) System.out.println("Distances: " + Arrays.toString(dist));
+        // [0, 4, 2, 1]
+    }
+}`,
+      },
+    ],
+  },
+  {
     id: "graph-floyd",
     title: "Bellman-Ford & Floyd-Warshall",
     difficulty: "Hard",
