@@ -15,7 +15,7 @@ import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 import { Menu, Sun, Moon, ZoomIn, ZoomOut, Search, X, ChevronRight, Sparkles } from "lucide-react";
 import { SettingsProvider, useSettings } from "@/contexts/SettingsContext";
-import { ModeProvider, useMode } from "@/contexts/ModeContext";
+import { ModeProvider } from "@/contexts/ModeContext";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { UserMenu } from "@/components/UserMenu";
 import { GuruBot } from "@/components/GuruBot";
