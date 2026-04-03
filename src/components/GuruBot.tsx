@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect, useCallback } from "react";
-import { Sparkles, X, Send, Trash2, Copy, Check, PanelRightOpen, PanelRightClose } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { Send, Trash2, Copy, Check, PanelRightClose, Sparkles } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 
 type Msg = { role: "user" | "assistant"; content: string };
@@ -73,80 +73,31 @@ function GuruCodeBlock({ children, className }: { children: string; className?: 
   };
 
   return (
-    <div className="relative my-2 rounded-lg overflow-hidden" style={{ background: "hsl(var(--muted))" }}>
-      <div className="flex items-center justify-between px-3 py-1.5 border-b" style={{ borderColor: "hsl(var(--border))", background: "hsl(var(--muted)/0.6)" }}>
-        <span className="text-[10px] font-mono font-medium" style={{ color: "hsl(var(--muted-foreground))" }}>{lang || "code"}</span>
+    <div className="relative my-2.5 rounded-xl overflow-hidden border" style={{ borderColor: "hsl(var(--border))", background: "hsl(var(--background))" }}>
+      <div className="flex items-center justify-between px-3 py-1.5 border-b" style={{ borderColor: "hsl(var(--border))", background: "hsl(var(--muted)/0.4)" }}>
+        <span className="text-[10px] font-mono font-semibold uppercase tracking-wider" style={{ color: "hsl(var(--muted-foreground))" }}>{lang || "code"}</span>
         <button
           onClick={handleCopy}
-          className="flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded transition-colors hover:bg-background/50"
+          className="flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-md transition-all hover:bg-background/80"
           style={{ color: copied ? "hsl(var(--primary))" : "hsl(var(--muted-foreground))" }}
         >
           {copied ? <Check size={10} /> : <Copy size={10} />}
           {copied ? "Copied!" : "Copy"}
         </button>
       </div>
-      <pre className="overflow-x-auto p-3 text-xs leading-relaxed" style={{ color: "hsl(var(--foreground))" }}>
+      <pre className="overflow-x-auto p-3.5 text-xs leading-relaxed" style={{ color: "hsl(var(--foreground))" }}>
         <code>{children}</code>
       </pre>
     </div>
   );
 }
 
-/* ── Draggable FAB ── */
-function DraggableFab({ onClick }: { onClick: () => void }) {
-  const [pos, setPos] = useState({ x: -1, y: -1 });
-  const dragging = useRef(false);
-  const hasMoved = useRef(false);
-  const offset = useRef({ x: 0, y: 0 });
-
-  useEffect(() => {
-    setPos({ x: window.innerWidth - 130, y: window.innerHeight - 70 });
-  }, []);
-
-  const onPointerDown = useCallback((e: React.PointerEvent) => {
-    dragging.current = true;
-    hasMoved.current = false;
-    offset.current = { x: e.clientX - pos.x, y: e.clientY - pos.y };
-    (e.target as HTMLElement).setPointerCapture(e.pointerId);
-  }, [pos]);
-
-  const onPointerMove = useCallback((e: React.PointerEvent) => {
-    if (!dragging.current) return;
-    hasMoved.current = true;
-    setPos({ x: e.clientX - offset.current.x, y: e.clientY - offset.current.y });
-  }, []);
-
-  const onPointerUp = useCallback(() => {
-    dragging.current = false;
-    if (!hasMoved.current) onClick();
-  }, [onClick]);
-
-  if (pos.x < 0) return null;
-
-  return (
-    <button
-      onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={onPointerUp}
-      className="fixed flex items-center gap-2 px-4 py-3 rounded-2xl shadow-2xl transition-shadow hover:shadow-[0_8px_40px_hsl(var(--primary)/0.5)] active:scale-95 z-50 touch-none select-none"
-      style={{
-        left: pos.x,
-        top: pos.y,
-        background: "linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary)/0.8))",
-        color: "hsl(var(--primary-foreground))",
-        boxShadow: "0 8px 32px hsl(var(--primary)/0.4)",
-        cursor: dragging.current ? "grabbing" : "grab",
-      }}
-    >
-      <Sparkles size={20} />
-      <span className="font-bold text-sm">Guru</span>
-    </button>
-  );
+interface GuroBotProps {
+  open: boolean;
+  onClose: () => void;
 }
 
-/* ── Main GuruBot: inline right-side panel ── */
-export function GuruBot() {
-  const [open, setOpen] = useState(false);
+export function GuruBot({ open, onClose }: GuroBotProps) {
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -206,53 +157,74 @@ export function GuruBot() {
     setLoading(false);
   };
 
-  if (!open) {
-    return <DraggableFab onClick={() => setOpen(true)} />;
-  }
+  const handleClose = () => {
+    if (abortRef.current) abortRef.current.abort();
+    onClose();
+  };
 
-  // Render as an inline right-side panel within the flex layout
+  if (!open) return null;
+
   return (
     <div
-      className="flex flex-col border-l flex-shrink-0 h-screen sticky top-0 transition-all duration-300"
+      className="flex flex-col border-l flex-shrink-0 h-screen sticky top-0"
       style={{
-        width: 380,
-        background: "hsl(var(--card))",
+        width: 360,
+        minWidth: 360,
+        background: "hsl(var(--background))",
         borderColor: "hsl(var(--border))",
       }}
     >
       {/* Header */}
       <div
-        className="flex items-center gap-2 px-4 py-3 border-b flex-shrink-0"
+        className="flex items-center gap-2.5 px-4 py-3 border-b flex-shrink-0"
         style={{
           borderColor: "hsl(var(--border))",
-          background: "linear-gradient(135deg, hsl(var(--primary)/0.08), hsl(var(--primary)/0.03))",
+          background: "linear-gradient(135deg, hsl(var(--primary)/0.06), hsl(var(--primary)/0.02))",
         }}
       >
-        <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: "hsl(var(--primary)/0.15)" }}>
-          <Sparkles size={16} style={{ color: "hsl(var(--primary))" }} />
+        <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: "hsl(var(--primary)/0.12)" }}>
+          <Sparkles size={15} style={{ color: "hsl(var(--primary))" }} />
         </div>
         <div className="flex-1 min-w-0">
           <div className="text-sm font-bold" style={{ color: "hsl(var(--foreground))" }}>Guru</div>
-          <div className="text-[10px]" style={{ color: "hsl(var(--muted-foreground))" }}>DSA & CP Assistant</div>
+          <div className="text-[10px] font-medium" style={{ color: "hsl(var(--muted-foreground))" }}>DSA & CP Assistant</div>
         </div>
         <button onClick={clearChat} className="p-1.5 rounded-lg transition-colors hover:bg-muted" title="Clear chat" style={{ color: "hsl(var(--muted-foreground))" }}>
           <Trash2 size={14} />
         </button>
-        <button onClick={() => { setOpen(false); if (abortRef.current) abortRef.current.abort(); }} className="p-1.5 rounded-lg transition-colors hover:bg-muted" title="Close Guru" style={{ color: "hsl(var(--muted-foreground))" }}>
+        <button onClick={handleClose} className="p-1.5 rounded-lg transition-colors hover:bg-muted" title="Close Guru" style={{ color: "hsl(var(--muted-foreground))" }}>
           <PanelRightClose size={16} />
         </button>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 min-h-0">
+      <div className="flex-1 overflow-y-auto px-3 py-4 space-y-4 min-h-0">
         {messages.length === 0 && (
-          <div className="flex flex-col items-center justify-center h-full text-center gap-3 py-8">
-            <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ background: "hsl(var(--primary)/0.1)" }}>
-              <Sparkles size={28} style={{ color: "hsl(var(--primary))" }} />
+          <div className="flex flex-col items-center justify-center h-full text-center gap-4 py-8">
+            <div className="w-16 h-16 rounded-2xl flex items-center justify-center" style={{ background: "hsl(var(--primary)/0.08)" }}>
+              <Sparkles size={30} style={{ color: "hsl(var(--primary))" }} />
             </div>
-            <div className="text-sm font-semibold" style={{ color: "hsl(var(--foreground))" }}>Hey! I'm Guru 👋</div>
-            <div className="text-xs leading-relaxed max-w-[260px]" style={{ color: "hsl(var(--muted-foreground))" }}>
-              Ask me anything about DSA, competitive programming, or algorithms. I'm here to help!
+            <div>
+              <div className="text-base font-bold mb-1" style={{ color: "hsl(var(--foreground))" }}>Hey! I'm Guru 👋</div>
+              <div className="text-xs leading-relaxed max-w-[240px]" style={{ color: "hsl(var(--muted-foreground))" }}>
+                Ask me anything about DSA, competitive programming, or algorithms. I'm here to help!
+              </div>
+            </div>
+            <div className="flex flex-wrap justify-center gap-1.5 mt-2">
+              {["Explain BFS vs DFS", "Time complexity of merge sort", "DP approach for knapsack"].map((q) => (
+                <button
+                  key={q}
+                  onClick={() => { setInput(q); setTimeout(() => inputRef.current?.focus(), 50); }}
+                  className="text-[11px] font-medium px-3 py-1.5 rounded-full border transition-all hover:scale-[1.02]"
+                  style={{
+                    borderColor: "hsl(var(--border))",
+                    color: "hsl(var(--primary))",
+                    background: "hsl(var(--primary)/0.04)",
+                  }}
+                >
+                  {q}
+                </button>
+              ))}
             </div>
           </div>
         )}
@@ -260,15 +232,28 @@ export function GuruBot() {
         {messages.map((m, i) => (
           <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
             <div
-              className="max-w-[85%] rounded-2xl px-3.5 py-2.5 text-[13px] leading-relaxed overflow-hidden"
+              className={`max-w-[88%] rounded-2xl px-3.5 py-2.5 text-[13px] leading-[1.7]`}
               style={
                 m.role === "user"
-                  ? { background: "hsl(var(--primary))", color: "hsl(var(--primary-foreground))", borderBottomRightRadius: 6, wordBreak: "break-word", overflowWrap: "anywhere" }
-                  : { background: "hsl(var(--muted))", color: "hsl(var(--foreground))", borderBottomLeftRadius: 6, wordBreak: "break-word", overflowWrap: "anywhere" }
+                  ? {
+                      background: "hsl(var(--primary))",
+                      color: "hsl(var(--primary-foreground))",
+                      borderBottomRightRadius: 6,
+                      wordBreak: "break-word",
+                      overflowWrap: "anywhere",
+                    }
+                  : {
+                      background: "hsl(var(--muted)/0.5)",
+                      color: "hsl(var(--foreground))",
+                      borderBottomLeftRadius: 6,
+                      wordBreak: "break-word",
+                      overflowWrap: "anywhere",
+                      border: "1px solid hsl(var(--border)/0.5)",
+                    }
               }
             >
               {m.role === "assistant" ? (
-                <div className="prose prose-sm dark:prose-invert max-w-none [&_pre]:p-0 [&_pre]:bg-transparent [&_pre]:m-0 [&_code]:text-xs [&_p]:m-0 [&_p]:mb-1.5 [&_ul]:m-0 [&_ol]:m-0 [&_li]:m-0 overflow-hidden">
+                <div className="prose prose-sm dark:prose-invert max-w-none [&_pre]:p-0 [&_pre]:bg-transparent [&_pre]:m-0 [&_code]:text-xs [&_p]:m-0 [&_p]:mb-2 [&_ul]:m-0 [&_ul]:mb-2 [&_ol]:m-0 [&_ol]:mb-2 [&_li]:m-0 [&_li]:mb-0.5 [&_h1]:text-sm [&_h2]:text-sm [&_h3]:text-xs [&_h1]:mb-2 [&_h2]:mb-2 [&_h3]:mb-1.5 [&_h1]:mt-3 [&_h2]:mt-3 [&_h3]:mt-2 overflow-hidden">
                   <ReactMarkdown
                     components={{
                       code({ className, children, ...props }) {
@@ -277,7 +262,11 @@ export function GuruBot() {
                           return <GuruCodeBlock className={className}>{String(children).replace(/\n$/, "")}</GuruCodeBlock>;
                         }
                         return (
-                          <code className="px-1 py-0.5 rounded text-xs" style={{ background: "hsl(var(--background))", color: "hsl(var(--primary))" }} {...props}>
+                          <code
+                            className="px-1.5 py-0.5 rounded-md text-xs font-mono"
+                            style={{ background: "hsl(var(--muted))", color: "hsl(var(--primary))" }}
+                            {...props}
+                          >
                             {children}
                           </code>
                         );
@@ -299,11 +288,11 @@ export function GuruBot() {
 
         {loading && messages[messages.length - 1]?.role !== "assistant" && (
           <div className="flex justify-start">
-            <div className="rounded-2xl px-4 py-3" style={{ background: "hsl(var(--muted))" }}>
+            <div className="rounded-2xl px-4 py-3" style={{ background: "hsl(var(--muted)/0.5)", border: "1px solid hsl(var(--border)/0.5)" }}>
               <div className="flex gap-1.5">
-                <span className="w-2 h-2 rounded-full animate-bounce" style={{ background: "hsl(var(--primary))", animationDelay: "0ms" }} />
-                <span className="w-2 h-2 rounded-full animate-bounce" style={{ background: "hsl(var(--primary))", animationDelay: "150ms" }} />
-                <span className="w-2 h-2 rounded-full animate-bounce" style={{ background: "hsl(var(--primary))", animationDelay: "300ms" }} />
+                <span className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ background: "hsl(var(--primary))", animationDelay: "0ms" }} />
+                <span className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ background: "hsl(var(--primary))", animationDelay: "150ms" }} />
+                <span className="w-1.5 h-1.5 rounded-full animate-bounce" style={{ background: "hsl(var(--primary))", animationDelay: "300ms" }} />
               </div>
             </div>
           </div>
@@ -312,7 +301,7 @@ export function GuruBot() {
       </div>
 
       {/* Input */}
-      <div className="flex items-center gap-2 px-3 py-2.5 border-t flex-shrink-0" style={{ borderColor: "hsl(var(--border))" }}>
+      <div className="flex items-center gap-2 px-3 py-3 border-t flex-shrink-0" style={{ borderColor: "hsl(var(--border))", background: "hsl(var(--muted)/0.15)" }}>
         <input
           ref={inputRef}
           value={input}
@@ -320,13 +309,13 @@ export function GuruBot() {
           onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
           placeholder="Ask Guru anything..."
           disabled={loading}
-          className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground disabled:opacity-50"
+          className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground disabled:opacity-50 px-2"
           style={{ color: "hsl(var(--foreground))" }}
         />
         <button
           onClick={send}
           disabled={!input.trim() || loading}
-          className="p-2 rounded-xl transition-all disabled:opacity-30 hover:scale-105 active:scale-95"
+          className="p-2.5 rounded-xl transition-all disabled:opacity-30 hover:scale-105 active:scale-95"
           style={{ background: "hsl(var(--primary))", color: "hsl(var(--primary-foreground))" }}
         >
           <Send size={14} />
