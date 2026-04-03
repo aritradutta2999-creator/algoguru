@@ -349,7 +349,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 }
 
 function AppLayout({ children }: { children: React.ReactNode }) {
-  const { currentMode } = useMode();
+  const [guruOpen, setGuruOpen] = useState(false);
 
   return (
     <SidebarProvider>
@@ -382,13 +382,26 @@ function AppLayout({ children }: { children: React.ReactNode }) {
             <HeaderControls />
             <div className="h-4 w-px mx-1" style={{ background: "hsl(var(--border))" }} />
             <UserMenu />
+            <div className="h-4 w-px mx-1" style={{ background: "hsl(var(--border))" }} />
+            <button
+              onClick={() => setGuruOpen((o) => !o)}
+              title={guruOpen ? "Close Guru" : "Open Guru"}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg transition-all duration-200 hover:scale-[1.03] active:scale-[0.97]"
+              style={{
+                background: guruOpen ? "hsl(var(--primary))" : "hsl(var(--primary)/0.1)",
+                color: guruOpen ? "hsl(var(--primary-foreground))" : "hsl(var(--primary))",
+              }}
+            >
+              <Sparkles size={14} />
+              <span className="text-xs font-bold hidden sm:inline">Guru</span>
+            </button>
           </header>
 
           <main className="flex-1 overflow-y-auto">
             {children}
           </main>
         </div>
-        <GuruBot />
+        <GuruBot open={guruOpen} onClose={() => setGuruOpen(false)} />
       </div>
     </SidebarProvider>
   );
