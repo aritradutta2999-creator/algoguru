@@ -123,9 +123,6 @@ export function GuruBot({ open, onClose }: GuroBotProps) {
     if (open) setTimeout(() => inputRef.current?.focus(), 200);
   }, [open]);
 
-  const handleResize = useCallback((delta: number) => {
-    setWidth((w) => Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, w + delta)));
-  }, []);
 
   const send = async () => {
     const text = input.trim();
