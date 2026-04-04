@@ -849,16 +849,17 @@ export const javaOOPContent: ContentSection[] = [
     title: "Encapsulation & Access Modifiers",
     difficulty: "Medium",
     theory: [
-      "**Encapsulation** is the practice of bundling data (fields) and the methods that operate on that data into a single unit (class), and restricting direct access to the internals",
-      "This is the most fundamental OOP principle — it protects your data from invalid states",
-      "**Access Modifiers** control visibility of classes, fields, methods, and constructors:",
-      "**public** — accessible from anywhere, any package, any class",
-      "**private** — accessible only within the **same class**. Most fields should be private",
-      "**protected** — accessible within the same **package** AND in **subclasses** (even in different packages)",
-      "**default (no modifier)** — accessible only within the same **package** (package-private)",
-      "The standard pattern: make fields **private**, expose through **public getters/setters** with validation",
-      "**Immutable objects** — make fields `private final`, no setters, set values only in constructor. Examples: String, Integer, LocalDate",
-      "Encapsulation allows you to change internal implementation without affecting code that uses the class"
+      "**Encapsulation** is the most fundamental OOP principle — it bundles data (fields) and the methods that operate on that data into a single unit (class), and restricts direct access to the internals. It's the idea that an object should control how its state is accessed and modified.",
+      "**Why Encapsulation Matters:** Without it, any code anywhere can set `account.balance = -1000`, putting the object in an invalid state. With encapsulation, `deposit()` and `withdraw()` methods enforce rules (positive amounts, sufficient funds) before changing the balance.",
+      "**Access Modifiers** control visibility at four levels:",
+      "**public** — accessible from anywhere, any package, any class. Use for APIs and methods meant for external use.",
+      "**private** — accessible only within the **same class**. Most fields should be private. This is the default choice for data protection.",
+      "**protected** — accessible within the same **package** AND in **subclasses** (even in different packages). Use for members that subclasses need to access or override.",
+      "**default (no modifier, aka package-private)** — accessible only within the same **package**. This is Java's default if you specify no modifier. Useful for internal implementation classes.",
+      "**The JavaBean Pattern:** Make all fields **private**, provide **public getters** (read access) and **setters** (write access with validation). This is the standard encapsulation pattern used in almost all Java frameworks (Spring, Hibernate, Jackson).",
+      "**Immutable Objects:** Make fields `private final`, provide no setters, set values only in the constructor, and if fields reference mutable objects (List, Date), return **defensive copies** from getters. Examples: String, Integer, LocalDate, BigDecimal. Immutable objects are inherently **thread-safe**.",
+      "**Information Hiding:** Encapsulation enables you to change the internal implementation (e.g., switch from ArrayList to LinkedList) without affecting any code that uses the class — as long as the public API stays the same. This is crucial for maintainability in large codebases.",
+      "**Defensive Copying:** When a getter returns a mutable object (like a List or Date), return a copy instead of the original — otherwise external code can modify your internal state, breaking encapsulation. Example: `return new ArrayList<>(this.items);`"
     ],
     keyPoints: [
       "private fields + public getters/setters = encapsulation",
