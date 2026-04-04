@@ -180,8 +180,13 @@ export const javaBasicsContent: ContentSection[] = [
     title: "Operators & Expressions",
     difficulty: "Easy",
     theory: [
-      "Java provides a rich set of operators for arithmetic, comparison, logical, bitwise, and assignment operations.",
-      "**Operator Precedence** (high → low): Unary (++, --, !) → Arithmetic (*, /, % → +, -) → Shift → Comparison → Bitwise → Logical → Ternary → Assignment. Use **parentheses** to make precedence explicit."
+      "Java provides a rich set of operators for arithmetic, comparison, logical, bitwise, and assignment operations. Understanding operator behavior — especially **precedence**, **associativity**, and **short-circuit evaluation** — is essential for writing correct and efficient code.",
+      "**Arithmetic Operators:** `+`, `-`, `*`, `/`, `%`. Key detail: **integer division** truncates the result (`7/2 = 3`, not `3.5`). To get decimal results, cast at least one operand to `double`. The `%` modulus operator works with negatives: `-7 % 3 = -1` (sign follows the dividend in Java).",
+      "**Increment/Decrement:** `++x` (pre: increment then use) vs `x++` (post: use then increment). A common interview trap: `int x = 5; int y = x++ + ++x;` → `y = 5 + 7 = 12` (x becomes 7).",
+      "**Comparison Operators:** `==`, `!=`, `<`, `>`, `<=`, `>=`. For primitives, `==` compares values. For objects, `==` compares **references** (memory addresses) — use `.equals()` for content comparison.",
+      "**Logical Operators (Short-Circuit):** `&&` (AND) and `||` (OR) are **short-circuit** — they stop evaluating as soon as the result is determined. `&` and `|` are non-short-circuit (evaluate both sides). Short-circuit is safer: `if (s != null && s.length() > 0)` — the second condition is skipped if `s` is null, preventing `NullPointerException`.",
+      "**Bitwise Operators:** `&` (AND), `|` (OR), `^` (XOR), `~` (NOT), `<<` (left shift = multiply by 2), `>>` (arithmetic right shift = divide by 2, preserves sign), `>>>` (unsigned right shift). These are crucial in competitive programming for bitmask DP, subset enumeration, and efficient flag manipulation.",
+      "**Operator Precedence** (high → low): Unary (`++`, `--`, `!`, `~`) → Multiplicative (`*`, `/`, `%`) → Additive (`+`, `-`) → Shift (`<<`, `>>`) → Relational (`<`, `>`) → Equality (`==`, `!=`) → Bitwise AND → XOR → OR → Logical AND → Logical OR → Ternary (`?:`) → Assignment (`=`, `+=`). **Rule of thumb:** When in doubt, use parentheses to make precedence explicit."
     ],
     code: [
       {
