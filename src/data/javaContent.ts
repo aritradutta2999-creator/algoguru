@@ -522,7 +522,10 @@ public class ArrayDemo {
     title: "Scanner & User Input",
     difficulty: "Easy",
     theory: [
-      "The `Scanner` class reads user input. For competitive programming, `BufferedReader` + `PrintWriter` is 5-10x faster."
+      "The `Scanner` class (from `java.util`) reads user input from various sources — keyboard (`System.in`), files, or strings. It provides convenient methods like `nextInt()`, `nextLine()`, `nextDouble()`, etc.",
+      "**Scanner Pitfalls:** The most common bug is mixing `nextInt()`/`nextDouble()` with `nextLine()` — numeric methods leave the newline character `\\n` in the buffer, causing the next `nextLine()` to read an empty string. Always add an extra `sc.nextLine()` after numeric reads to consume the leftover newline.",
+      "**BufferedReader vs Scanner:** For competitive programming, `BufferedReader` + `StringTokenizer` is **5-10x faster** than Scanner. Scanner uses regex internally for parsing, which adds overhead. For large inputs (10⁵+ lines), Scanner can cause TLE (Time Limit Exceeded) on competitive programming judges.",
+      "**Fast I/O Pattern for CP:** Use `BufferedReader` for input and `PrintWriter` with `BufferedOutputStream` for output. This minimizes system calls by batching I/O operations. Always call `pw.flush()` at the end to ensure all output is written."
     ],
     code: [
       {
