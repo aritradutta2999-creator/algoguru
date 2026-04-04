@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect, useCallback } from "react";
-import { Send, Trash2, Copy, Check, PanelRightClose, Sparkles, GripVertical } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { Send, Trash2, Copy, Check, PanelRightClose, Sparkles } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 
 type Msg = { role: "user" | "assistant"; content: string };
@@ -102,59 +102,15 @@ function GuruCodeBlock({ children, className }: { children: string; className?: 
   );
 }
 
-/* ── Resize handle ── */
-function ResizeHandle({ onDrag }: { onDrag: (deltaX: number) => void }) {
-  const dragging = useRef(false);
-  const lastX = useRef(0);
-
-  const onPointerDown = useCallback((e: React.PointerEvent) => {
-    dragging.current = true;
-    lastX.current = e.clientX;
-    (e.target as HTMLElement).setPointerCapture(e.pointerId);
-    document.body.style.cursor = "col-resize";
-    document.body.style.userSelect = "none";
-  }, []);
-
-  const onPointerMove = useCallback((e: React.PointerEvent) => {
-    if (!dragging.current) return;
-    const delta = lastX.current - e.clientX;
-    lastX.current = e.clientX;
-    onDrag(delta);
-  }, [onDrag]);
-
-  const onPointerUp = useCallback(() => {
-    dragging.current = false;
-    document.body.style.cursor = "";
-    document.body.style.userSelect = "";
-  }, []);
-
-  return (
-    <div
-      onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={onPointerUp}
-      className="absolute left-0 top-0 bottom-0 w-2 cursor-col-resize z-10 flex items-center justify-center group hover:bg-primary/10 transition-colors"
-      title="Drag to resize"
-    >
-      <div className="w-0.5 h-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: "hsl(var(--primary)/0.4)" }} />
-    </div>
-  );
-}
-
 interface GuroBotProps {
   open: boolean;
   onClose: () => void;
 }
 
-const MIN_WIDTH = 300;
-const MAX_WIDTH = 600;
-const DEFAULT_WIDTH = 380;
-
 export function GuruBot({ open, onClose }: GuroBotProps) {
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [width, setWidth] = useState(DEFAULT_WIDTH);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const abortRef = useRef<AbortController | null>(null);
@@ -167,9 +123,6 @@ export function GuruBot({ open, onClose }: GuroBotProps) {
     if (open) setTimeout(() => inputRef.current?.focus(), 200);
   }, [open]);
 
-  const handleResize = useCallback((delta: number) => {
-    setWidth((w) => Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, w + delta)));
-  }, []);
 
   const send = async () => {
     const text = input.trim();
@@ -224,17 +177,12 @@ export function GuruBot({ open, onClose }: GuroBotProps) {
 
   return (
     <div
-      className="relative flex flex-col border-l flex-shrink-0 h-screen sticky top-0"
+      className="flex flex-col h-full border-l"
       style={{
-        width,
-        minWidth: MIN_WIDTH,
-        maxWidth: MAX_WIDTH,
         background: "hsl(var(--background))",
         borderColor: "hsl(var(--border))",
       }}
     >
-      {/* Resize handle on the left edge */}
-      <ResizeHandle onDrag={handleResize} />
 
       {/* Header */}
       <div

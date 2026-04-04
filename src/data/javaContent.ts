@@ -16,7 +16,11 @@ export const javaBasicsContent: ContentSection[] = [
       "Java is a **high-level, class-based, object-oriented** programming language designed to have as few implementation dependencies as possible. It was developed by **James Gosling** at Sun Microsystems (now owned by Oracle) and released in **1995**. Java follows the principle of **WORA** — Write Once, Run Anywhere.",
       "Java is one of the most popular programming languages in the world, used for building enterprise applications, Android apps, web servers, big data processing, and much more.",
       "**Key Features of Java:** Platform Independent (bytecode runs on any JVM), Object-Oriented (everything is an object), Strongly Typed (variables must be declared with types), Automatic Memory Management (Garbage Collector), Multithreaded (built-in concurrency support), Secure (no pointers, security manager), Rich Standard Library.",
-      "**Java Editions:** Java SE (Standard Edition) — Core language, collections, I/O, concurrency. Java EE (Enterprise Edition) — Now Jakarta EE, Servlets, JPA, EJB. Java ME (Micro Edition) — For embedded/mobile devices."
+      "**How Java Achieves Platform Independence:** When you write Java code, the compiler (`javac`) converts it to **bytecode** — an intermediate, platform-neutral representation stored in `.class` files. The JVM (Java Virtual Machine) then interprets or JIT-compiles this bytecode into native machine code specific to the host OS. This is why Java programs can run on Windows, macOS, Linux, etc., without recompilation — you only need a JVM for that platform.",
+      "**Java's Memory Model:** Java divides memory into **Stack** (stores local variables, method calls — fast, thread-specific, LIFO) and **Heap** (stores objects and arrays — shared across threads, managed by the Garbage Collector). Understanding this distinction is crucial for writing efficient programs and debugging `StackOverflowError` vs `OutOfMemoryError`.",
+      "**Garbage Collection (GC):** Unlike C/C++, Java automatically manages memory. The GC periodically identifies objects on the heap that are no longer referenced and reclaims their memory. You cannot explicitly free memory — instead, set references to `null` and let the GC handle it. Major GC algorithms include Serial GC, Parallel GC, G1 GC (default since Java 9), and ZGC (low-latency).",
+      "**Java Editions:** Java SE (Standard Edition) — Core language, collections, I/O, concurrency. Java EE (Enterprise Edition) — Now Jakarta EE, Servlets, JPA, EJB. Java ME (Micro Edition) — For embedded/mobile devices.",
+      "**Java Version History Highlights:** Java 5 (Generics, Enums, Autoboxing), Java 8 (Lambdas, Streams, Optional), Java 9 (Modules), Java 10 (var keyword), Java 11 (LTS, new String methods), Java 14 (Switch expressions, Records preview), Java 17 (LTS, Sealed classes), Java 21 (LTS, Virtual threads, Pattern matching)."
     ],
     note: "Java code is compiled into **bytecode** that runs on the **JVM (Java Virtual Machine)**, making it platform-independent."
   },
@@ -97,11 +101,16 @@ export const javaBasicsContent: ContentSection[] = [
     title: "Variables & Data Types",
     difficulty: "Easy",
     theory: [
-      "Java is a **statically typed** language — every variable must be declared with a type before use. Java has **8 primitive types** and **reference types** (objects).",
-      "**Integer types:** byte (8-bit, -128 to 127), short (16-bit), int (32-bit, most common), long (64-bit, suffix L).",
-      "**Floating-point:** float (32-bit, suffix f), double (64-bit, default for decimals). **char** (16-bit Unicode). **boolean** (true/false).",
-      "**Reference types** include String, arrays, and all objects. Wrapper classes (Integer, Double, Boolean) provide object versions of primitives with autoboxing/unboxing.",
-      "**Variable scopes:** Instance variables (belong to object), static variables (belong to class), local variables (must be initialized before use), constants (final keyword)."
+      "Java is a **statically typed** language — every variable must be declared with a type before use. This means the compiler catches type mismatches at compile time rather than at runtime, making Java programs safer and more predictable.",
+      "**Primitive Types (8 total):** These are the building blocks of data in Java. They are stored directly on the **stack** (when local) and are NOT objects — they don't have methods or inherit from Object.",
+      "**Integer types:** `byte` (8-bit, -128 to 127, useful for raw binary data), `short` (16-bit, rarely used), `int` (32-bit, most common — range ±2.1 billion), `long` (64-bit, suffix `L`, for large numbers like timestamps or CP problems where values exceed 2×10⁹).",
+      "**Floating-point:** `float` (32-bit, ~7 decimal digits precision, suffix `f`), `double` (64-bit, ~15 decimal digits, default for decimal literals). **Important:** Floating-point arithmetic is **not exact** due to IEEE 754 representation — `0.1 + 0.2 ≠ 0.3` exactly. Use `BigDecimal` for financial calculations.",
+      "**char** (16-bit Unicode character, range 0-65535, supports international characters). **boolean** (true/false, not convertible to int unlike C/C++).",
+      "**Reference types** include String, arrays, and all objects. They are stored on the **heap** and variables hold a reference (pointer) to the object, not the object itself. This means assigning one reference variable to another makes both point to the **same object**.",
+      "**Wrapper classes** (Integer, Double, Boolean, etc.) provide object versions of primitives. **Autoboxing** automatically converts `int → Integer` and **unboxing** does the reverse. Wrappers are needed for generics (`List<Integer>` works, `List<int>` doesn't) and provide utility methods like `Integer.parseInt()`, `Integer.MAX_VALUE`.",
+      "**Type Inference with `var` (Java 10+):** The `var` keyword lets the compiler infer the type from the right-hand side. It reduces boilerplate but only works for local variables with initializers — not for fields, parameters, or return types.",
+      "**Variable scopes:** Instance variables (belong to object, have default values: 0/false/null), Static variables (belong to class, shared across all instances), Local variables (must be initialized before use, no default values), Constants (`final` keyword — immutable once assigned).",
+      "**Default Values:** Primitives get defaults only as instance/static fields: `int→0`, `double→0.0`, `boolean→false`, `char→'\\u0000'`. Reference types default to `null`. Local variables have **no defaults** — using them uninitialized causes a compile error."
     ],
     code: [
       {
@@ -171,8 +180,13 @@ export const javaBasicsContent: ContentSection[] = [
     title: "Operators & Expressions",
     difficulty: "Easy",
     theory: [
-      "Java provides a rich set of operators for arithmetic, comparison, logical, bitwise, and assignment operations.",
-      "**Operator Precedence** (high → low): Unary (++, --, !) → Arithmetic (*, /, % → +, -) → Shift → Comparison → Bitwise → Logical → Ternary → Assignment. Use **parentheses** to make precedence explicit."
+      "Java provides a rich set of operators for arithmetic, comparison, logical, bitwise, and assignment operations. Understanding operator behavior — especially **precedence**, **associativity**, and **short-circuit evaluation** — is essential for writing correct and efficient code.",
+      "**Arithmetic Operators:** `+`, `-`, `*`, `/`, `%`. Key detail: **integer division** truncates the result (`7/2 = 3`, not `3.5`). To get decimal results, cast at least one operand to `double`. The `%` modulus operator works with negatives: `-7 % 3 = -1` (sign follows the dividend in Java).",
+      "**Increment/Decrement:** `++x` (pre: increment then use) vs `x++` (post: use then increment). A common interview trap: `int x = 5; int y = x++ + ++x;` → `y = 5 + 7 = 12` (x becomes 7).",
+      "**Comparison Operators:** `==`, `!=`, `<`, `>`, `<=`, `>=`. For primitives, `==` compares values. For objects, `==` compares **references** (memory addresses) — use `.equals()` for content comparison.",
+      "**Logical Operators (Short-Circuit):** `&&` (AND) and `||` (OR) are **short-circuit** — they stop evaluating as soon as the result is determined. `&` and `|` are non-short-circuit (evaluate both sides). Short-circuit is safer: `if (s != null && s.length() > 0)` — the second condition is skipped if `s` is null, preventing `NullPointerException`.",
+      "**Bitwise Operators:** `&` (AND), `|` (OR), `^` (XOR), `~` (NOT), `<<` (left shift = multiply by 2), `>>` (arithmetic right shift = divide by 2, preserves sign), `>>>` (unsigned right shift). These are crucial in competitive programming for bitmask DP, subset enumeration, and efficient flag manipulation.",
+      "**Operator Precedence** (high → low): Unary (`++`, `--`, `!`, `~`) → Multiplicative (`*`, `/`, `%`) → Additive (`+`, `-`) → Shift (`<<`, `>>`) → Relational (`<`, `>`) → Equality (`==`, `!=`) → Bitwise AND → XOR → OR → Logical AND → Logical OR → Ternary (`?:`) → Assignment (`=`, `+=`). **Rule of thumb:** When in doubt, use parentheses to make precedence explicit."
     ],
     code: [
       {
@@ -233,7 +247,11 @@ export const javaBasicsContent: ContentSection[] = [
     title: "Control Flow (if/else, switch)",
     difficulty: "Easy",
     theory: [
-      "Control flow statements determine execution order. Java supports **if-else**, **switch** (including enhanced switch expressions in Java 14+), and **ternary** operators."
+      "Control flow statements determine which code gets executed and when. Java supports **if-else**, **switch** (including enhanced switch expressions in Java 14+), and the **ternary** operator for conditional logic.",
+      "**if-else:** The most fundamental branching mechanism. Conditions are evaluated top-down — once a branch matches, the rest are skipped. Best practice: handle the most likely case first for readability, and always use braces `{}` even for single statements to prevent bugs.",
+      "**switch Statement:** More readable than chained if-else when comparing a single variable against multiple constant values. Works with `byte`, `short`, `int`, `char`, `String` (Java 7+), and `enum` types. **Fall-through:** without `break`, execution falls through to the next case — this is a common source of bugs.",
+      "**Switch Expressions (Java 14+):** A modern, safer alternative using `->` arrow syntax. No fall-through risk, can return values directly, and the compiler ensures all cases are covered (exhaustiveness check). Use `yield` for multi-line cases in switch expressions.",
+      "**Ternary Operator:** `condition ? valueIfTrue : valueIfFalse` — a compact inline conditional. Use for simple assignments; avoid nesting ternaries as they become unreadable."
     ],
     code: [
       {
@@ -297,7 +315,13 @@ export const javaBasicsContent: ContentSection[] = [
     title: "Loops (for, while, do-while)",
     difficulty: "Easy",
     theory: [
-      "Java supports **for**, **enhanced for-each**, **while**, and **do-while** loops, along with **break**, **continue**, and **labeled** loop control."
+      "Loops allow you to execute a block of code repeatedly. Choosing the right loop type and understanding loop mechanics is fundamental to programming efficiency.",
+      "**for loop:** Best when the number of iterations is known. Consists of three parts: initialization, condition, and update — all in one line. The loop variable's scope is limited to the loop block.",
+      "**Enhanced for-each (Java 5+):** Simplified syntax for iterating over arrays and `Iterable` collections. You cannot modify the collection during iteration, and you don't have access to the index — use a regular for loop if you need the index.",
+      "**while loop:** Best when the number of iterations is unknown and depends on a condition. The condition is checked **before** each iteration — if initially false, the body never executes.",
+      "**do-while loop:** Similar to while, but the body executes **at least once** because the condition is checked **after** each iteration. Useful for menu-driven programs or input validation.",
+      "**Loop Control:** `break` exits the loop entirely, `continue` skips to the next iteration. **Labeled break/continue** allows controlling outer loops from inner loops — invaluable for nested loop problems in CP.",
+      "**Performance Tips:** Avoid calling methods in the loop condition (e.g., `i < list.size()` — cache the size). Prefer `for` over `while` when possible for clearer scope. In CP, watch out for **infinite loops** — always ensure the loop variable converges toward the termination condition."
     ],
     code: [
       {
@@ -355,7 +379,12 @@ export const javaBasicsContent: ContentSection[] = [
     title: "Arrays & Multi-dimensional Arrays",
     difficulty: "Easy",
     theory: [
-      "An **array** is a fixed-size, indexed collection of elements of the same type. Java arrays are **objects** stored on the heap with a fixed `.length` property."
+      "An **array** is a fixed-size, indexed collection of elements of the same type. Java arrays are **objects** stored on the heap with a fixed `.length` property that cannot be changed after creation.",
+      "**Memory Layout:** Array elements are stored in **contiguous memory**, which enables O(1) random access by index. The array reference lives on the stack, but the actual data lives on the heap. When you pass an array to a method, you pass the reference — the method can modify the original array.",
+      "**Initialization:** Arrays can be declared with `new int[n]` (all elements initialized to default: 0 for int, false for boolean, null for objects) or with literal syntax `{1, 2, 3}`. The size is fixed at creation — to resize, you must create a new array and copy elements.",
+      "**Arrays Utility Class:** `java.util.Arrays` provides essential static methods: `sort()` (dual-pivot quicksort for primitives, TimSort for objects — both O(n log n)), `binarySearch()` (array must be sorted first), `fill()`, `copyOf()`, `copyOfRange()`, `equals()`, `deepEquals()` (for multi-dimensional), `toString()`, and `stream()`.",
+      "**2D Arrays (Matrices):** Declared as `int[][]` — actually an array of arrays. Each row can have a different length (**jagged arrays**). Row-major traversal (row by row) is more cache-friendly than column-major in Java.",
+      "**Common Pitfalls:** `ArrayIndexOutOfBoundsException` (accessing index < 0 or ≥ length), confusing `.length` (array property, no parentheses) with `.length()` (String method), and forgetting that `Arrays.sort()` modifies the array in-place."
     ],
     code: [
       {
@@ -418,7 +447,11 @@ public class ArrayDemo {
     title: "Strings & String Methods",
     difficulty: "Easy",
     theory: [
-      "Strings in Java are **immutable** reference types. Any modification creates a **new** String object. For mutable strings, use **StringBuilder** (not thread-safe, faster) or **StringBuffer** (thread-safe)."
+      "Strings in Java are **immutable** reference types backed by a `char[]` (or `byte[]` since Java 9 for compact strings). Any modification creates a **new** String object — the original is never changed. This immutability provides thread-safety, caching benefits (String pool), and security (strings are used for passwords, URLs, class names).",
+      "**String Pool (String Interning):** Java maintains a special memory area called the **String Pool** in the heap. When you create a string with a literal (`String s = \"hello\"`), Java first checks the pool — if an identical string exists, it returns the existing reference. This saves memory but means `==` sometimes works for String comparison (when both are from the pool) — however, **always use `.equals()`** for reliability.",
+      "**String vs StringBuilder vs StringBuffer:** `String` is immutable — each concatenation creates a new object, making repeated concatenation O(n²). `StringBuilder` is mutable and not synchronized — fastest for single-threaded string building, O(n) for n appends. `StringBuffer` is synchronized (thread-safe) but slower — use only in multi-threaded contexts.",
+      "**Essential String Methods:** `charAt()`, `substring()`, `indexOf()`, `lastIndexOf()`, `contains()`, `startsWith()`, `endsWith()`, `replace()`, `replaceAll()` (regex), `split()` (regex), `trim()`, `strip()` (Java 11, Unicode-aware), `toUpperCase()`, `toLowerCase()`, `toCharArray()`, `compareTo()` (lexicographic), `isEmpty()`, `isBlank()` (Java 11).",
+      "**CP Tips:** For heavy string manipulation, always use `StringBuilder`. For character frequency counting, use an `int[26]` array (faster than HashMap). `String.toCharArray()` is handy for sorting characters. `compareTo()` returns negative/zero/positive for lexicographic comparison."
     ],
     code: [
       {
@@ -489,7 +522,10 @@ public class ArrayDemo {
     title: "Scanner & User Input",
     difficulty: "Easy",
     theory: [
-      "The `Scanner` class reads user input. For competitive programming, `BufferedReader` + `PrintWriter` is 5-10x faster."
+      "The `Scanner` class (from `java.util`) reads user input from various sources — keyboard (`System.in`), files, or strings. It provides convenient methods like `nextInt()`, `nextLine()`, `nextDouble()`, etc.",
+      "**Scanner Pitfalls:** The most common bug is mixing `nextInt()`/`nextDouble()` with `nextLine()` — numeric methods leave the newline character `\\n` in the buffer, causing the next `nextLine()` to read an empty string. Always add an extra `sc.nextLine()` after numeric reads to consume the leftover newline.",
+      "**BufferedReader vs Scanner:** For competitive programming, `BufferedReader` + `StringTokenizer` is **5-10x faster** than Scanner. Scanner uses regex internally for parsing, which adds overhead. For large inputs (10⁵+ lines), Scanner can cause TLE (Time Limit Exceeded) on competitive programming judges.",
+      "**Fast I/O Pattern for CP:** Use `BufferedReader` for input and `PrintWriter` with `BufferedOutputStream` for output. This minimizes system calls by batching I/O operations. Always call `pw.flush()` at the end to ensure all output is written."
     ],
     code: [
       {
@@ -533,8 +569,11 @@ public class InputDemo {
     title: "Type Casting & Conversion",
     difficulty: "Easy",
     theory: [
-      "Type casting converts a value from one type to another. **Widening** (implicit): smaller → larger, no data loss. **Narrowing** (explicit): larger → smaller, possible data loss.",
-      "Widening path: byte → short → int → long → float → double."
+      "Type casting converts a value from one type to another. Java distinguishes between **widening** (safe, automatic) and **narrowing** (potentially lossy, requires explicit cast).",
+      "**Widening (Implicit) Conversions:** Smaller types are automatically promoted to larger types without data loss. The widening path is: `byte → short → int → long → float → double`. Note: `int → float` and `long → double` may lose **precision** (not magnitude) because floats have only ~7 significant digits.",
+      "**Narrowing (Explicit) Conversions:** Larger types must be explicitly cast to smaller types using `(type)` syntax. This can cause **data loss** — truncation for decimals (`(int)3.99 = 3`), and **overflow** for integers (`(byte)256 = 0` because 256 wraps around).",
+      "**Object Type Casting:** For objects, you can **upcast** (child → parent) implicitly and **downcast** (parent → child) explicitly. Downcasting can throw `ClassCastException` at runtime if the object isn't actually an instance of the target type. Use `instanceof` to check safely before downcasting.",
+      "**Pattern Matching for instanceof (Java 16+):** Combines the type check and cast in one step: `if (obj instanceof String str)` — `str` is automatically cast and available in the block. This eliminates the separate cast line and reduces bugs."
     ],
     code: [
       {
