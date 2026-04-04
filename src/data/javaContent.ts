@@ -1272,18 +1272,16 @@ public class PolymorphismDemo {
     title: "Abstract Classes & Interfaces",
     difficulty: "Medium",
     theory: [
-      "**Abstraction** hides implementation details and shows only the essential features to the user",
-      "**Abstract class** — a class declared with `abstract` keyword. Cannot be instantiated directly",
-      "Abstract classes can have: abstract methods (no body), concrete methods (with body), fields, constructors",
-      "Any class with at least one abstract method MUST be declared abstract",
-      "A subclass MUST implement all abstract methods — or be declared abstract itself",
-      "**Interface** — a pure contract that defines WHAT a class must do, not HOW",
-      "Before Java 8: interfaces could only have abstract methods and constants (public static final)",
-      "Java 8+: interfaces can have **default methods** (with body) and **static methods**",
-      "Java 9+: interfaces can have **private methods** (helper methods for defaults)",
-      "**Key difference:** Abstract class = partial implementation + IS-A. Interface = capability/contract + CAN-DO",
-      "A class can extend only ONE abstract class but implement MANY interfaces",
-      "Use **abstract class** when: classes share common state (fields) and behavior. Use **interface** when: defining a capability that unrelated classes can implement"
+      "**Abstraction** is the process of hiding complex implementation details and exposing only the essential features. You interact with a TV via a remote (abstraction) without knowing the circuitry inside (implementation). In Java, abstraction is achieved through **abstract classes** and **interfaces**.",
+      "**Abstract Class** — declared with the `abstract` keyword. Cannot be instantiated with `new`. It serves as a **partial blueprint** — it can have both abstract methods (no body, subclasses MUST implement) and concrete methods (with body, shared behavior). It can also have fields, constructors, and static methods.",
+      "**When to use Abstract Classes:** When related classes share common **state** (fields) and **behavior** (methods). Example: `Vehicle` has fields `brand` and `year`, shared method `stop()`, but each subclass (Car, Bike) implements `start()` differently.",
+      "**Template Method Pattern:** A powerful design pattern enabled by abstract classes — define the algorithm skeleton in the abstract class with `final` methods (can't be overridden), and let subclasses fill in specific steps via abstract methods.",
+      "**Interface** — a **pure contract** that defines WHAT a class must do, not HOW. It represents a **capability** (CAN-DO relationship): Comparable means 'can be compared', Serializable means 'can be serialized', Runnable means 'can be run in a thread'.",
+      "**Interface Evolution:** Before Java 8: only abstract methods and constants (`public static final`). Java 8: added **default methods** (with body, for backward compatibility) and **static methods**. Java 9: added **private methods** (helper methods for default methods, reducing code duplication).",
+      "**Key Differences:** Abstract class: single inheritance, can have state (fields), constructors, any access modifier. Interface: multiple inheritance, no state (only constants), no constructors, methods are implicitly public. Abstract class = IS-A with shared code. Interface = CAN-DO capability.",
+      "A class can extend only **ONE** abstract class but implement **MANY** interfaces. This is how Java achieves a form of multiple inheritance without the diamond problem — if two interfaces have the same default method, the implementing class must override it to resolve the conflict.",
+      "**Sealed Classes (Java 17+):** A middle ground — `sealed class Shape permits Circle, Rectangle, Triangle` restricts which classes can extend it. This enables exhaustive pattern matching in switch expressions and provides better control over inheritance hierarchies.",
+      "**Interface vs Abstract Class Decision Tree:** Need shared state (fields)? → Abstract class. Need multiple inheritance? → Interface. Need constructors? → Abstract class. Defining a capability for unrelated classes? → Interface. Both? → Abstract class that implements an interface."
     ],
     keyPoints: [
       "Abstract class: single inheritance, can have state (fields), constructors",
