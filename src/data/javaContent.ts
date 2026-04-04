@@ -379,7 +379,12 @@ export const javaBasicsContent: ContentSection[] = [
     title: "Arrays & Multi-dimensional Arrays",
     difficulty: "Easy",
     theory: [
-      "An **array** is a fixed-size, indexed collection of elements of the same type. Java arrays are **objects** stored on the heap with a fixed `.length` property."
+      "An **array** is a fixed-size, indexed collection of elements of the same type. Java arrays are **objects** stored on the heap with a fixed `.length` property that cannot be changed after creation.",
+      "**Memory Layout:** Array elements are stored in **contiguous memory**, which enables O(1) random access by index. The array reference lives on the stack, but the actual data lives on the heap. When you pass an array to a method, you pass the reference — the method can modify the original array.",
+      "**Initialization:** Arrays can be declared with `new int[n]` (all elements initialized to default: 0 for int, false for boolean, null for objects) or with literal syntax `{1, 2, 3}`. The size is fixed at creation — to resize, you must create a new array and copy elements.",
+      "**Arrays Utility Class:** `java.util.Arrays` provides essential static methods: `sort()` (dual-pivot quicksort for primitives, TimSort for objects — both O(n log n)), `binarySearch()` (array must be sorted first), `fill()`, `copyOf()`, `copyOfRange()`, `equals()`, `deepEquals()` (for multi-dimensional), `toString()`, and `stream()`.",
+      "**2D Arrays (Matrices):** Declared as `int[][]` — actually an array of arrays. Each row can have a different length (**jagged arrays**). Row-major traversal (row by row) is more cache-friendly than column-major in Java.",
+      "**Common Pitfalls:** `ArrayIndexOutOfBoundsException` (accessing index < 0 or ≥ length), confusing `.length` (array property, no parentheses) with `.length()` (String method), and forgetting that `Arrays.sort()` modifies the array in-place."
     ],
     code: [
       {
