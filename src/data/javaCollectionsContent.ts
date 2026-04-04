@@ -473,16 +473,15 @@ public class EnumSetDemo {
     title: "HashMap, LinkedHashMap & TreeMap",
     difficulty: "Medium",
     theory: [
-      "**Map<K, V>** stores **key-value pairs** — each key is unique, values can repeat",
-      "**HashMap** — O(1) get/put, unordered, allows one null key and multiple null values",
-      "**LinkedHashMap** — maintains **insertion order** (or access order if configured)",
-      "**TreeMap** — sorted by keys (natural order or custom Comparator), O(log n) operations",
-      "HashMap uses **hashing** — key.hashCode() determines the bucket, equals() resolves collisions",
-      "**Load factor** (default 0.75) — when 75% full, HashMap doubles its capacity and rehashes",
-      "**Collision handling:** Java 8+ uses linked list for ≤8 collisions, converts to **Red-Black Tree** for >8",
-      "**getOrDefault**, **putIfAbsent**, **compute**, **merge** are powerful Java 8+ methods",
-      "**LinkedHashMap with access order** can be used to implement an **LRU Cache** — override `removeEldestEntry()`",
-      "**TreeMap** implements **NavigableMap** — supports `floorKey`, `ceilingKey`, `subMap`, `headMap`, `tailMap`"
+      "**Map<K, V>** stores **key-value pairs** where each key is unique. It's the most-used data structure in real-world Java applications — used for caching, indexing, configuration, frequency counting, and much more.",
+      "**HashMap** — The workhorse. O(1) average-case for `get()`/`put()`/`remove()`. Backed by an array of buckets with linked lists (or Red-Black Trees for long chains). Unordered — iteration order is unpredictable. Allows **one null key** and multiple null values.",
+      "**HashMap Internal Mechanics:** When you call `map.put(key, value)`: (1) Compute `key.hashCode()`, (2) Apply perturbation: `h ^ (h >>> 16)` to spread bits, (3) Find bucket: `hash & (capacity - 1)`, (4) If bucket empty → insert. If occupied → traverse chain, check `equals()`, update or append. Default capacity is 16, load factor is 0.75 → rehash (double capacity, re-bucket all entries) when size exceeds `capacity × loadFactor`.",
+      "**LinkedHashMap** — Extends HashMap, adds a **doubly-linked list** through all entries to maintain **insertion order** (default) or **access order** (if constructed with `accessOrder=true`). Slightly slower than HashMap due to linked list maintenance. With access order and `removeEldestEntry()` override, it becomes a perfect **LRU Cache** implementation.",
+      "**TreeMap** — Backed by a **Red-Black Tree** (self-balancing BST). All operations are O(log n). Keys are stored in **sorted order** (natural ordering via Comparable, or custom Comparator). Does NOT allow null keys. Implements **NavigableMap** with powerful navigation: `floorKey()`, `ceilingKey()`, `subMap()`, `headMap()`, `tailMap()`.",
+      "**Java 8+ Map Methods:** `getOrDefault(key, default)` — avoids null checks. `putIfAbsent(key, value)` — insert only if key is absent. `compute(key, remappingFunction)` — compute new value based on key and existing value. `merge(key, value, remappingFunction)` — elegantly handles frequency counting: `map.merge(key, 1, Integer::sum)`. `replaceAll()` — transform all values in-place.",
+      "**HashMap vs TreeMap vs LinkedHashMap:** Need fastest lookup? → HashMap. Need sorted keys? → TreeMap. Need insertion order? → LinkedHashMap. Need thread safety? → ConcurrentHashMap.",
+      "**Performance Tip:** If you know the number of entries upfront, pre-size the HashMap: `new HashMap<>((int)(expectedSize / 0.75f) + 1)`. This avoids costly rehashing operations.",
+      "**Common Pitfall:** Never use **mutable objects** as HashMap keys. If a key's `hashCode()` changes after insertion, the entry becomes unreachable — effectively a memory leak. Use String, Integer, or other immutable types as keys."
     ],
     code: [
       {
