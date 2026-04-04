@@ -447,7 +447,11 @@ public class ArrayDemo {
     title: "Strings & String Methods",
     difficulty: "Easy",
     theory: [
-      "Strings in Java are **immutable** reference types. Any modification creates a **new** String object. For mutable strings, use **StringBuilder** (not thread-safe, faster) or **StringBuffer** (thread-safe)."
+      "Strings in Java are **immutable** reference types backed by a `char[]` (or `byte[]` since Java 9 for compact strings). Any modification creates a **new** String object — the original is never changed. This immutability provides thread-safety, caching benefits (String pool), and security (strings are used for passwords, URLs, class names).",
+      "**String Pool (String Interning):** Java maintains a special memory area called the **String Pool** in the heap. When you create a string with a literal (`String s = \"hello\"`), Java first checks the pool — if an identical string exists, it returns the existing reference. This saves memory but means `==` sometimes works for String comparison (when both are from the pool) — however, **always use `.equals()`** for reliability.",
+      "**String vs StringBuilder vs StringBuffer:** `String` is immutable — each concatenation creates a new object, making repeated concatenation O(n²). `StringBuilder` is mutable and not synchronized — fastest for single-threaded string building, O(n) for n appends. `StringBuffer` is synchronized (thread-safe) but slower — use only in multi-threaded contexts.",
+      "**Essential String Methods:** `charAt()`, `substring()`, `indexOf()`, `lastIndexOf()`, `contains()`, `startsWith()`, `endsWith()`, `replace()`, `replaceAll()` (regex), `split()` (regex), `trim()`, `strip()` (Java 11, Unicode-aware), `toUpperCase()`, `toLowerCase()`, `toCharArray()`, `compareTo()` (lexicographic), `isEmpty()`, `isBlank()` (Java 11).",
+      "**CP Tips:** For heavy string manipulation, always use `StringBuilder`. For character frequency counting, use an `int[26]` array (faster than HashMap). `String.toCharArray()` is handy for sorting characters. `compareTo()` returns negative/zero/positive for lexicographic comparison."
     ],
     code: [
       {
