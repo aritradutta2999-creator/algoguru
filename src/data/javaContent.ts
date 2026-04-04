@@ -569,8 +569,11 @@ public class InputDemo {
     title: "Type Casting & Conversion",
     difficulty: "Easy",
     theory: [
-      "Type casting converts a value from one type to another. **Widening** (implicit): smaller → larger, no data loss. **Narrowing** (explicit): larger → smaller, possible data loss.",
-      "Widening path: byte → short → int → long → float → double."
+      "Type casting converts a value from one type to another. Java distinguishes between **widening** (safe, automatic) and **narrowing** (potentially lossy, requires explicit cast).",
+      "**Widening (Implicit) Conversions:** Smaller types are automatically promoted to larger types without data loss. The widening path is: `byte → short → int → long → float → double`. Note: `int → float` and `long → double` may lose **precision** (not magnitude) because floats have only ~7 significant digits.",
+      "**Narrowing (Explicit) Conversions:** Larger types must be explicitly cast to smaller types using `(type)` syntax. This can cause **data loss** — truncation for decimals (`(int)3.99 = 3`), and **overflow** for integers (`(byte)256 = 0` because 256 wraps around).",
+      "**Object Type Casting:** For objects, you can **upcast** (child → parent) implicitly and **downcast** (parent → child) explicitly. Downcasting can throw `ClassCastException` at runtime if the object isn't actually an instance of the target type. Use `instanceof` to check safely before downcasting.",
+      "**Pattern Matching for instanceof (Java 16+):** Combines the type check and cast in one step: `if (obj instanceof String str)` — `str` is automatically cast and available in the block. This eliminates the separate cast line and reduces bugs."
     ],
     code: [
       {
