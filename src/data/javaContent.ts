@@ -2217,4 +2217,5 @@ export const javaContentMap: Record<string, ContentSection[]> = {
   "java-multithreading": javaMultithreadingContent,
   "java-io": javaIOContent,
   "java-advanced": javaAdvancedContent,
+  "java-jdbc": javaJDBCContent,
 };
