@@ -6,16 +6,16 @@ export const javaCollectionsContent: ContentSection[] = [
     title: "Collections Overview & Hierarchy",
     difficulty: "Easy",
     theory: [
-      "The **Collections Framework** is a unified architecture for representing and manipulating groups of objects in Java",
-      "It provides **interfaces**, **implementations**, and **algorithms** — all packaged in `java.util`",
-      "The root interface is **Collection<E>** which extends **Iterable<E>**",
-      "**Hierarchy:** Collection → List (ordered, duplicates allowed), Set (no duplicates), Queue (FIFO order)",
-      "**Map<K,V>** is separate — it does NOT extend Collection, but is part of the framework",
-      "**Why use Collections?** Arrays have fixed size, no built-in search/sort. Collections are dynamic, type-safe with generics, and come with powerful utility methods",
-      "**Key interfaces:** List (ArrayList, LinkedList), Set (HashSet, TreeSet), Queue (PriorityQueue, ArrayDeque), Map (HashMap, TreeMap)",
-      "All collections store **references** (objects), not primitives. Use wrapper classes (Integer, Double, etc.) for primitives",
-      "**Fail-fast iterators:** Most collections throw `ConcurrentModificationException` if modified during iteration (except via iterator's own methods)",
-      "**Fail-safe iterators:** Concurrent collections (ConcurrentHashMap, CopyOnWriteArrayList) allow modification during iteration"
+      "The **Java Collections Framework (JCF)** is a unified architecture introduced in Java 2 for representing and manipulating groups of objects. It provides **interfaces** (abstract data types), **implementations** (concrete data structures), and **algorithms** (sorting, searching, shuffling) — all in `java.util`.",
+      "**Why Collections over Arrays?** Arrays have fixed size (can't grow/shrink), no built-in search/sort/insert/delete, no type-safe generics before Java 5, and no utility methods. Collections are **dynamic**, **type-safe with generics**, and come with powerful built-in algorithms.",
+      "The root interface is **Iterable<E>** (enables for-each loops) → **Collection<E>** (basic operations: add, remove, contains, size) → three main sub-interfaces:",
+      "**List<E>** — Ordered (maintains insertion order), indexed (0-based random access), allows duplicates. Implementations: ArrayList (dynamic array), LinkedList (doubly-linked list), Vector (legacy, synchronized).",
+      "**Set<E>** — No duplicates allowed, uses `equals()` and `hashCode()` for uniqueness. Implementations: HashSet (O(1) lookup, unordered), LinkedHashSet (insertion order), TreeSet (sorted, Red-Black Tree).",
+      "**Queue<E>** — FIFO ordering (or priority-based). Implementations: PriorityQueue (min-heap), ArrayDeque (resizable circular array — fastest stack/queue), LinkedList (also implements Deque).",
+      "**Map<K,V>** — Separate hierarchy (does NOT extend Collection). Stores key-value pairs with unique keys. Implementations: HashMap (O(1) lookup, unordered), LinkedHashMap (insertion/access order), TreeMap (sorted keys, Red-Black Tree).",
+      "**Generics & Type Safety:** All collections are generic — `List<String>` ensures only String objects can be added. Without generics (raw types), you'd need unsafe casting: `String s = (String) list.get(0)`. Always specify the type parameter.",
+      "**Fail-fast vs Fail-safe Iterators:** Standard collections (ArrayList, HashMap) use **fail-fast** iterators that throw `ConcurrentModificationException` if the collection is modified during iteration (except via the iterator's own `remove()`). Concurrent collections (ConcurrentHashMap, CopyOnWriteArrayList) use **fail-safe** iterators that work on a snapshot.",
+      "**Choosing the Right Collection:** This is a critical skill. Consider: Do you need ordering? Uniqueness? Key-value mapping? Random access? Sorted iteration? Thread safety? The answer determines which collection to use."
     ],
     diagram: {
       type: "hierarchy",
