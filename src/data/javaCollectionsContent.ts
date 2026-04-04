@@ -159,16 +159,15 @@ public class CollectionMethods {
     title: "ArrayList & LinkedList",
     difficulty: "Easy",
     theory: [
-      "**ArrayList** is backed by a **dynamic array** — fast random access O(1), slow insert/delete in middle O(n)",
-      "**LinkedList** is a **doubly-linked list** — fast insert/delete at ends O(1), slow random access O(n)",
-      "Both implement **List<E>** interface, so they share the same API",
-      "**ArrayList default capacity** is 10. When full, it grows by ~50% (creates a new larger array and copies elements)",
-      "**LinkedList** also implements **Deque**, so it can be used as a stack or queue",
-      "**When to use ArrayList:** Most of the time! Random access, iteration, and appending at end are all fast",
-      "**When to use LinkedList:** Frequent insertions/deletions at the beginning or middle, or when you need Deque functionality",
-      "**Memory:** ArrayList uses ~40% less memory — LinkedList stores two extra pointers (prev, next) per node plus object overhead",
-      "**Cache locality:** ArrayList elements are contiguous in memory → CPU cache-friendly → faster iteration",
-      "In competitive programming, **ArrayList** is almost always preferred over LinkedList"
+      "**ArrayList** is backed by a **dynamic array** (internally an `Object[]`). It provides O(1) amortized random access via index and O(1) amortized append. Insert/delete in the middle is O(n) because elements must be shifted.",
+      "**ArrayList Internals:** Default initial capacity is **10**. When the array is full, it grows by **50%** (new capacity = old × 1.5). Growth involves creating a new larger array and copying all elements via `Arrays.copyOf()` — an O(n) operation. Pre-sizing with `new ArrayList<>(expectedSize)` avoids repeated resizing.",
+      "**LinkedList** is a **doubly-linked list** — each node stores the element plus pointers to the previous and next nodes. Insert/delete at either end is O(1), but random access by index is O(n) because you must traverse from head or tail.",
+      "**LinkedList** also implements **Deque<E>** (double-ended queue), so it can function as a stack (`push`/`pop`) or queue (`offer`/`poll`). However, **ArrayDeque** is faster for both use cases due to better cache locality.",
+      "**Memory comparison:** ArrayList uses ~40% less memory than LinkedList. Each LinkedList node has ~40 bytes of overhead (two pointers + object header), while ArrayList stores only the element references contiguously. This also means ArrayList has better **CPU cache locality** — sequential elements are adjacent in memory, making iteration significantly faster.",
+      "**When to use ArrayList (almost always):** Random access by index, iteration, appending at the end, sorting, binary search. ArrayList is the **default choice** in 95%+ of cases.",
+      "**When to use LinkedList (rarely):** Frequent insertion/deletion at the beginning (ArrayList would shift all elements), implementing a queue/deque (though ArrayDeque is usually better), or when you need a node-based structure for algorithmic reasons.",
+      "**Important Gotchas:** `Arrays.asList()` returns a fixed-size list backed by the array — you can modify elements but cannot add/remove. Use `new ArrayList<>(Arrays.asList(...))` for a mutable copy. `List.of()` (Java 9+) returns an **immutable** list. `subList()` returns a **view**, not a copy — modifications to the sublist affect the original.",
+      "**Thread Safety:** Neither ArrayList nor LinkedList is thread-safe. Use `Collections.synchronizedList()` for simple thread safety, or `CopyOnWriteArrayList` for concurrent read-heavy workloads."
     ],
     code: [
       {
