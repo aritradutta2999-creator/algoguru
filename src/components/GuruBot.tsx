@@ -180,17 +180,12 @@ export function GuruBot({ open, onClose }: GuroBotProps) {
 
   return (
     <div
-      className="relative flex flex-col border-l flex-shrink-0 h-screen sticky top-0"
+      className="flex flex-col h-full border-l"
       style={{
-        width,
-        minWidth: MIN_WIDTH,
-        maxWidth: MAX_WIDTH,
         background: "hsl(var(--background))",
         borderColor: "hsl(var(--border))",
       }}
     >
-      {/* Resize handle on the left edge */}
-      <ResizeHandle onDrag={handleResize} />
 
       {/* Header */}
       <div
