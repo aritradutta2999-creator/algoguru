@@ -6,13 +6,13 @@ export const javaStreamsContent: ContentSection[] = [
     title: "Lambda Expressions",
     difficulty: "Easy",
     theory: [
-      "A **lambda expression** is an anonymous function — a short block of code that takes parameters and returns a value",
-      "Syntax: `(parameters) -> expression` or `(parameters) -> { statements; }`",
-      "Lambdas can only be used where a **functional interface** (single abstract method) is expected",
-      "If there's one parameter, parentheses are optional: `x -> x * 2`",
-      "If the body is a single expression, braces and return are optional: `(a, b) -> a + b`",
-      "Lambdas can capture **effectively final** variables from the enclosing scope",
-      "They replaced verbose anonymous inner classes for simple callbacks and event handlers"
+      "A **lambda expression** is an anonymous function — a concise way to represent a single-method interface implementation. Introduced in Java 8, lambdas are the foundation of functional programming in Java.",
+      "**Syntax:** `(parameters) -> expression` for single expressions, or `(parameters) -> { statements; }` for multi-line bodies. If there's exactly one parameter and its type is inferred, parentheses are optional: `x -> x * 2`.",
+      "**How Lambdas Work Internally:** Lambdas are NOT anonymous inner classes. The compiler generates a private static method and uses `invokedynamic` bytecode instruction to create the functional interface instance at runtime. This makes lambdas **more efficient** than anonymous classes — no extra `.class` file, no object allocation overhead.",
+      "**Variable Capture:** Lambdas can access variables from their enclosing scope, but those variables must be **effectively final** (assigned only once). This restriction ensures thread-safety — since lambdas may execute in different threads, mutable captured variables would create race conditions.",
+      "**`this` in Lambdas:** Unlike anonymous inner classes, `this` inside a lambda refers to the **enclosing class instance**, not the lambda itself. This is because lambdas don't create a new scope — they're syntactic sugar within the enclosing method.",
+      "**Common Functional Patterns:** Lambdas replaced verbose anonymous inner classes for: event handlers (`button.onClick(e -> handleClick(e))`), comparators (`list.sort((a, b) -> a.compareTo(b))`), callbacks, strategy pattern implementations, and stream operations.",
+      "**Type Inference:** The compiler infers lambda parameter types from the **target type** (the functional interface). You rarely need to specify types: `(String a, String b) -> a.compareTo(b)` can be simplified to `(a, b) -> a.compareTo(b)`."
     ],
     code: [
       {
@@ -176,14 +176,14 @@ public class MethodRefDemo {
     title: "Stream API Introduction",
     difficulty: "Medium",
     theory: [
-      "A **Stream** is a sequence of elements that supports **functional-style operations** for processing data",
-      "Streams do **NOT store data** — they process elements from a source (collection, array, generator)",
-      "Streams are **lazy** — intermediate operations are not executed until a terminal operation is called",
-      "Streams are **one-use** — once consumed by a terminal operation, they cannot be reused",
-      "**Pipeline:** Source → Intermediate Operations → Terminal Operation",
-      "Intermediate ops return a new Stream (chainable): filter, map, sorted, distinct, limit, skip",
-      "Terminal ops produce a result or side-effect: collect, forEach, reduce, count, findFirst, anyMatch",
-      "Streams promote **declarative** code — describe WHAT, not HOW"
+      "The **Stream API** (Java 8) is a declarative, functional-style abstraction for processing sequences of elements. It lets you express complex data transformations as a pipeline of operations — filter, transform, aggregate — without manual loops or temporary variables.",
+      "**Streams vs Collections:** Collections are about **storing** data (data structures). Streams are about **processing** data (computation pipelines). A collection is an in-memory data structure that holds all its elements. A stream is a sequence of elements computed on demand — it doesn't store anything.",
+      "**Streams are LAZY:** Intermediate operations (filter, map, sorted) are not executed until a **terminal operation** (collect, forEach, reduce) triggers the pipeline. This enables powerful optimizations — for example, `stream.filter(...).findFirst()` stops as soon as the first match is found, without processing the entire collection.",
+      "**Streams are ONE-USE:** Once a terminal operation is called, the stream is consumed and cannot be reused. Attempting to reuse throws `IllegalStateException`. Create a new stream from the source each time.",
+      "**Pipeline Architecture:** Source (collection, array, generator, file) → Zero or more **intermediate operations** (return new Stream, chainable, lazy) → One **terminal operation** (triggers computation, produces result or side-effect).",
+      "**Internal Iteration:** Unlike external iteration (for-each loops where YOU control iteration), streams use **internal iteration** — the library handles iteration, enabling parallel execution, short-circuiting, and optimization transparently.",
+      "**Primitive Streams:** `IntStream`, `LongStream`, `DoubleStream` avoid autoboxing overhead. Use `mapToInt()`, `mapToLong()`, `mapToDouble()` to convert. They provide sum(), average(), min(), max() directly.",
+      "**Streams promote DECLARATIVE code:** Instead of 'create list, loop through items, check condition, add to new list' (imperative), you write 'filter matching items and collect' (declarative). This is more readable, less error-prone, and easier to parallelize."
     ],
     diagram: {
       type: "flow",

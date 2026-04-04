@@ -6,16 +6,16 @@ export const javaCollectionsContent: ContentSection[] = [
     title: "Collections Overview & Hierarchy",
     difficulty: "Easy",
     theory: [
-      "The **Collections Framework** is a unified architecture for representing and manipulating groups of objects in Java",
-      "It provides **interfaces**, **implementations**, and **algorithms** — all packaged in `java.util`",
-      "The root interface is **Collection<E>** which extends **Iterable<E>**",
-      "**Hierarchy:** Collection → List (ordered, duplicates allowed), Set (no duplicates), Queue (FIFO order)",
-      "**Map<K,V>** is separate — it does NOT extend Collection, but is part of the framework",
-      "**Why use Collections?** Arrays have fixed size, no built-in search/sort. Collections are dynamic, type-safe with generics, and come with powerful utility methods",
-      "**Key interfaces:** List (ArrayList, LinkedList), Set (HashSet, TreeSet), Queue (PriorityQueue, ArrayDeque), Map (HashMap, TreeMap)",
-      "All collections store **references** (objects), not primitives. Use wrapper classes (Integer, Double, etc.) for primitives",
-      "**Fail-fast iterators:** Most collections throw `ConcurrentModificationException` if modified during iteration (except via iterator's own methods)",
-      "**Fail-safe iterators:** Concurrent collections (ConcurrentHashMap, CopyOnWriteArrayList) allow modification during iteration"
+      "The **Java Collections Framework (JCF)** is a unified architecture introduced in Java 2 for representing and manipulating groups of objects. It provides **interfaces** (abstract data types), **implementations** (concrete data structures), and **algorithms** (sorting, searching, shuffling) — all in `java.util`.",
+      "**Why Collections over Arrays?** Arrays have fixed size (can't grow/shrink), no built-in search/sort/insert/delete, no type-safe generics before Java 5, and no utility methods. Collections are **dynamic**, **type-safe with generics**, and come with powerful built-in algorithms.",
+      "The root interface is **Iterable<E>** (enables for-each loops) → **Collection<E>** (basic operations: add, remove, contains, size) → three main sub-interfaces:",
+      "**List<E>** — Ordered (maintains insertion order), indexed (0-based random access), allows duplicates. Implementations: ArrayList (dynamic array), LinkedList (doubly-linked list), Vector (legacy, synchronized).",
+      "**Set<E>** — No duplicates allowed, uses `equals()` and `hashCode()` for uniqueness. Implementations: HashSet (O(1) lookup, unordered), LinkedHashSet (insertion order), TreeSet (sorted, Red-Black Tree).",
+      "**Queue<E>** — FIFO ordering (or priority-based). Implementations: PriorityQueue (min-heap), ArrayDeque (resizable circular array — fastest stack/queue), LinkedList (also implements Deque).",
+      "**Map<K,V>** — Separate hierarchy (does NOT extend Collection). Stores key-value pairs with unique keys. Implementations: HashMap (O(1) lookup, unordered), LinkedHashMap (insertion/access order), TreeMap (sorted keys, Red-Black Tree).",
+      "**Generics & Type Safety:** All collections are generic — `List<String>` ensures only String objects can be added. Without generics (raw types), you'd need unsafe casting: `String s = (String) list.get(0)`. Always specify the type parameter.",
+      "**Fail-fast vs Fail-safe Iterators:** Standard collections (ArrayList, HashMap) use **fail-fast** iterators that throw `ConcurrentModificationException` if the collection is modified during iteration (except via the iterator's own `remove()`). Concurrent collections (ConcurrentHashMap, CopyOnWriteArrayList) use **fail-safe** iterators that work on a snapshot.",
+      "**Choosing the Right Collection:** This is a critical skill. Consider: Do you need ordering? Uniqueness? Key-value mapping? Random access? Sorted iteration? Thread safety? The answer determines which collection to use."
     ],
     diagram: {
       type: "hierarchy",
@@ -159,16 +159,15 @@ public class CollectionMethods {
     title: "ArrayList & LinkedList",
     difficulty: "Easy",
     theory: [
-      "**ArrayList** is backed by a **dynamic array** — fast random access O(1), slow insert/delete in middle O(n)",
-      "**LinkedList** is a **doubly-linked list** — fast insert/delete at ends O(1), slow random access O(n)",
-      "Both implement **List<E>** interface, so they share the same API",
-      "**ArrayList default capacity** is 10. When full, it grows by ~50% (creates a new larger array and copies elements)",
-      "**LinkedList** also implements **Deque**, so it can be used as a stack or queue",
-      "**When to use ArrayList:** Most of the time! Random access, iteration, and appending at end are all fast",
-      "**When to use LinkedList:** Frequent insertions/deletions at the beginning or middle, or when you need Deque functionality",
-      "**Memory:** ArrayList uses ~40% less memory — LinkedList stores two extra pointers (prev, next) per node plus object overhead",
-      "**Cache locality:** ArrayList elements are contiguous in memory → CPU cache-friendly → faster iteration",
-      "In competitive programming, **ArrayList** is almost always preferred over LinkedList"
+      "**ArrayList** is backed by a **dynamic array** (internally an `Object[]`). It provides O(1) amortized random access via index and O(1) amortized append. Insert/delete in the middle is O(n) because elements must be shifted.",
+      "**ArrayList Internals:** Default initial capacity is **10**. When the array is full, it grows by **50%** (new capacity = old × 1.5). Growth involves creating a new larger array and copying all elements via `Arrays.copyOf()` — an O(n) operation. Pre-sizing with `new ArrayList<>(expectedSize)` avoids repeated resizing.",
+      "**LinkedList** is a **doubly-linked list** — each node stores the element plus pointers to the previous and next nodes. Insert/delete at either end is O(1), but random access by index is O(n) because you must traverse from head or tail.",
+      "**LinkedList** also implements **Deque<E>** (double-ended queue), so it can function as a stack (`push`/`pop`) or queue (`offer`/`poll`). However, **ArrayDeque** is faster for both use cases due to better cache locality.",
+      "**Memory comparison:** ArrayList uses ~40% less memory than LinkedList. Each LinkedList node has ~40 bytes of overhead (two pointers + object header), while ArrayList stores only the element references contiguously. This also means ArrayList has better **CPU cache locality** — sequential elements are adjacent in memory, making iteration significantly faster.",
+      "**When to use ArrayList (almost always):** Random access by index, iteration, appending at the end, sorting, binary search. ArrayList is the **default choice** in 95%+ of cases.",
+      "**When to use LinkedList (rarely):** Frequent insertion/deletion at the beginning (ArrayList would shift all elements), implementing a queue/deque (though ArrayDeque is usually better), or when you need a node-based structure for algorithmic reasons.",
+      "**Important Gotchas:** `Arrays.asList()` returns a fixed-size list backed by the array — you can modify elements but cannot add/remove. Use `new ArrayList<>(Arrays.asList(...))` for a mutable copy. `List.of()` (Java 9+) returns an **immutable** list. `subList()` returns a **view**, not a copy — modifications to the sublist affect the original.",
+      "**Thread Safety:** Neither ArrayList nor LinkedList is thread-safe. Use `Collections.synchronizedList()` for simple thread safety, or `CopyOnWriteArrayList` for concurrent read-heavy workloads."
     ],
     code: [
       {
@@ -474,16 +473,15 @@ public class EnumSetDemo {
     title: "HashMap, LinkedHashMap & TreeMap",
     difficulty: "Medium",
     theory: [
-      "**Map<K, V>** stores **key-value pairs** — each key is unique, values can repeat",
-      "**HashMap** — O(1) get/put, unordered, allows one null key and multiple null values",
-      "**LinkedHashMap** — maintains **insertion order** (or access order if configured)",
-      "**TreeMap** — sorted by keys (natural order or custom Comparator), O(log n) operations",
-      "HashMap uses **hashing** — key.hashCode() determines the bucket, equals() resolves collisions",
-      "**Load factor** (default 0.75) — when 75% full, HashMap doubles its capacity and rehashes",
-      "**Collision handling:** Java 8+ uses linked list for ≤8 collisions, converts to **Red-Black Tree** for >8",
-      "**getOrDefault**, **putIfAbsent**, **compute**, **merge** are powerful Java 8+ methods",
-      "**LinkedHashMap with access order** can be used to implement an **LRU Cache** — override `removeEldestEntry()`",
-      "**TreeMap** implements **NavigableMap** — supports `floorKey`, `ceilingKey`, `subMap`, `headMap`, `tailMap`"
+      "**Map<K, V>** stores **key-value pairs** where each key is unique. It's the most-used data structure in real-world Java applications — used for caching, indexing, configuration, frequency counting, and much more.",
+      "**HashMap** — The workhorse. O(1) average-case for `get()`/`put()`/`remove()`. Backed by an array of buckets with linked lists (or Red-Black Trees for long chains). Unordered — iteration order is unpredictable. Allows **one null key** and multiple null values.",
+      "**HashMap Internal Mechanics:** When you call `map.put(key, value)`: (1) Compute `key.hashCode()`, (2) Apply perturbation: `h ^ (h >>> 16)` to spread bits, (3) Find bucket: `hash & (capacity - 1)`, (4) If bucket empty → insert. If occupied → traverse chain, check `equals()`, update or append. Default capacity is 16, load factor is 0.75 → rehash (double capacity, re-bucket all entries) when size exceeds `capacity × loadFactor`.",
+      "**LinkedHashMap** — Extends HashMap, adds a **doubly-linked list** through all entries to maintain **insertion order** (default) or **access order** (if constructed with `accessOrder=true`). Slightly slower than HashMap due to linked list maintenance. With access order and `removeEldestEntry()` override, it becomes a perfect **LRU Cache** implementation.",
+      "**TreeMap** — Backed by a **Red-Black Tree** (self-balancing BST). All operations are O(log n). Keys are stored in **sorted order** (natural ordering via Comparable, or custom Comparator). Does NOT allow null keys. Implements **NavigableMap** with powerful navigation: `floorKey()`, `ceilingKey()`, `subMap()`, `headMap()`, `tailMap()`.",
+      "**Java 8+ Map Methods:** `getOrDefault(key, default)` — avoids null checks. `putIfAbsent(key, value)` — insert only if key is absent. `compute(key, remappingFunction)` — compute new value based on key and existing value. `merge(key, value, remappingFunction)` — elegantly handles frequency counting: `map.merge(key, 1, Integer::sum)`. `replaceAll()` — transform all values in-place.",
+      "**HashMap vs TreeMap vs LinkedHashMap:** Need fastest lookup? → HashMap. Need sorted keys? → TreeMap. Need insertion order? → LinkedHashMap. Need thread safety? → ConcurrentHashMap.",
+      "**Performance Tip:** If you know the number of entries upfront, pre-size the HashMap: `new HashMap<>((int)(expectedSize / 0.75f) + 1)`. This avoids costly rehashing operations.",
+      "**Common Pitfall:** Never use **mutable objects** as HashMap keys. If a key's `hashCode()` changes after insertion, the entry becomes unreachable — effectively a memory leak. Use String, Integer, or other immutable types as keys."
     ],
     code: [
       {

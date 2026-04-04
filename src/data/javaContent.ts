@@ -5,6 +5,7 @@ import { javaStreamsContent } from "./javaStreamsContent";
 import { javaMultithreadingContent } from "./javaMultithreadingContent";
 import { javaIOContent } from "./javaIOContent";
 import { javaAdvancedContent } from "./javaAdvancedContent";
+import { javaJDBCContent } from "./javaJDBCContent";
 
 // Java Fundamentals content
 export const javaBasicsContent: ContentSection[] = [
@@ -620,15 +621,15 @@ export const javaOOPContent: ContentSection[] = [
     title: "Classes & Objects",
     difficulty: "Easy",
     theory: [
-      "A **class** is a blueprint/template that defines the structure (fields) and behavior (methods) of objects",
-      "An **object** is a concrete instance of a class — it occupies memory on the **heap**",
-      "A class can contain: **fields** (instance variables), **methods**, **constructors**, **nested classes**, and **static members**",
-      "When you write `Student s = new Student()`, three things happen: memory is allocated on the heap, the constructor runs, and the reference is stored in `s` on the stack",
-      "The **reference variable** (like `s`) lives on the **stack** and points to the actual object on the **heap**",
-      "If two references point to the same object, modifying through one affects the other — they share the same memory",
-      "By default, `equals()` compares **references** (same as `==`). Override it along with `hashCode()` for meaningful content-based comparison",
-      "Every class implicitly extends **Object** — so every object has `toString()`, `equals()`, `hashCode()`, `getClass()`, `clone()`, etc.",
-      "The `toString()` method is called automatically when you print an object — always override it for readable output"
+      "A **class** is a blueprint/template that defines the structure (fields) and behavior (methods) of objects. Think of a class as a cookie cutter and objects as the cookies — the class defines the shape, each cookie is a unique instance.",
+      "An **object** is a concrete instance of a class — it occupies memory on the **heap**. Every object has three characteristics: **state** (fields/attributes), **behavior** (methods), and **identity** (unique memory address).",
+      "A class can contain: **fields** (instance variables), **methods**, **constructors**, **nested classes**, **static members**, and **initialization blocks**.",
+      "**Object Creation Process:** When you write `Student s = new Student()`, four things happen: (1) Memory is allocated on the heap for the object, (2) Instance variables are initialized to defaults (0, null, false), (3) The constructor body executes, (4) The reference is stored in `s` on the stack.",
+      "The **reference variable** (like `s`) lives on the **stack** and holds the memory address of the object on the **heap**. It is NOT the object itself — it's a pointer to the object.",
+      "If two references point to the same object (`Student s2 = s1`), modifying through one affects the other — they share the same memory. This is called **aliasing** and is a common source of bugs.",
+      "**The `equals()` and `hashCode()` Contract:** By default, `equals()` compares **references** (same as `==`). You MUST override both `equals()` and `hashCode()` together for meaningful comparison. The contract states: if `a.equals(b)` is true, then `a.hashCode() == b.hashCode()` must also be true. Violating this breaks HashMap, HashSet, and other hash-based collections.",
+      "Every class implicitly extends **java.lang.Object** — the root of all classes. Object provides: `toString()` (string representation), `equals()` (equality check), `hashCode()` (hash code for collections), `getClass()` (runtime type), `clone()` (shallow copy), `finalize()` (deprecated), and `wait()`/`notify()` (thread coordination).",
+      "**Pass-by-Value in Java:** Java is ALWAYS pass-by-value. For primitives, the value is copied. For objects, the **reference** (address) is copied — not the object. This means a method can modify an object's fields but cannot make the caller's reference point to a different object."
     ],
     diagram: {
       type: "table-visual",
@@ -849,16 +850,17 @@ export const javaOOPContent: ContentSection[] = [
     title: "Encapsulation & Access Modifiers",
     difficulty: "Medium",
     theory: [
-      "**Encapsulation** is the practice of bundling data (fields) and the methods that operate on that data into a single unit (class), and restricting direct access to the internals",
-      "This is the most fundamental OOP principle — it protects your data from invalid states",
-      "**Access Modifiers** control visibility of classes, fields, methods, and constructors:",
-      "**public** — accessible from anywhere, any package, any class",
-      "**private** — accessible only within the **same class**. Most fields should be private",
-      "**protected** — accessible within the same **package** AND in **subclasses** (even in different packages)",
-      "**default (no modifier)** — accessible only within the same **package** (package-private)",
-      "The standard pattern: make fields **private**, expose through **public getters/setters** with validation",
-      "**Immutable objects** — make fields `private final`, no setters, set values only in constructor. Examples: String, Integer, LocalDate",
-      "Encapsulation allows you to change internal implementation without affecting code that uses the class"
+      "**Encapsulation** is the most fundamental OOP principle — it bundles data (fields) and the methods that operate on that data into a single unit (class), and restricts direct access to the internals. It's the idea that an object should control how its state is accessed and modified.",
+      "**Why Encapsulation Matters:** Without it, any code anywhere can set `account.balance = -1000`, putting the object in an invalid state. With encapsulation, `deposit()` and `withdraw()` methods enforce rules (positive amounts, sufficient funds) before changing the balance.",
+      "**Access Modifiers** control visibility at four levels:",
+      "**public** — accessible from anywhere, any package, any class. Use for APIs and methods meant for external use.",
+      "**private** — accessible only within the **same class**. Most fields should be private. This is the default choice for data protection.",
+      "**protected** — accessible within the same **package** AND in **subclasses** (even in different packages). Use for members that subclasses need to access or override.",
+      "**default (no modifier, aka package-private)** — accessible only within the same **package**. This is Java's default if you specify no modifier. Useful for internal implementation classes.",
+      "**The JavaBean Pattern:** Make all fields **private**, provide **public getters** (read access) and **setters** (write access with validation). This is the standard encapsulation pattern used in almost all Java frameworks (Spring, Hibernate, Jackson).",
+      "**Immutable Objects:** Make fields `private final`, provide no setters, set values only in the constructor, and if fields reference mutable objects (List, Date), return **defensive copies** from getters. Examples: String, Integer, LocalDate, BigDecimal. Immutable objects are inherently **thread-safe**.",
+      "**Information Hiding:** Encapsulation enables you to change the internal implementation (e.g., switch from ArrayList to LinkedList) without affecting any code that uses the class — as long as the public API stays the same. This is crucial for maintainability in large codebases.",
+      "**Defensive Copying:** When a getter returns a mutable object (like a List or Date), return a copy instead of the original — otherwise external code can modify your internal state, breaking encapsulation. Example: `return new ArrayList<>(this.items);`"
     ],
     keyPoints: [
       "private fields + public getters/setters = encapsulation",
@@ -994,17 +996,16 @@ public final class Money {  // final — can't be subclassed
     title: "Inheritance & super Keyword",
     difficulty: "Medium",
     theory: [
-      "**Inheritance** allows a child class to acquire all fields and methods of a parent class using `extends`",
-      "It represents an **IS-A** relationship: Dog IS-A Animal, Car IS-A Vehicle",
-      "Java supports only **single inheritance** for classes — a class can extend only ONE parent",
-      "But a class can implement **multiple interfaces** — achieving a form of multiple inheritance",
-      "The **super** keyword refers to the parent class — used to: call parent constructor `super()`, call parent method `super.method()`",
-      "The first line of every constructor is either `this()` or `super()`. If you write neither, Java inserts `super()` automatically",
-      "**Method overriding:** the child provides its own version of a parent method with the **same signature**",
-      "Use `@Override` annotation — the compiler will catch mistakes like wrong method name or parameters",
-      "**final** classes cannot be extended. **final** methods cannot be overridden",
-      "**Inheritance hierarchy:** Object → Animal → Dog. Every class ultimately extends Object",
-      "Avoid deep inheritance chains (>3 levels) — prefer **composition** (HAS-A) over inheritance for flexibility"
+      "**Inheritance** is the mechanism by which a child class (subclass) acquires all non-private fields and methods of a parent class (superclass) using the `extends` keyword. It represents an **IS-A** relationship: Dog IS-A Animal, ElectricCar IS-A Car.",
+      "**Purpose:** Code reuse (write common logic once in the parent), establishing type hierarchies (polymorphism), and modeling real-world taxonomies.",
+      "Java supports only **single inheritance** for classes — a class can extend exactly ONE parent. This avoids the **Diamond Problem** (ambiguity when two parents have the same method). However, a class can implement **multiple interfaces**.",
+      "**The `super` keyword** refers to the parent class. Three uses: (1) Call parent constructor: `super(args)` — must be the FIRST line in the child constructor. (2) Call parent method: `super.method()` — useful when overriding but still need the parent's behavior. (3) Access parent field: `super.field` — when child has a field with the same name (shadowing).",
+      "**Constructor Chain:** Every constructor implicitly calls `super()` (parent's no-arg constructor) as its first statement if you don't explicitly call `this()` or `super(args)`. If the parent has no no-arg constructor, you MUST explicitly call `super(args)` — otherwise compile error.",
+      "**Method Overriding:** The child provides its own version of a parent method with the **exact same signature** (name + parameters). The `@Override` annotation is strongly recommended — the compiler will catch mistakes. Overriding rules: access modifier must be **same or wider** (e.g., protected → public OK, public → private NOT OK), return type must be **same or covariant** (subtype).",
+      "**What IS inherited:** public and protected members, default members (if in same package). **What is NOT inherited:** private members (they exist in the object but are not directly accessible), constructors (must be called via `super()`), and static methods (they are hidden, not overridden).",
+      "**`final` keyword in inheritance:** `final class` cannot be extended (e.g., String, Integer). `final method` cannot be overridden. `final variable` cannot be reassigned.",
+      "**Inheritance vs Composition:** Inheritance creates tight coupling — changes to the parent ripple to all children. **Composition** (HAS-A: Car HAS-A Engine) is more flexible, allows swapping implementations at runtime, and doesn't break when the composed class changes. **Rule of thumb:** 'Is B truly a type of A?' → inheritance. 'B uses A' → composition. When in doubt, prefer composition.",
+      "**Inheritance depth:** Avoid chains deeper than 3 levels. Deep hierarchies are hard to understand and maintain. The Java standard library itself rarely goes beyond 3 levels."
     ],
     keyPoints: [
       "super() must be the first statement in a constructor",
@@ -1138,16 +1139,15 @@ public class CompositionDemo {
     title: "Polymorphism (Overloading/Overriding)",
     difficulty: "Medium",
     theory: [
-      "**Polymorphism** means 'many forms' — the same method name behaves differently based on the context",
-      "**Compile-time polymorphism (Static)** → **Method Overloading**: same method name, different parameter lists in the SAME class",
-      "**Runtime polymorphism (Dynamic)** → **Method Overriding**: subclass provides its own implementation of a parent method",
-      "**Overloading rules:** methods must differ in number, type, or order of parameters. Return type alone is NOT enough",
-      "**Overriding rules:** same name, same parameters, same or covariant return type. Access can be **same or wider** (not narrower)",
-      "**Dynamic dispatch:** when you call a method on a parent reference pointing to a child object, the **child's version** runs",
-      "This is how Java achieves runtime polymorphism — the JVM determines the actual type at runtime",
-      "**Upcasting** (automatic): `Animal a = new Dog()` — safe, always works",
-      "**Downcasting** (manual): `Dog d = (Dog) animal` — risky, can throw ClassCastException. Use `instanceof` first",
-      "Java 16+ pattern matching: `if (obj instanceof Dog d)` — combines instanceof check and cast in one step"
+      "**Polymorphism** (Greek: 'many forms') is the ability of a single interface to represent different underlying types. It's what makes OOP truly powerful — you can write code that works with the parent type and automatically handles any child type correctly.",
+      "**Two types of polymorphism in Java:**",
+      "**1. Compile-time (Static) Polymorphism → Method Overloading:** Same method name, different parameter lists in the SAME class. The compiler decides which version to call based on the arguments at compile time. Overloading rules: methods must differ in number, type, or order of parameters. **Return type alone is NOT enough** to distinguish overloaded methods.",
+      "**2. Runtime (Dynamic) Polymorphism → Method Overriding:** A subclass provides its own implementation of a parent method with the exact same signature. The JVM decides which version to call at **runtime** based on the actual object type — this is called **dynamic dispatch** or **late binding**.",
+      "**How Dynamic Dispatch Works Internally:** The JVM maintains a **vtable** (virtual method table) for each class — a lookup table mapping method signatures to their implementations. When you call `animal.speak()`, the JVM checks the actual object's vtable at runtime to find the correct `speak()` method, not the reference type's.",
+      "**Upcasting** (child → parent reference): Always safe, automatic. `Animal a = new Dog()` — you can treat a Dog as an Animal. You lose access to Dog-specific methods but gain flexibility.",
+      "**Downcasting** (parent → child reference): Risky, requires explicit cast. `Dog d = (Dog) animal` — can throw `ClassCastException` if the object isn't actually a Dog. **Always check with `instanceof` first.**",
+      "**Pattern Matching (Java 16+):** `if (obj instanceof Dog d)` — combines the instanceof check and the cast in one step. The variable `d` is automatically cast and scoped to the block. This eliminates verbose casting boilerplate.",
+      "**Polymorphism in Practice:** Design methods to accept the **most general type** possible (e.g., `List<>` instead of `ArrayList<>`). This lets callers pass any implementation — ArrayList, LinkedList, etc. — making your code flexible and testable."
     ],
     code: [
       {
@@ -1273,18 +1273,16 @@ public class PolymorphismDemo {
     title: "Abstract Classes & Interfaces",
     difficulty: "Medium",
     theory: [
-      "**Abstraction** hides implementation details and shows only the essential features to the user",
-      "**Abstract class** — a class declared with `abstract` keyword. Cannot be instantiated directly",
-      "Abstract classes can have: abstract methods (no body), concrete methods (with body), fields, constructors",
-      "Any class with at least one abstract method MUST be declared abstract",
-      "A subclass MUST implement all abstract methods — or be declared abstract itself",
-      "**Interface** — a pure contract that defines WHAT a class must do, not HOW",
-      "Before Java 8: interfaces could only have abstract methods and constants (public static final)",
-      "Java 8+: interfaces can have **default methods** (with body) and **static methods**",
-      "Java 9+: interfaces can have **private methods** (helper methods for defaults)",
-      "**Key difference:** Abstract class = partial implementation + IS-A. Interface = capability/contract + CAN-DO",
-      "A class can extend only ONE abstract class but implement MANY interfaces",
-      "Use **abstract class** when: classes share common state (fields) and behavior. Use **interface** when: defining a capability that unrelated classes can implement"
+      "**Abstraction** is the process of hiding complex implementation details and exposing only the essential features. You interact with a TV via a remote (abstraction) without knowing the circuitry inside (implementation). In Java, abstraction is achieved through **abstract classes** and **interfaces**.",
+      "**Abstract Class** — declared with the `abstract` keyword. Cannot be instantiated with `new`. It serves as a **partial blueprint** — it can have both abstract methods (no body, subclasses MUST implement) and concrete methods (with body, shared behavior). It can also have fields, constructors, and static methods.",
+      "**When to use Abstract Classes:** When related classes share common **state** (fields) and **behavior** (methods). Example: `Vehicle` has fields `brand` and `year`, shared method `stop()`, but each subclass (Car, Bike) implements `start()` differently.",
+      "**Template Method Pattern:** A powerful design pattern enabled by abstract classes — define the algorithm skeleton in the abstract class with `final` methods (can't be overridden), and let subclasses fill in specific steps via abstract methods.",
+      "**Interface** — a **pure contract** that defines WHAT a class must do, not HOW. It represents a **capability** (CAN-DO relationship): Comparable means 'can be compared', Serializable means 'can be serialized', Runnable means 'can be run in a thread'.",
+      "**Interface Evolution:** Before Java 8: only abstract methods and constants (`public static final`). Java 8: added **default methods** (with body, for backward compatibility) and **static methods**. Java 9: added **private methods** (helper methods for default methods, reducing code duplication).",
+      "**Key Differences:** Abstract class: single inheritance, can have state (fields), constructors, any access modifier. Interface: multiple inheritance, no state (only constants), no constructors, methods are implicitly public. Abstract class = IS-A with shared code. Interface = CAN-DO capability.",
+      "A class can extend only **ONE** abstract class but implement **MANY** interfaces. This is how Java achieves a form of multiple inheritance without the diamond problem — if two interfaces have the same default method, the implementing class must override it to resolve the conflict.",
+      "**Sealed Classes (Java 17+):** A middle ground — `sealed class Shape permits Circle, Rectangle, Triangle` restricts which classes can extend it. This enables exhaustive pattern matching in switch expressions and provides better control over inheritance hierarchies.",
+      "**Interface vs Abstract Class Decision Tree:** Need shared state (fields)? → Abstract class. Need multiple inheritance? → Interface. Need constructors? → Abstract class. Defining a capability for unrelated classes? → Interface. Both? → Abstract class that implements an interface."
     ],
     keyPoints: [
       "Abstract class: single inheritance, can have state (fields), constructors",
@@ -2219,4 +2217,5 @@ export const javaContentMap: Record<string, ContentSection[]> = {
   "java-multithreading": javaMultithreadingContent,
   "java-io": javaIOContent,
   "java-advanced": javaAdvancedContent,
+  "java-jdbc": javaJDBCContent,
 };

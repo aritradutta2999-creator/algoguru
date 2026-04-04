@@ -145,6 +145,20 @@ export const javaTopics: Topic[] = [
     ],
   },
   {
+    id: "java-jdbc",
+    title: "JDBC & Database",
+    icon: "🗄️",
+    color: "info",
+    description: "Database connectivity, CRUD, transactions & DAO pattern",
+    subtopics: [
+      { id: "jdbc-intro", title: "JDBC Architecture & Drivers" },
+      { id: "jdbc-crud", title: "CRUD Operations with JDBC" },
+      { id: "jdbc-transactions", title: "Transactions & Error Handling" },
+      { id: "jdbc-dao", title: "DAO Pattern & Best Practices" },
+      { id: "jdbc-advanced", title: "Advanced JDBC — Metadata & Pooling" },
+    ],
+  },
+  {
     id: "java-advanced",
     title: "Advanced Java",
     icon: "🔥",
