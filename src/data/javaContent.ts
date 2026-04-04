@@ -5,6 +5,7 @@ import { javaStreamsContent } from "./javaStreamsContent";
 import { javaMultithreadingContent } from "./javaMultithreadingContent";
 import { javaIOContent } from "./javaIOContent";
 import { javaAdvancedContent } from "./javaAdvancedContent";
+import { javaJDBCContent } from "./javaJDBCContent";
 
 // Java Fundamentals content
 export const javaBasicsContent: ContentSection[] = [
