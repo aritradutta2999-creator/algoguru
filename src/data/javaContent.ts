@@ -101,11 +101,16 @@ export const javaBasicsContent: ContentSection[] = [
     title: "Variables & Data Types",
     difficulty: "Easy",
     theory: [
-      "Java is a **statically typed** language — every variable must be declared with a type before use. Java has **8 primitive types** and **reference types** (objects).",
-      "**Integer types:** byte (8-bit, -128 to 127), short (16-bit), int (32-bit, most common), long (64-bit, suffix L).",
-      "**Floating-point:** float (32-bit, suffix f), double (64-bit, default for decimals). **char** (16-bit Unicode). **boolean** (true/false).",
-      "**Reference types** include String, arrays, and all objects. Wrapper classes (Integer, Double, Boolean) provide object versions of primitives with autoboxing/unboxing.",
-      "**Variable scopes:** Instance variables (belong to object), static variables (belong to class), local variables (must be initialized before use), constants (final keyword)."
+      "Java is a **statically typed** language — every variable must be declared with a type before use. This means the compiler catches type mismatches at compile time rather than at runtime, making Java programs safer and more predictable.",
+      "**Primitive Types (8 total):** These are the building blocks of data in Java. They are stored directly on the **stack** (when local) and are NOT objects — they don't have methods or inherit from Object.",
+      "**Integer types:** `byte` (8-bit, -128 to 127, useful for raw binary data), `short` (16-bit, rarely used), `int` (32-bit, most common — range ±2.1 billion), `long` (64-bit, suffix `L`, for large numbers like timestamps or CP problems where values exceed 2×10⁹).",
+      "**Floating-point:** `float` (32-bit, ~7 decimal digits precision, suffix `f`), `double` (64-bit, ~15 decimal digits, default for decimal literals). **Important:** Floating-point arithmetic is **not exact** due to IEEE 754 representation — `0.1 + 0.2 ≠ 0.3` exactly. Use `BigDecimal` for financial calculations.",
+      "**char** (16-bit Unicode character, range 0-65535, supports international characters). **boolean** (true/false, not convertible to int unlike C/C++).",
+      "**Reference types** include String, arrays, and all objects. They are stored on the **heap** and variables hold a reference (pointer) to the object, not the object itself. This means assigning one reference variable to another makes both point to the **same object**.",
+      "**Wrapper classes** (Integer, Double, Boolean, etc.) provide object versions of primitives. **Autoboxing** automatically converts `int → Integer` and **unboxing** does the reverse. Wrappers are needed for generics (`List<Integer>` works, `List<int>` doesn't) and provide utility methods like `Integer.parseInt()`, `Integer.MAX_VALUE`.",
+      "**Type Inference with `var` (Java 10+):** The `var` keyword lets the compiler infer the type from the right-hand side. It reduces boilerplate but only works for local variables with initializers — not for fields, parameters, or return types.",
+      "**Variable scopes:** Instance variables (belong to object, have default values: 0/false/null), Static variables (belong to class, shared across all instances), Local variables (must be initialized before use, no default values), Constants (`final` keyword — immutable once assigned).",
+      "**Default Values:** Primitives get defaults only as instance/static fields: `int→0`, `double→0.0`, `boolean→false`, `char→'\\u0000'`. Reference types default to `null`. Local variables have **no defaults** — using them uninitialized causes a compile error."
     ],
     code: [
       {
