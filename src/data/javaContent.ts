@@ -995,17 +995,16 @@ public final class Money {  // final — can't be subclassed
     title: "Inheritance & super Keyword",
     difficulty: "Medium",
     theory: [
-      "**Inheritance** allows a child class to acquire all fields and methods of a parent class using `extends`",
-      "It represents an **IS-A** relationship: Dog IS-A Animal, Car IS-A Vehicle",
-      "Java supports only **single inheritance** for classes — a class can extend only ONE parent",
-      "But a class can implement **multiple interfaces** — achieving a form of multiple inheritance",
-      "The **super** keyword refers to the parent class — used to: call parent constructor `super()`, call parent method `super.method()`",
-      "The first line of every constructor is either `this()` or `super()`. If you write neither, Java inserts `super()` automatically",
-      "**Method overriding:** the child provides its own version of a parent method with the **same signature**",
-      "Use `@Override` annotation — the compiler will catch mistakes like wrong method name or parameters",
-      "**final** classes cannot be extended. **final** methods cannot be overridden",
-      "**Inheritance hierarchy:** Object → Animal → Dog. Every class ultimately extends Object",
-      "Avoid deep inheritance chains (>3 levels) — prefer **composition** (HAS-A) over inheritance for flexibility"
+      "**Inheritance** is the mechanism by which a child class (subclass) acquires all non-private fields and methods of a parent class (superclass) using the `extends` keyword. It represents an **IS-A** relationship: Dog IS-A Animal, ElectricCar IS-A Car.",
+      "**Purpose:** Code reuse (write common logic once in the parent), establishing type hierarchies (polymorphism), and modeling real-world taxonomies.",
+      "Java supports only **single inheritance** for classes — a class can extend exactly ONE parent. This avoids the **Diamond Problem** (ambiguity when two parents have the same method). However, a class can implement **multiple interfaces**.",
+      "**The `super` keyword** refers to the parent class. Three uses: (1) Call parent constructor: `super(args)` — must be the FIRST line in the child constructor. (2) Call parent method: `super.method()` — useful when overriding but still need the parent's behavior. (3) Access parent field: `super.field` — when child has a field with the same name (shadowing).",
+      "**Constructor Chain:** Every constructor implicitly calls `super()` (parent's no-arg constructor) as its first statement if you don't explicitly call `this()` or `super(args)`. If the parent has no no-arg constructor, you MUST explicitly call `super(args)` — otherwise compile error.",
+      "**Method Overriding:** The child provides its own version of a parent method with the **exact same signature** (name + parameters). The `@Override` annotation is strongly recommended — the compiler will catch mistakes. Overriding rules: access modifier must be **same or wider** (e.g., protected → public OK, public → private NOT OK), return type must be **same or covariant** (subtype).",
+      "**What IS inherited:** public and protected members, default members (if in same package). **What is NOT inherited:** private members (they exist in the object but are not directly accessible), constructors (must be called via `super()`), and static methods (they are hidden, not overridden).",
+      "**`final` keyword in inheritance:** `final class` cannot be extended (e.g., String, Integer). `final method` cannot be overridden. `final variable` cannot be reassigned.",
+      "**Inheritance vs Composition:** Inheritance creates tight coupling — changes to the parent ripple to all children. **Composition** (HAS-A: Car HAS-A Engine) is more flexible, allows swapping implementations at runtime, and doesn't break when the composed class changes. **Rule of thumb:** 'Is B truly a type of A?' → inheritance. 'B uses A' → composition. When in doubt, prefer composition.",
+      "**Inheritance depth:** Avoid chains deeper than 3 levels. Deep hierarchies are hard to understand and maintain. The Java standard library itself rarely goes beyond 3 levels."
     ],
     keyPoints: [
       "super() must be the first statement in a constructor",
