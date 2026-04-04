@@ -247,7 +247,11 @@ export const javaBasicsContent: ContentSection[] = [
     title: "Control Flow (if/else, switch)",
     difficulty: "Easy",
     theory: [
-      "Control flow statements determine execution order. Java supports **if-else**, **switch** (including enhanced switch expressions in Java 14+), and **ternary** operators."
+      "Control flow statements determine which code gets executed and when. Java supports **if-else**, **switch** (including enhanced switch expressions in Java 14+), and the **ternary** operator for conditional logic.",
+      "**if-else:** The most fundamental branching mechanism. Conditions are evaluated top-down — once a branch matches, the rest are skipped. Best practice: handle the most likely case first for readability, and always use braces `{}` even for single statements to prevent bugs.",
+      "**switch Statement:** More readable than chained if-else when comparing a single variable against multiple constant values. Works with `byte`, `short`, `int`, `char`, `String` (Java 7+), and `enum` types. **Fall-through:** without `break`, execution falls through to the next case — this is a common source of bugs.",
+      "**Switch Expressions (Java 14+):** A modern, safer alternative using `->` arrow syntax. No fall-through risk, can return values directly, and the compiler ensures all cases are covered (exhaustiveness check). Use `yield` for multi-line cases in switch expressions.",
+      "**Ternary Operator:** `condition ? valueIfTrue : valueIfFalse` — a compact inline conditional. Use for simple assignments; avoid nesting ternaries as they become unreadable."
     ],
     code: [
       {
