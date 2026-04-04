@@ -620,15 +620,15 @@ export const javaOOPContent: ContentSection[] = [
     title: "Classes & Objects",
     difficulty: "Easy",
     theory: [
-      "A **class** is a blueprint/template that defines the structure (fields) and behavior (methods) of objects",
-      "An **object** is a concrete instance of a class — it occupies memory on the **heap**",
-      "A class can contain: **fields** (instance variables), **methods**, **constructors**, **nested classes**, and **static members**",
-      "When you write `Student s = new Student()`, three things happen: memory is allocated on the heap, the constructor runs, and the reference is stored in `s` on the stack",
-      "The **reference variable** (like `s`) lives on the **stack** and points to the actual object on the **heap**",
-      "If two references point to the same object, modifying through one affects the other — they share the same memory",
-      "By default, `equals()` compares **references** (same as `==`). Override it along with `hashCode()` for meaningful content-based comparison",
-      "Every class implicitly extends **Object** — so every object has `toString()`, `equals()`, `hashCode()`, `getClass()`, `clone()`, etc.",
-      "The `toString()` method is called automatically when you print an object — always override it for readable output"
+      "A **class** is a blueprint/template that defines the structure (fields) and behavior (methods) of objects. Think of a class as a cookie cutter and objects as the cookies — the class defines the shape, each cookie is a unique instance.",
+      "An **object** is a concrete instance of a class — it occupies memory on the **heap**. Every object has three characteristics: **state** (fields/attributes), **behavior** (methods), and **identity** (unique memory address).",
+      "A class can contain: **fields** (instance variables), **methods**, **constructors**, **nested classes**, **static members**, and **initialization blocks**.",
+      "**Object Creation Process:** When you write `Student s = new Student()`, four things happen: (1) Memory is allocated on the heap for the object, (2) Instance variables are initialized to defaults (0, null, false), (3) The constructor body executes, (4) The reference is stored in `s` on the stack.",
+      "The **reference variable** (like `s`) lives on the **stack** and holds the memory address of the object on the **heap**. It is NOT the object itself — it's a pointer to the object.",
+      "If two references point to the same object (`Student s2 = s1`), modifying through one affects the other — they share the same memory. This is called **aliasing** and is a common source of bugs.",
+      "**The `equals()` and `hashCode()` Contract:** By default, `equals()` compares **references** (same as `==`). You MUST override both `equals()` and `hashCode()` together for meaningful comparison. The contract states: if `a.equals(b)` is true, then `a.hashCode() == b.hashCode()` must also be true. Violating this breaks HashMap, HashSet, and other hash-based collections.",
+      "Every class implicitly extends **java.lang.Object** — the root of all classes. Object provides: `toString()` (string representation), `equals()` (equality check), `hashCode()` (hash code for collections), `getClass()` (runtime type), `clone()` (shallow copy), `finalize()` (deprecated), and `wait()`/`notify()` (thread coordination).",
+      "**Pass-by-Value in Java:** Java is ALWAYS pass-by-value. For primitives, the value is copied. For objects, the **reference** (address) is copied — not the object. This means a method can modify an object's fields but cannot make the caller's reference point to a different object."
     ],
     diagram: {
       type: "table-visual",
