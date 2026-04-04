@@ -315,7 +315,13 @@ export const javaBasicsContent: ContentSection[] = [
     title: "Loops (for, while, do-while)",
     difficulty: "Easy",
     theory: [
-      "Java supports **for**, **enhanced for-each**, **while**, and **do-while** loops, along with **break**, **continue**, and **labeled** loop control."
+      "Loops allow you to execute a block of code repeatedly. Choosing the right loop type and understanding loop mechanics is fundamental to programming efficiency.",
+      "**for loop:** Best when the number of iterations is known. Consists of three parts: initialization, condition, and update — all in one line. The loop variable's scope is limited to the loop block.",
+      "**Enhanced for-each (Java 5+):** Simplified syntax for iterating over arrays and `Iterable` collections. You cannot modify the collection during iteration, and you don't have access to the index — use a regular for loop if you need the index.",
+      "**while loop:** Best when the number of iterations is unknown and depends on a condition. The condition is checked **before** each iteration — if initially false, the body never executes.",
+      "**do-while loop:** Similar to while, but the body executes **at least once** because the condition is checked **after** each iteration. Useful for menu-driven programs or input validation.",
+      "**Loop Control:** `break` exits the loop entirely, `continue` skips to the next iteration. **Labeled break/continue** allows controlling outer loops from inner loops — invaluable for nested loop problems in CP.",
+      "**Performance Tips:** Avoid calling methods in the loop condition (e.g., `i < list.size()` — cache the size). Prefer `for` over `while` when possible for clearer scope. In CP, watch out for **infinite loops** — always ensure the loop variable converges toward the termination condition."
     ],
     code: [
       {
