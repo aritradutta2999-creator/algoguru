@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Send, Trash2, Copy, Check, PanelRightClose, Sparkles } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 
