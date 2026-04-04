@@ -398,11 +398,24 @@ function AppLayout({ children }: { children: React.ReactNode }) {
             </button>
           </header>
 
-          <main className="flex-1 overflow-y-auto">
-            {children}
-          </main>
+          {guruOpen ? (
+            <ResizablePanelGroup direction="horizontal" className="flex-1 min-h-0">
+              <ResizablePanel defaultSize={70} minSize={40}>
+                <main className="h-full overflow-y-auto">
+                  {children}
+                </main>
+              </ResizablePanel>
+              <ResizableHandle withHandle />
+              <ResizablePanel defaultSize={30} minSize={20} maxSize={45}>
+                <GuruBot open={guruOpen} onClose={() => setGuruOpen(false)} />
+              </ResizablePanel>
+            </ResizablePanelGroup>
+          ) : (
+            <main className="flex-1 overflow-y-auto">
+              {children}
+            </main>
+          )}
         </div>
-        <GuruBot open={guruOpen} onClose={() => setGuruOpen(false)} />
       </div>
     </SidebarProvider>
   );
