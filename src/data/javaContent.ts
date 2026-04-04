@@ -1138,16 +1138,15 @@ public class CompositionDemo {
     title: "Polymorphism (Overloading/Overriding)",
     difficulty: "Medium",
     theory: [
-      "**Polymorphism** means 'many forms' — the same method name behaves differently based on the context",
-      "**Compile-time polymorphism (Static)** → **Method Overloading**: same method name, different parameter lists in the SAME class",
-      "**Runtime polymorphism (Dynamic)** → **Method Overriding**: subclass provides its own implementation of a parent method",
-      "**Overloading rules:** methods must differ in number, type, or order of parameters. Return type alone is NOT enough",
-      "**Overriding rules:** same name, same parameters, same or covariant return type. Access can be **same or wider** (not narrower)",
-      "**Dynamic dispatch:** when you call a method on a parent reference pointing to a child object, the **child's version** runs",
-      "This is how Java achieves runtime polymorphism — the JVM determines the actual type at runtime",
-      "**Upcasting** (automatic): `Animal a = new Dog()` — safe, always works",
-      "**Downcasting** (manual): `Dog d = (Dog) animal` — risky, can throw ClassCastException. Use `instanceof` first",
-      "Java 16+ pattern matching: `if (obj instanceof Dog d)` — combines instanceof check and cast in one step"
+      "**Polymorphism** (Greek: 'many forms') is the ability of a single interface to represent different underlying types. It's what makes OOP truly powerful — you can write code that works with the parent type and automatically handles any child type correctly.",
+      "**Two types of polymorphism in Java:**",
+      "**1. Compile-time (Static) Polymorphism → Method Overloading:** Same method name, different parameter lists in the SAME class. The compiler decides which version to call based on the arguments at compile time. Overloading rules: methods must differ in number, type, or order of parameters. **Return type alone is NOT enough** to distinguish overloaded methods.",
+      "**2. Runtime (Dynamic) Polymorphism → Method Overriding:** A subclass provides its own implementation of a parent method with the exact same signature. The JVM decides which version to call at **runtime** based on the actual object type — this is called **dynamic dispatch** or **late binding**.",
+      "**How Dynamic Dispatch Works Internally:** The JVM maintains a **vtable** (virtual method table) for each class — a lookup table mapping method signatures to their implementations. When you call `animal.speak()`, the JVM checks the actual object's vtable at runtime to find the correct `speak()` method, not the reference type's.",
+      "**Upcasting** (child → parent reference): Always safe, automatic. `Animal a = new Dog()` — you can treat a Dog as an Animal. You lose access to Dog-specific methods but gain flexibility.",
+      "**Downcasting** (parent → child reference): Risky, requires explicit cast. `Dog d = (Dog) animal` — can throw `ClassCastException` if the object isn't actually a Dog. **Always check with `instanceof` first.**",
+      "**Pattern Matching (Java 16+):** `if (obj instanceof Dog d)` — combines the instanceof check and the cast in one step. The variable `d` is automatically cast and scoped to the block. This eliminates verbose casting boilerplate.",
+      "**Polymorphism in Practice:** Design methods to accept the **most general type** possible (e.g., `List<>` instead of `ArrayList<>`). This lets callers pass any implementation — ArrayList, LinkedList, etc. — making your code flexible and testable."
     ],
     code: [
       {
