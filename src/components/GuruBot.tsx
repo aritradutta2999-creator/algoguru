@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Send, Trash2, Copy, Check, PanelRightClose, Sparkles, GripVertical } from "lucide-react";
+import { Send, Trash2, Copy, Check, PanelRightClose, Sparkles } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 
 type Msg = { role: "user" | "assistant"; content: string };
