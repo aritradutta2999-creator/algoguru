@@ -363,4 +363,6 @@ export const GuruBot = forwardRef<HTMLDivElement, GuruBotProps>(function GuruBot
       </div>
     </div>
   );
-}
+});
+
+GuruBot.displayName = "GuruBot";
