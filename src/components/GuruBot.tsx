@@ -177,7 +177,7 @@ export function GuruBot({ open, onClose }: GuroBotProps) {
 
   return (
     <div
-      className="flex flex-col h-full border-l"
+      className="flex flex-col h-full border-l overflow-hidden"
       style={{
         background: "hsl(var(--background))",
         borderColor: "hsl(var(--border))",
