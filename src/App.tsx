@@ -399,9 +399,9 @@ function AppLayout({ children }: { children: React.ReactNode }) {
           </header>
 
           {guruOpen ? (
-            <ResizablePanelGroup direction="horizontal" className="flex-1 min-h-0">
+            <ResizablePanelGroup direction="horizontal" className="flex-1 min-h-0 overflow-hidden">
               <ResizablePanel defaultSize={70} minSize={40}>
-                <main className="h-full overflow-y-auto">
+                <main className="h-full overflow-y-auto" style={{ overscrollBehavior: "contain" }}>
                   {children}
                 </main>
               </ResizablePanel>
