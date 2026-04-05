@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, forwardRef } from "react";
 import { Send, Trash2, Copy, Check, PanelRightClose, Sparkles } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 
@@ -102,12 +102,12 @@ function GuruCodeBlock({ children, className }: { children: string; className?: 
   );
 }
 
-interface GuroBotProps {
+interface GuruBotProps {
   open: boolean;
   onClose: () => void;
 }
 
-export function GuruBot({ open, onClose }: GuroBotProps) {
+export const GuruBot = forwardRef<HTMLDivElement, GuruBotProps>(function GuruBot({ open, onClose }, ref) {
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -177,7 +177,8 @@ export function GuruBot({ open, onClose }: GuroBotProps) {
 
   return (
     <div
-      className="flex flex-col h-full border-l overflow-hidden"
+      ref={ref}
+      className="flex h-full min-h-0 flex-col overflow-hidden border-l"
       style={{
         background: "hsl(var(--background))",
         borderColor: "hsl(var(--border))",
@@ -362,4 +363,6 @@ export function GuruBot({ open, onClose }: GuroBotProps) {
       </div>
     </div>
   );
-}
+});
+
+GuruBot.displayName = "GuruBot";

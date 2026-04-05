@@ -354,9 +354,9 @@ function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full" style={{ background: "hsl(var(--background))" }}>
+      <div className="flex h-[100dvh] w-full overflow-hidden" style={{ background: "hsl(var(--background))" }}>
         <AppSidebar />
-        <div className="flex-1 flex flex-col min-w-0">
+        <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
           {/* Top bar */}
           <header
             className="h-14 flex items-center gap-3 px-5 border-b flex-shrink-0 sticky top-0 z-40"
@@ -401,7 +401,7 @@ function AppLayout({ children }: { children: React.ReactNode }) {
           {guruOpen ? (
             <ResizablePanelGroup direction="horizontal" className="flex-1 min-h-0 overflow-hidden">
               <ResizablePanel defaultSize={70} minSize={40}>
-                <main className="h-full overflow-y-auto" style={{ overscrollBehavior: "contain" }}>
+                <main className="h-full min-h-0 overflow-y-auto" style={{ overscrollBehavior: "contain" }}>
                   {children}
                 </main>
               </ResizablePanel>
@@ -411,7 +411,7 @@ function AppLayout({ children }: { children: React.ReactNode }) {
               </ResizablePanel>
             </ResizablePanelGroup>
           ) : (
-            <main className="flex-1 overflow-y-auto">
+            <main className="flex-1 min-h-0 overflow-y-auto" style={{ overscrollBehavior: "contain" }}>
               {children}
             </main>
           )}
