@@ -177,7 +177,8 @@ export const GuruBot = forwardRef<HTMLDivElement, GuruBotProps>(function GuruBot
 
   return (
     <div
-      className="flex flex-col h-full border-l overflow-hidden"
+      ref={ref}
+      className="flex h-full min-h-0 flex-col overflow-hidden border-l"
       style={{
         background: "hsl(var(--background))",
         borderColor: "hsl(var(--border))",
