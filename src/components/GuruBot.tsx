@@ -102,12 +102,12 @@ function GuruCodeBlock({ children, className }: { children: string; className?: 
   );
 }
 
-interface GuroBotProps {
+interface GuruBotProps {
   open: boolean;
   onClose: () => void;
 }
 
-export function GuruBot({ open, onClose }: GuroBotProps) {
+export const GuruBot = forwardRef<HTMLDivElement, GuruBotProps>(function GuruBot({ open, onClose }, ref) {
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
