@@ -24,13 +24,12 @@ const ResizablePanel = React.forwardRef<
 ResizablePanel.displayName = ResizablePrimitive.Panel.displayName;
 
 const ResizableHandle = React.forwardRef<
-  React.ElementRef<typeof ResizablePrimitive.PanelResizeHandle>,
+  HTMLDivElement,
   React.ComponentPropsWithoutRef<typeof ResizablePrimitive.PanelResizeHandle> & {
     withHandle?: boolean;
   }
->(({ withHandle, className, ...props }, ref) => (
+>(({ withHandle, className, ...props }, _ref) => (
   <ResizablePrimitive.PanelResizeHandle
-    ref={ref}
     className={cn(
       "group/handle relative flex shrink-0 items-center justify-center select-none bg-transparent",
       "w-[4px] cursor-col-resize after:absolute after:inset-y-0 after:left-1/2 after:w-5 after:-translate-x-1/2",
@@ -47,6 +46,6 @@ const ResizableHandle = React.forwardRef<
     )}
   </ResizablePrimitive.PanelResizeHandle>
 ));
-ResizableHandle.displayName = ResizablePrimitive.PanelResizeHandle.displayName;
+ResizableHandle.displayName = "ResizableHandle";
 
 export { ResizablePanelGroup, ResizablePanel, ResizableHandle };
