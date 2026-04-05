@@ -208,7 +208,7 @@ export function GuruBot({ open, onClose }: GuroBotProps) {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5 min-h-0">
+      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5 min-h-0" style={{ overscrollBehavior: "contain" }}>
         {messages.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full text-center gap-4 py-8">
             <div className="w-16 h-16 rounded-2xl flex items-center justify-center" style={{ background: "hsl(var(--primary)/0.08)" }}>
