@@ -48,7 +48,7 @@ const ResizableHandle = React.forwardRef<
   >
     {withHandle && (
       <div className="pointer-events-none z-10 flex items-center justify-center opacity-0 group-hover/handle:opacity-100 transition-opacity duration-150">
-        <div className="h-8 w-[3px] rounded-full bg-primary/40" />
+        <div className="h-6 w-[3px] rounded-full bg-primary/30" />
       </div>
     )}
   </ResizablePrimitive.PanelResizeHandle>
