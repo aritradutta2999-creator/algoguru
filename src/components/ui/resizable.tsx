@@ -31,18 +31,25 @@ const ResizableHandle = React.forwardRef<
 >(({ withHandle, className, ...props }, _ref) => (
   <ResizablePrimitive.PanelResizeHandle
     className={cn(
-      "group/handle relative flex shrink-0 items-center justify-center select-none bg-transparent",
-      "w-[4px] cursor-col-resize after:absolute after:inset-y-0 after:left-1/2 after:w-5 after:-translate-x-1/2",
-      "data-[panel-group-direction=vertical]:h-[4px] data-[panel-group-direction=vertical]:w-full data-[panel-group-direction=vertical]:cursor-row-resize",
-      "data-[panel-group-direction=vertical]:after:inset-x-0 data-[panel-group-direction=vertical]:after:inset-y-auto data-[panel-group-direction=vertical]:after:top-1/2 data-[panel-group-direction=vertical]:after:h-5 data-[panel-group-direction=vertical]:after:w-full data-[panel-group-direction=vertical]:after:-translate-y-1/2 data-[panel-group-direction=vertical]:after:translate-x-0",
+      "group/handle relative flex shrink-0 items-center justify-center select-none",
+      // LeetCode-style: thin line, expands on hover
+      "w-[2px] cursor-col-resize bg-border/40 transition-all duration-150",
+      "hover:bg-primary/30 hover:w-[4px] active:bg-primary/50 active:w-[4px]",
+      // Invisible hit area for easy grabbing
+      "after:absolute after:inset-y-0 after:left-1/2 after:w-4 after:-translate-x-1/2",
+      // Vertical direction
+      "data-[panel-group-direction=vertical]:h-[2px] data-[panel-group-direction=vertical]:w-full data-[panel-group-direction=vertical]:cursor-row-resize",
+      "data-[panel-group-direction=vertical]:hover:h-[4px] data-[panel-group-direction=vertical]:active:h-[4px]",
+      "data-[panel-group-direction=vertical]:after:inset-x-0 data-[panel-group-direction=vertical]:after:inset-y-auto data-[panel-group-direction=vertical]:after:top-1/2 data-[panel-group-direction=vertical]:after:h-4 data-[panel-group-direction=vertical]:after:w-full data-[panel-group-direction=vertical]:after:-translate-y-1/2 data-[panel-group-direction=vertical]:after:translate-x-0",
       "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
-      "[&[data-panel-group-direction=vertical]>div]:h-[3px] [&[data-panel-group-direction=vertical]>div]:w-10",
       className,
     )}
     {...props}
   >
     {withHandle && (
-      <div className="pointer-events-none z-10 h-10 w-[3px] rounded-full bg-border/70 transition-colors duration-150 group-hover/handle:bg-primary/40 group-active/handle:bg-primary/60" />
+      <div className="pointer-events-none z-10 flex items-center justify-center opacity-0 group-hover/handle:opacity-100 transition-opacity duration-150">
+        <div className="h-8 w-[3px] rounded-full bg-primary/40" />
+      </div>
     )}
   </ResizablePrimitive.PanelResizeHandle>
 ));
