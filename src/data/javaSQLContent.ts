@@ -13,7 +13,7 @@ export const javaSQLContent: ContentSection[] = [
       "**SQL vs NoSQL:** SQL databases (MySQL, PostgreSQL, Oracle, SQL Server) enforce a **schema**, support **ACID transactions**, and use **joins** for related data. NoSQL databases (MongoDB, Cassandra, DynamoDB) offer schema flexibility, horizontal scaling, and eventual consistency. The choice depends on data structure, consistency requirements, and scale.",
       "**Types of SQL Commands:** DDL (Data Definition Language) — CREATE, ALTER, DROP, TRUNCATE. DML (Data Manipulation Language) — SELECT, INSERT, UPDATE, DELETE. DCL (Data Control Language) — GRANT, REVOKE. TCL (Transaction Control Language) — COMMIT, ROLLBACK, SAVEPOINT. DQL (Data Query Language) — SELECT (sometimes classified separately).",
     ],
-    code: `-- DDL: Create a table
+    code: [{ title: "SQL Example", language: "sql", content: `-- DDL: Create a table
 CREATE TABLE employees (
     id         INT PRIMARY KEY AUTO_INCREMENT,
     name       VARCHAR(100) NOT NULL,
@@ -44,7 +44,7 @@ DELETE FROM employees WHERE id = 3;
 ALTER TABLE employees ADD COLUMN phone VARCHAR(20);
 
 -- DDL: Drop table
--- DROP TABLE employees;  -- Destructive! Use with caution`,
+-- DROP TABLE employees;  -- Destructive! Use with caution` }],
     note: "SQL is **declarative** — you specify *what* data you want, not *how* to get it. The database engine's query optimizer determines the execution plan."
   },
 
@@ -62,7 +62,7 @@ ALTER TABLE employees ADD COLUMN phone VARCHAR(20);
       "**Aliasing:** Use AS to rename columns or tables in the result. Table aliases are essential for self-joins and improve readability. Column aliases defined in SELECT cannot be used in WHERE (use HAVING or a subquery instead).",
       "**Interview Tip:** Always mention the logical execution order when discussing SQL. Understanding that WHERE executes before SELECT explains why you can't use column aliases in WHERE clauses.",
     ],
-    code: `-- Basic SELECT with WHERE
+    code: [{ title: "SQL Example", language: "sql", content: `-- Basic SELECT with WHERE
 SELECT name, department, salary
 FROM employees
 WHERE salary > 80000 AND department = 'Engineering';
@@ -98,7 +98,7 @@ SELECT DISTINCT department FROM employees;
 -- Column aliases
 SELECT name, salary * 12 AS annual_salary
 FROM employees
-ORDER BY annual_salary DESC;  -- alias works in ORDER BY but NOT in WHERE`,
+ORDER BY annual_salary DESC;  -- alias works in ORDER BY but NOT in WHERE` }],
     note: "**Performance insight:** LIKE patterns starting with '%' cannot use indexes efficiently. For full-text search, use dedicated features like PostgreSQL's `tsvector` or MySQL's `FULLTEXT` indexes."
   },
 
@@ -115,7 +115,7 @@ ORDER BY annual_salary DESC;  -- alias works in ORDER BY but NOT in WHERE`,
       "**ROLLUP and CUBE** (SQL:1999) provide subtotals and grand totals. ROLLUP generates hierarchical subtotals. CUBE generates all possible subtotal combinations. GROUPING SETS lets you specify exactly which groupings to compute.",
       "**Interview classic:** 'Find departments with more than 5 employees whose average salary exceeds 80000.' This tests GROUP BY + HAVING + multiple aggregates.",
     ],
-    code: `-- Basic aggregates
+    code: [{ title: "SQL Example", language: "sql", content: `-- Basic aggregates
 SELECT COUNT(*) AS total_employees,
        AVG(salary) AS avg_salary,
        MIN(salary) AS min_salary,
@@ -158,7 +158,7 @@ GROUP BY GROUPING SETS (
     (hire_year),
     (department, hire_year),
     ()  -- grand total
-);`,
+);` }],
     note: "**Rule of thumb:** If you need to filter *before* grouping → use WHERE. If you need to filter *after* grouping → use HAVING."
   },
 
@@ -178,7 +178,7 @@ GROUP BY GROUPING SETS (
       "**NATURAL JOIN** automatically joins on columns with the same name. Avoid in production — it's fragile and can break when columns are added. **USING** is a safer alternative when join columns share the same name.",
       "**Join performance:** Indexes on join columns are critical. The database may use Nested Loop Join (small tables), Hash Join (equality joins, larger tables), or Merge Join (sorted inputs). EXPLAIN ANALYZE reveals the chosen strategy.",
     ],
-    code: `-- INNER JOIN: employees with their department info
+    code: [{ title: "SQL Example", language: "sql", content: `-- INNER JOIN: employees with their department info
 SELECT e.name, e.salary, d.department_name, d.location
 FROM employees e
 INNER JOIN departments d ON e.department_id = d.id;
@@ -222,7 +222,7 @@ JOIN projects p ON pa.project_id = p.id;
 -- USING shorthand (when column names match)
 SELECT e.name, d.department_name
 FROM employees e
-JOIN departments d USING (department_id);`,
+JOIN departments d USING (department_id);` }],
     note: "**Interview pattern:** 'Find all X that don't have Y' → LEFT JOIN + WHERE right_side IS NULL. This is more efficient than NOT IN with subqueries because NOT IN handles NULLs poorly."
   },
 
@@ -240,7 +240,7 @@ JOIN departments d USING (department_id);`,
       "**EXISTS vs IN:** EXISTS stops at the first match (short-circuits), making it efficient for large subquery results. IN materializes the entire subquery result. EXISTS handles NULLs correctly; NOT IN does not (if the subquery returns any NULL, NOT IN returns no rows).",
       "**Subquery vs JOIN:** Many subqueries can be rewritten as JOINs for better performance. However, correlated subqueries for existence checks (EXISTS) are often optimal. Modern query optimizers can flatten simple subqueries into joins automatically.",
     ],
-    code: `-- Scalar subquery in WHERE
+    code: [{ title: "SQL Example", language: "sql", content: `-- Scalar subquery in WHERE
 SELECT name, salary
 FROM employees
 WHERE salary > (SELECT AVG(salary) FROM employees);
@@ -291,7 +291,7 @@ WHERE department_id IN (
 
 -- ALL / ANY
 SELECT name, salary FROM employees
-WHERE salary > ALL (SELECT salary FROM employees WHERE department = 'Marketing');`,
+WHERE salary > ALL (SELECT salary FROM employees WHERE department = 'Marketing');` }],
     note: "**Critical interview gotcha:** `NOT IN (subquery)` returns **empty result** if the subquery contains any NULL value. Always prefer `NOT EXISTS` for safety."
   },
 
@@ -311,7 +311,7 @@ WHERE salary > ALL (SELECT salary FROM employees WHERE department = 'Marketing')
       "**Window functions execute after WHERE, GROUP BY, and HAVING** but before ORDER BY and LIMIT. You cannot use window functions in WHERE — wrap in a subquery or CTE.",
       "**Interview favorite:** 'Find the second highest salary in each department' → ROW_NUMBER() or DENSE_RANK() with PARTITION BY department.",
     ],
-    code: `-- ROW_NUMBER: assign unique row numbers per department
+    code: [{ title: "SQL Example", language: "sql", content: `-- ROW_NUMBER: assign unique row numbers per department
 SELECT name, department, salary,
        ROW_NUMBER() OVER (PARTITION BY department ORDER BY salary DESC) AS rn
 FROM employees;
@@ -359,7 +359,7 @@ FROM employees;
 -- Percentage of department total
 SELECT name, department, salary,
        ROUND(100.0 * salary / SUM(salary) OVER (PARTITION BY department), 2) AS pct_of_dept
-FROM employees;`,
+FROM employees;` }],
     note: "**Window functions are the #1 advanced SQL topic in FAANG interviews.** Master ROW_NUMBER, RANK, running totals, and LAG/LEAD — they appear in nearly every SQL round."
   },
 
@@ -376,7 +376,7 @@ FROM employees;`,
       "**Recursive CTE structure:** WITH RECURSIVE cte AS (anchor UNION ALL recursive_step). The recursive step references the CTE itself. Always include a termination condition to prevent infinite loops.",
       "**CTE vs Subquery vs Temp Table:** CTEs win on readability and are scoped to one query. Temp tables persist for the session and can be indexed. Subqueries are inline and can be auto-flattened by the optimizer. For interview answers, CTEs demonstrate clean thinking.",
     ],
-    code: `-- Simple CTE
+    code: [{ title: "SQL Example", language: "sql", content: `-- Simple CTE
 WITH dept_stats AS (
     SELECT department,
            COUNT(*) AS emp_count,
@@ -431,7 +431,7 @@ WITH RECURSIVE fib AS (
     UNION ALL
     SELECT n + 1, val + prev_val, val FROM fib WHERE n < 20
 )
-SELECT n, val FROM fib;`,
+SELECT n, val FROM fib;` }],
     note: "**Interview tip:** When given a complex query, always start by outlining the CTE structure. It shows the interviewer you think in logical steps."
   },
 
@@ -451,7 +451,7 @@ SELECT n, val FROM fib;`,
       "**Index maintenance:** Indexes consume disk space and slow down writes. Over-indexing is a common anti-pattern. Use EXPLAIN ANALYZE to verify an index is actually being used. Drop unused indexes.",
       "**Partial index** (PostgreSQL): indexes only rows matching a condition. E.g., CREATE INDEX idx ON orders (status) WHERE status = 'pending'. Smaller and faster than a full index.",
     ],
-    code: `-- Create a B-Tree index (default)
+    code: [{ title: "SQL Example", language: "sql", content: `-- Create a B-Tree index (default)
 CREATE INDEX idx_emp_department ON employees(department);
 
 -- Composite index (order matters!)
@@ -484,7 +484,7 @@ SELECT name, salary FROM employees WHERE department = 'Engineering';
 DROP INDEX IF EXISTS idx_emp_department;
 
 -- List all indexes on a table (PostgreSQL)
-SELECT indexname, indexdef FROM pg_indexes WHERE tablename = 'employees';`,
+SELECT indexname, indexdef FROM pg_indexes WHERE tablename = 'employees';` }],
     warning: "**Over-indexing** degrades write performance. Every INSERT/UPDATE/DELETE must update all relevant indexes. Profile before adding indexes — don't guess."
   },
 
@@ -503,7 +503,7 @@ SELECT indexname, indexdef FROM pg_indexes WHERE tablename = 'employees';`,
       "**Query anti-patterns:** Using DISTINCT to mask a bad join. Using ORDER BY RAND() for random selection (scans entire table). Comparing with functions: WHERE YEAR(date_col) = 2024 (use WHERE date_col >= '2024-01-01').",
       "**Cardinality estimation:** The optimizer estimates how many rows each step will produce. Stale statistics lead to bad plans. Run ANALYZE (PostgreSQL) or ANALYZE TABLE (MySQL) to update statistics.",
     ],
-    code: `-- EXPLAIN ANALYZE (PostgreSQL) — see real execution
+    code: [{ title: "SQL Example", language: "sql", content: `-- EXPLAIN ANALYZE (PostgreSQL) — see real execution
 EXPLAIN ANALYZE
 SELECT e.name, d.department_name
 FROM employees e
@@ -538,7 +538,7 @@ SELECT * FROM employees FORCE INDEX (idx_emp_dept_salary)
 WHERE department = 'Engineering' AND salary > 80000;
 
 -- Update statistics (PostgreSQL)
-ANALYZE employees;`,
+ANALYZE employees;` }],
     note: "**Interview mantra:** 'SELECT only what you need, index what you search, and always check EXPLAIN.'"
   },
 
@@ -557,7 +557,7 @@ ANALYZE employees;`,
       "**Trade-offs:** Normalization → data integrity, smaller storage, slower reads (more joins). Denormalization → faster reads, redundant data, risk of inconsistency, larger storage.",
       "**Interview rule:** Design schemas in 3NF, then selectively denormalize based on query patterns and performance requirements.",
     ],
-    code: `-- ❌ Violates 1NF: multi-valued column
+    code: [{ title: "SQL Example", language: "sql", content: `-- ❌ Violates 1NF: multi-valued column
 CREATE TABLE students_bad (
     id INT PRIMARY KEY,
     name VARCHAR(100),
@@ -611,7 +611,7 @@ CREATE TABLE employees_3nf (
     id INT PRIMARY KEY,
     name VARCHAR(100),
     dept_id INT REFERENCES departments(id)
-);`,
+);` }],
     note: "**Normalize until it hurts, denormalize until it works.** — common database design philosophy."
   },
 
@@ -629,7 +629,7 @@ CREATE TABLE employees_3nf (
       "**Savepoints** allow partial rollback within a transaction. SAVEPOINT sp1; ... ROLLBACK TO sp1; — rolls back to the savepoint without aborting the entire transaction.",
       "**Two-Phase Commit (2PC)** is used in distributed databases to ensure atomicity across multiple nodes. Phase 1: Prepare (all nodes vote). Phase 2: Commit (if all voted yes) or Abort.",
     ],
-    code: `-- Basic transaction
+    code: [{ title: "SQL Example", language: "sql", content: `-- Basic transaction
 BEGIN TRANSACTION;  -- or just BEGIN; or START TRANSACTION;
 
 UPDATE accounts SET balance = balance - 500 WHERE id = 1;
@@ -675,7 +675,7 @@ SELECT * FROM inventory WHERE product_id = 1;
 COMMIT;
 
 -- Check current isolation level (PostgreSQL)
-SHOW transaction_isolation;`,
+SHOW transaction_isolation;` }],
     note: "**Interview must-know:** Always explain ACID properties with a real example (bank transfer). Knowing isolation levels and their trade-offs distinguishes senior candidates."
   },
 
@@ -694,7 +694,7 @@ SHOW transaction_isolation;`,
       "**DEFAULT:** Specifies a default value when no value is provided during INSERT. Can be a literal, function (CURRENT_TIMESTAMP), or expression.",
       "**Surrogate vs Natural keys:** Surrogate keys (auto-increment integer, UUID) are artificial and stable. Natural keys (email, SSN) are meaningful but can change. Most systems use surrogate keys for primary keys.",
     ],
-    code: `-- Table with comprehensive constraints
+    code: [{ title: "SQL Example", language: "sql", content: `-- Table with comprehensive constraints
 CREATE TABLE products (
     id          SERIAL PRIMARY KEY,               -- surrogate key
     sku         VARCHAR(50) UNIQUE NOT NULL,       -- natural key candidate
@@ -728,7 +728,7 @@ ALTER TABLE employees
     ADD CONSTRAINT chk_salary_range CHECK (salary BETWEEN 30000 AND 500000);
 
 -- Drop a constraint
-ALTER TABLE employees DROP CONSTRAINT chk_salary_range;`,
+ALTER TABLE employees DROP CONSTRAINT chk_salary_range;` }],
     note: "**Design principle:** Enforce constraints at the database level, not just in application code. The database is the last line of defense against data corruption."
   },
 
@@ -744,7 +744,7 @@ ALTER TABLE employees DROP CONSTRAINT chk_salary_range;`,
       "**View vs CTE:** Views are persistent (stored in the database), reusable across queries, and can be granted permissions. CTEs are scoped to a single query. Use views for frequently-used query patterns.",
       "**Security through views:** GRANT SELECT on a view without granting access to underlying tables. This lets users see aggregated data without accessing individual records — a common pattern for data privacy.",
     ],
-    code: `-- Create a view
+    code: [{ title: "SQL Example", language: "sql", content: `-- Create a view
 CREATE VIEW employee_summary AS
 SELECT e.id, e.name, e.salary, d.department_name,
        RANK() OVER (PARTITION BY d.id ORDER BY e.salary DESC) AS dept_rank
@@ -779,7 +779,7 @@ REFRESH MATERIALIZED VIEW CONCURRENTLY monthly_revenue;
 
 -- Drop view
 DROP VIEW IF EXISTS employee_summary;
-DROP MATERIALIZED VIEW IF EXISTS monthly_revenue;`,
+DROP MATERIALIZED VIEW IF EXISTS monthly_revenue;` }],
     note: "**Interview tip:** Materialized views are the go-to answer for 'How do you speed up a dashboard that runs expensive aggregate queries?'"
   },
 
@@ -796,7 +796,7 @@ DROP MATERIALIZED VIEW IF EXISTS monthly_revenue;`,
       "**Trigger warnings:** Triggers add hidden complexity — they execute implicitly, making debugging harder. Avoid long-running operations in triggers. Be cautious of trigger cascades (trigger A fires trigger B, etc.).",
       "**Interview perspective:** Know the difference between procedures and functions. Know BEFORE vs AFTER triggers. Be prepared to write a simple audit trigger.",
     ],
-    code: `-- PostgreSQL: Create a function
+    code: [{ title: "SQL Example", language: "sql", content: `-- PostgreSQL: Create a function
 CREATE OR REPLACE FUNCTION get_department_stats(dept_name VARCHAR)
 RETURNS TABLE(employee_count BIGINT, avg_salary NUMERIC, max_salary NUMERIC)
 LANGUAGE plpgsql AS $$
@@ -860,7 +860,7 @@ $$;
 
 CREATE TRIGGER trg_employee_audit
 AFTER UPDATE OR DELETE ON employees
-FOR EACH ROW EXECUTE FUNCTION log_employee_changes();`,
+FOR EACH ROW EXECUTE FUNCTION log_employee_changes();` }],
     note: "**Best practice:** Keep trigger logic minimal. For complex workflows, use stored procedures called explicitly — they're easier to debug and test."
   },
 
@@ -877,7 +877,7 @@ FOR EACH ROW EXECUTE FUNCTION log_employee_changes();`,
       "**Performance:** UNION requires sorting/hashing for deduplication. UNION ALL is O(n+m). INTERSECT and EXCEPT also require deduplication. For large datasets, consider JOIN-based alternatives.",
       "**Column naming:** The result set uses column names from the first SELECT. ORDER BY can reference these names or column positions (ORDER BY 1, 2).",
     ],
-    code: `-- UNION: combine customers and prospects (remove duplicates)
+    code: [{ title: "SQL Example", language: "sql", content: `-- UNION: combine customers and prospects (remove duplicates)
 SELECT email, name FROM customers
 UNION
 SELECT email, name FROM prospects;
@@ -906,7 +906,7 @@ SELECT product_id FROM orders WHERE EXTRACT(MONTH FROM order_date) = 2;
 SELECT name, 'customer' AS source FROM customers
 UNION ALL
 SELECT name, 'employee' AS source FROM employees
-ORDER BY name;`,
+ORDER BY name;` }],
     note: "**Interview shortcut:** EXCEPT is the set-based way to express 'Find X that are NOT in Y' — cleaner than LEFT JOIN + IS NULL for simple cases."
   },
 
@@ -924,7 +924,7 @@ ORDER BY name;`,
       "**NULL ordering:** In ORDER BY, NULLs sort differently across databases. PostgreSQL: NULLS LAST (default for ASC). MySQL: NULLs treated as smallest value.",
       "**Interview trap:** WHERE column != 'value' does NOT return rows where column IS NULL. You need: WHERE column != 'value' OR column IS NULL.",
     ],
-    code: `-- Searched CASE: categorize salaries
+    code: [{ title: "SQL Example", language: "sql", content: `-- Searched CASE: categorize salaries
 SELECT name, salary,
     CASE
         WHEN salary >= 120000 THEN 'Executive'
@@ -968,7 +968,7 @@ SELECT * FROM employees WHERE manager_id IS NULL;  -- correct
 -- COALESCE in calculations
 SELECT name,
        COALESCE(bonus, 0) + COALESCE(commission, 0) AS total_extra_comp
-FROM employees;`,
+FROM employees;` }],
     note: "**Golden rule:** Always handle NULLs explicitly. 'Unexpected NULLs' is the #1 cause of wrong query results in interviews."
   },
 
@@ -984,7 +984,7 @@ FROM employees;`,
       "**Type conversion:** CAST(value AS type) is ANSI standard. PostgreSQL also supports value::type. Implicit casting happens in some contexts but explicit is safer.",
       "**Date arithmetic is crucial for interview queries** involving 'last 30 days', 'month-over-month growth', 'year-to-date' calculations.",
     ],
-    code: `-- String functions
+    code: [{ title: "SQL Example", language: "sql", content: `-- String functions
 SELECT UPPER('hello') AS upper_case,                    -- HELLO
        LOWER('WORLD') AS lower_case,                    -- world
        TRIM('  hello  ') AS trimmed,                    -- 'hello'
@@ -1029,7 +1029,7 @@ SELECT ROUND(3.14159, 2) AS rounded,     -- 3.14
 
 -- Type casting
 SELECT CAST('2024-01-15' AS DATE);
-SELECT '42'::INTEGER;  -- PostgreSQL shorthand`,
+SELECT '42'::INTEGER;  -- PostgreSQL shorthand` }],
     note: "**Interview pattern:** Date functions appear in almost every SQL round — 'find users who signed up in the last 7 days', 'calculate month-over-month growth', etc."
   },
 
@@ -1046,7 +1046,7 @@ SELECT '42'::INTEGER;  -- PostgreSQL shorthand`,
       "**MERGE/UPSERT:** MERGE (SQL standard) performs INSERT, UPDATE, or DELETE in a single statement based on conditions. PostgreSQL uses INSERT ... ON CONFLICT (upsert). MySQL uses INSERT ... ON DUPLICATE KEY UPDATE.",
       "**Common Table Expression DELETE/UPDATE:** In PostgreSQL, CTEs can include data-modifying statements (INSERT, UPDATE, DELETE in CTEs), enabling complex multi-step operations in a single query.",
     ],
-    code: `-- PIVOT using CASE + GROUP BY (works everywhere)
+    code: [{ title: "SQL Example", language: "sql", content: `-- PIVOT using CASE + GROUP BY (works everywhere)
 SELECT
     department,
     COUNT(CASE WHEN salary_tier = 'Junior' THEN 1 END) AS junior_count,
@@ -1105,7 +1105,7 @@ MERGE INTO target_table t
 USING source_table s ON t.id = s.id
 WHEN MATCHED THEN UPDATE SET t.value = s.value
 WHEN NOT MATCHED THEN INSERT (id, value) VALUES (s.id, s.value)
-WHEN NOT MATCHED BY SOURCE THEN DELETE;`,
+WHEN NOT MATCHED BY SOURCE THEN DELETE;` }],
     note: "**LATERAL JOIN** is the most underused yet powerful SQL feature. It solves 'top N per group' problems elegantly — a favorite in advanced interviews."
   },
 
@@ -1125,7 +1125,7 @@ WHEN NOT MATCHED BY SOURCE THEN DELETE;`,
       "**Pattern 7 — Year-over-Year/Month-over-Month:** LAG function with proper date grouping.",
       "**Pattern 8 — Median Calculation:** PERCENTILE_CONT(0.5) or manual calculation with ROW_NUMBER.",
     ],
-    code: `-- Pattern 1: Second highest salary
+    code: [{ title: "SQL Example", language: "sql", content: `-- Pattern 1: Second highest salary
 SELECT MAX(salary) AS second_highest
 FROM employees
 WHERE salary < (SELECT MAX(salary) FROM employees);
@@ -1195,7 +1195,7 @@ FROM monthly;
 
 -- Pattern 8: Median salary (PostgreSQL)
 SELECT PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY salary) AS median_salary
-FROM employees;`,
+FROM employees;` }],
     note: "**Master these 8 patterns** and you can solve 90% of SQL interview questions. Practice writing them from memory."
   },
 ];
