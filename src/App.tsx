@@ -405,7 +405,7 @@ function AppLayout({ children }: { children: React.ReactNode }) {
                   {children}
                 </main>
               </ResizablePanel>
-              <ResizableHandle withHandle />
+              <ResizableHandle />
               <ResizablePanel defaultSize={35} minSize={22} maxSize={50}>
                 <GuruBot open={guruOpen} onClose={() => setGuruOpen(false)} />
               </ResizablePanel>
