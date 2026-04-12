@@ -6,6 +6,7 @@ import { javaMultithreadingContent } from "./javaMultithreadingContent";
 import { javaIOContent } from "./javaIOContent";
 import { javaAdvancedContent } from "./javaAdvancedContent";
 import { javaJDBCContent } from "./javaJDBCContent";
+import { javaSQLContent } from "./javaSQLContent";
 
 // Java Fundamentals content
 export const javaBasicsContent: ContentSection[] = [
@@ -2218,4 +2219,5 @@ export const javaContentMap: Record<string, ContentSection[]> = {
   "java-io": javaIOContent,
   "java-advanced": javaAdvancedContent,
   "java-jdbc": javaJDBCContent,
+  "java-sql": javaSQLContent,
 };
