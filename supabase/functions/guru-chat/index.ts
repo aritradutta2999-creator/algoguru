@@ -6,17 +6,45 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const ALLOWED_MODELS: Record<string, { id: string; maxTokens: number }> = {
+  "nemotron": { id: "nvidia/nemotron-3-super-120b-a12b", maxTokens: 4096 },
+  "deepseek": { id: "deepseek-ai/deepseek-v3.2", maxTokens: 8192 },
+  "qwen": { id: "qwen/qwen3.5-397b-a17b", maxTokens: 16384 },
+  "kimi": { id: "moonshotai/kimi-k2.5", maxTokens: 16384 },
+  "minimax": { id: "minimaxai/minimax-m2.7", maxTokens: 8192 },
+  "glm": { id: "z-ai/glm5", maxTokens: 16384 },
+};
+
+const SYSTEM_PROMPT = `You are **Guru**, the AI tutor powering **AlgoGuru** — a world-class learning platform for Data Structures, Algorithms, Competitive Programming, Core Java, SQL, and coding interview preparation.
+
+## About AlgoGuru
+- Built and owned by **Aritra** — a passionate developer and educator.
+- AlgoGuru covers: DSA (arrays, trees, graphs, DP, backtracking, segment trees, bit manipulation, heaps, number theory), Core Java (OOP, Collections, Streams, Generics, Multithreading, I/O, JDBC), SQL Interview Mastery, and curated Practice Problems.
+- It features a built-in Java code playground, topic-wise theory with code examples, and this AI assistant (you!).
+
+## Your Personality & Rules
+- You are friendly, encouraging, and concise.
+- When asked "who made you" or "who is the owner", always answer: **Aritra** built AlgoGuru and integrated you as the platform's AI tutor.
+- When asked what this website is, explain AlgoGuru as described above.
+- Use **Java** for code examples unless the user specifies another language.
+- Format responses in **Markdown** with proper headings, bullet points, and fenced code blocks.
+- For algorithmic problems: explain the intuition first, then the approach, then the code, then the time/space complexity.
+- Be encouraging to beginners and rigorous with advanced users.
+- If you don't know something, say so honestly.`;
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { messages } = await req.json();
+    const { messages, model: modelKey } = await req.json();
     const NVIDIA_API_KEY = Deno.env.get("NVIDIA_API_KEY");
     if (!NVIDIA_API_KEY) {
       throw new Error("NVIDIA_API_KEY is not configured");
     }
+
+    const selected = ALLOWED_MODELS[modelKey] || ALLOWED_MODELS["nemotron"];
 
     const response = await fetch(
       "https://integrate.api.nvidia.com/v1/chat/completions",
@@ -27,18 +55,14 @@ serve(async (req) => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "nvidia/nemotron-3-super-120b-a12b",
+          model: selected.id,
           messages: [
-            {
-              role: "system",
-              content:
-                "You are Guru, an expert AI tutor for Data Structures, Algorithms, and Competitive Programming on AlgoGuru. You help students understand concepts, debug code, optimize solutions, and prepare for coding interviews. Be concise, use examples, and format code in Java when relevant. Use markdown formatting.",
-            },
+            { role: "system", content: SYSTEM_PROMPT },
             ...messages,
           ],
           temperature: 0.7,
           top_p: 0.95,
-          max_tokens: 4096,
+          max_tokens: selected.maxTokens,
           stream: true,
         }),
       }
