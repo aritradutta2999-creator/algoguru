@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, forwardRef } from "react";
+import { createPortal } from "react-dom";
 import { Send, Trash2, Copy, Check, PanelRightClose, Sparkles, ChevronDown } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 
@@ -121,41 +122,53 @@ function GuruCodeBlock({ children, className }: { children: string; className?: 
 
 function ModelSelector({ selected, onSelect }: { selected: string; onSelect: (key: string) => void }) {
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const dropRef = useRef<HTMLDivElement>(null);
   const current = MODELS.find((m) => m.key === selected) || MODELS[0];
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      if (
+        btnRef.current && !btnRef.current.contains(e.target as Node) &&
+        dropRef.current && !dropRef.current.contains(e.target as Node)
+      ) setOpen(false);
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  const [pos, setPos] = useState({ top: 0, left: 0 });
+  useEffect(() => {
+    if (open && btnRef.current) {
+      const rect = btnRef.current.getBoundingClientRect();
+      setPos({ top: rect.bottom + 6, left: Math.max(rect.right - 224, 8) });
+    }
+  }, [open]);
+
   return (
-    <div ref={ref} className="relative">
+    <>
       <button
+        ref={btnRef}
         onClick={() => setOpen((o) => !o)}
         className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all hover:bg-muted"
         style={{ color: "hsl(var(--primary))", background: "hsl(var(--primary)/0.06)" }}
       >
         <span className="truncate max-w-[100px]">{current.label}</span>
-        <ChevronDown size={12} className={`transition-transform ${open ? "rotate-180" : ""}`} />
+        <ChevronDown size={12} className={`transition-transform flex-shrink-0 ${open ? "rotate-180" : ""}`} />
       </button>
 
-      {open && (
+      {open && createPortal(
         <div
-          className="absolute top-full left-0 mt-1.5 w-56 rounded-xl overflow-hidden border shadow-lg z-50"
-          style={{ background: "hsl(var(--card))", borderColor: "hsl(var(--border))" }}
+          ref={dropRef}
+          className="fixed w-56 rounded-xl overflow-hidden border shadow-xl"
+          style={{ top: pos.top, left: pos.left, zIndex: 9999, background: "hsl(var(--card))", borderColor: "hsl(var(--border))" }}
         >
           {MODELS.map((m) => (
             <button
               key={m.key}
               onClick={() => { onSelect(m.key); setOpen(false); }}
               className="w-full flex items-start gap-2.5 px-3.5 py-2.5 text-left transition-colors hover:bg-muted/50"
-              style={{
-                background: m.key === selected ? "hsl(var(--primary)/0.06)" : "transparent",
-              }}
+              style={{ background: m.key === selected ? "hsl(var(--primary)/0.06)" : "transparent" }}
             >
               <div className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0" style={{ background: m.key === selected ? "hsl(var(--primary))" : "hsl(var(--border))" }} />
               <div>
@@ -164,9 +177,10 @@ function ModelSelector({ selected, onSelect }: { selected: string; onSelect: (ke
               </div>
             </button>
           ))}
-        </div>
+        </div>,
+        document.body
       )}
-    </div>
+    </>
   );
 }
 
