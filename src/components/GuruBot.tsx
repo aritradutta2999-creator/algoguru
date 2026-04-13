@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, forwardRef } from "react";
+import { createPortal } from "react-dom";
 import { Send, Trash2, Copy, Check, PanelRightClose, Sparkles, ChevronDown } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 
